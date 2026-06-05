@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { getTransacoesOrThrow } from '@/app/services/transacoes';
@@ -6,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { ordenarPorDataDesc } from '@/data/transacoes';
 
 export default async function TransacoesPage() {
-  const transacoes = await getTransacoesOrThrow();
+  const usuarioId = (await cookies()).get('fincontrol_uid')?.value;
+  const transacoes = await getTransacoesOrThrow(usuarioId);
   const ordenadas = ordenarPorDataDesc(transacoes);
 
   return (

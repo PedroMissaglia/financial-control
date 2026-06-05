@@ -7,6 +7,8 @@ export interface Usuario {
 
 export type UsuarioPublico = Omit<Usuario, 'senha'>;
 
+export type NovoUsuario = Omit<Usuario, 'id'>;
+
 export interface Credenciais {
   email: string;
   senha: string;
@@ -18,8 +20,7 @@ export const seedUsuarios: Usuario[] = [
 ];
 
 export function toUsuarioPublico(usuario: Usuario): UsuarioPublico {
-  const { senha: _senha, ...publico } = usuario;
-  return publico;
+  return { id: usuario.id, nome: usuario.nome, email: usuario.email };
 }
 
 export function validarCredenciais(usuarios: Usuario[], email: string, senha: string): UsuarioPublico | undefined {

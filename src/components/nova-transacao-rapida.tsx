@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { useAuth } from '@/contexts/auth-context';
 import { TIPOS_TRANSACAO } from '@/data/transacoes';
 
 const quickSchema = z.object({
@@ -24,6 +25,7 @@ type QuickFormData = z.infer<typeof quickSchema>;
 
 export function NovaTransacaoRapida() {
   const router = useRouter();
+  const { usuario } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,11 +41,17 @@ export function NovaTransacaoRapida() {
   });
 
   async function onSubmit(data: QuickFormData) {
+    if (!usuario?.id) {
+      setError('Sessão expirada. Faça login novamente.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     const result = await createTransacao({
       ...data,
+      usuarioId: usuario.id,
       data: new Date().toISOString().split('T')[0],
       descricao: `Nova ${TIPOS_TRANSACAO.find(t => t.value === data.tipo)?.label.toLowerCase()}`,
     });

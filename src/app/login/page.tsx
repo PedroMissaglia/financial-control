@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { CriarUsuarioModal } from '@/components/criar-usuario-modal';
+import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +27,7 @@ export default function LoginPage() {
   const { login, isAuthenticated, loading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCriarOpen, setIsCriarOpen] = useState(false);
 
   const {
     register,
@@ -108,9 +111,23 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Entrando...' : 'Entrar'}
           </Button>
+
+          <p className="text-muted-foreground text-center text-sm">
+            Não tem uma conta?{' '}
+            <button
+              type="button"
+              onClick={() => setIsCriarOpen(true)}
+              className="text-primary font-medium hover:underline focus:outline-none focus-visible:underline"
+            >
+              Criar conta
+            </button>
+          </p>
         </form>
         </div>
       </main>
+      <Footer />
+
+      <CriarUsuarioModal open={isCriarOpen} onClose={() => setIsCriarOpen(false)} />
     </>
   );
 }

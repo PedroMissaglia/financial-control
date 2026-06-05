@@ -19,16 +19,24 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
   return { success: true, data };
 }
 
-export async function fetchTransacoes(): Promise<ApiResponse<Transacao[]>> {
+export async function fetchTransacoes(usuarioId?: string): Promise<ApiResponse<Transacao[]>> {
+  if (!usuarioId) {
+    return { success: true, data: [] };
+  }
+
+  const seedDoUsuario = seedTransacoes.filter(transacao => transacao.usuarioId === usuarioId);
+
   try {
-    const response = await fetch(`${API_URL}/transacoes`, { cache: 'no-store' });
+    const response = await fetch(`${API_URL}/transacoes?usuarioId=${encodeURIComponent(usuarioId)}`, {
+      cache: 'no-store',
+    });
     if (!response.ok) {
-      return { success: true, data: seedTransacoes };
+      return { success: true, data: seedDoUsuario };
     }
     return handleResponse<Transacao[]>(response);
   } catch (error) {
     console.error('Erro ao buscar transações:', error);
-    return { success: true, data: seedTransacoes };
+    return { success: true, data: seedDoUsuario };
   }
 }
 
@@ -90,8 +98,8 @@ export async function deleteTransacao(id: string): Promise<ApiResponse<void>> {
   }
 }
 
-export async function getTransacoesOrThrow(): Promise<Transacao[]> {
-  const result = await fetchTransacoes();
+export async function getTransacoesOrThrow(usuarioId?: string): Promise<Transacao[]> {
+  const result = await fetchTransacoes(usuarioId);
   if (!result.success || !result.data) {
     throw new Error(result.message ?? 'Erro ao carregar transações');
   }

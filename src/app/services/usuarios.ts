@@ -1,5 +1,5 @@
-import type { Usuario, UsuarioPublico } from '@/data/usuarios';
-import { seedUsuarios, validarCredenciais } from '@/data/usuarios';
+import type { NovoUsuario, Usuario, UsuarioPublico } from '@/data/usuarios';
+import { seedUsuarios, toUsuarioPublico, validarCredenciais } from '@/data/usuarios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -31,4 +31,31 @@ export async function autenticar(email: string, senha: string): Promise<ApiRespo
   }
 
   return { success: true, data: usuario };
+}
+
+export async function criarUsuario(novo: NovoUsuario): Promise<ApiResponse<UsuarioPublico>> {
+  const email = novo.email.trim().toLowerCase();
+
+  try {
+    const usuarios = await carregarUsuarios();
+    if (usuarios.some(usuario => usuario.email.toLowerCase() === email)) {
+      return { success: false, message: 'Este e-mail já está cadastrado' };
+    }
+
+    const response = await fetch(`${API_URL}/usuarios`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome: novo.nome.trim(), email, senha: novo.senha }),
+    });
+
+    if (!response.ok) {
+      return { success: false, message: 'Não foi possível criar a conta' };
+    }
+
+    const criado = (await response.json()) as Usuario;
+    return { success: true, data: toUsuarioPublico(criado) };
+  } catch (error) {
+    console.error('Erro ao criar usuário:', error);
+    return { success: false, message: 'Não foi possível conectar à API' };
+  }
 }

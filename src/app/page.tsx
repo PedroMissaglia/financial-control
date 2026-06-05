@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { getTransacoesOrThrow } from '@/app/services/transacoes';
@@ -10,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { calcularSaldo, getUltimasTransacoes } from '@/data/transacoes';
 
 export default async function HomePage() {
-  const transacoes = await getTransacoesOrThrow();
+  const usuarioId = (await cookies()).get('fincontrol_uid')?.value;
+  const transacoes = await getTransacoesOrThrow(usuarioId);
   const saldo = calcularSaldo(transacoes);
   const recentes = getUltimasTransacoes(transacoes, 5);
 

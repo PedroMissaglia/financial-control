@@ -2,6 +2,7 @@ export type TipoTransacao = 'deposito' | 'transferencia' | 'saque' | 'pagamento'
 
 export interface Transacao {
   id: string;
+  usuarioId: string;
   tipo: TipoTransacao;
   valor: number;
   data: string;
@@ -9,6 +10,7 @@ export interface Transacao {
 }
 
 export interface NovaTransacao {
+  usuarioId: string;
   tipo: TipoTransacao;
   valor: number;
   data: string;
@@ -68,12 +70,12 @@ export function ordenarPorDataDesc(transacoes: Transacao[]): Transacao[] {
 }
 
 export const seedTransacoes: Transacao[] = [
-  { id: '1', tipo: 'deposito', valor: 3500, data: '2026-06-01', descricao: 'Salário' },
-  { id: '2', tipo: 'pagamento', valor: 1200, data: '2026-06-02', descricao: 'Aluguel' },
-  { id: '3', tipo: 'transferencia', valor: 350, data: '2026-06-03', descricao: 'Transferência para poupança' },
-  { id: '4', tipo: 'saque', valor: 200, data: '2026-06-03', descricao: 'Saque ATM' },
-  { id: '5', tipo: 'deposito', valor: 800, data: '2026-05-28', descricao: 'Freelance' },
-  { id: '6', tipo: 'pagamento', valor: 89.9, data: '2026-05-27', descricao: 'Internet' },
-  { id: '7', tipo: 'pagamento', valor: 450, data: '2026-05-25', descricao: 'Supermercado' },
-  { id: '8', tipo: 'transferencia', valor: 150, data: '2026-05-20', descricao: 'Pix para João' },
+  { id: '1', usuarioId: '1', tipo: 'deposito', valor: 3500, data: '2026-06-01', descricao: 'Salário' },
+  { id: '2', usuarioId: '1', tipo: 'pagamento', valor: 1200, data: '2026-06-02', descricao: 'Aluguel' },
+  { id: '3', usuarioId: '1', tipo: 'transferencia', valor: 350, data: '2026-06-03', descricao: 'Transferência para poupança' },
+  { id: '4', usuarioId: '1', tipo: 'saque', valor: 200, data: '2026-06-03', descricao: 'Saque ATM' },
+  { id: '5', usuarioId: '1', tipo: 'deposito', valor: 800, data: '2026-05-28', descricao: 'Freelance' },
+  { id: '6', usuarioId: '1', tipo: 'pagamento', valor: 89.9, data: '2026-05-27', descricao: 'Internet' },
+  { id: '7', usuarioId: '1', tipo: 'pagamento', valor: 450, data: '2026-05-25', descricao: 'Supermercado' },
+  { id: '8', usuarioId: '1', tipo: 'transferencia', valor: 150, data: '2026-05-20', descricao: 'Pix para João' },
 ];

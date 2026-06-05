@@ -11,11 +11,18 @@
       "nome": "John Doe",
       "email": "John@fincontrol.com",
       "senha": "fincontrol"
+    },
+    {
+      "nome": "Pedro",
+      "email": "a@a.com",
+      "senha": "123456",
+      "id": "UCjIEq9"
     }
   ],
   "transacoes": [
     {
       "id": "1",
+      "usuarioId": "1",
       "tipo": "deposito",
       "valor": 3500,
       "data": "2026-06-01",
@@ -23,6 +30,7 @@
     },
     {
       "id": "2",
+      "usuarioId": "1",
       "tipo": "pagamento",
       "valor": 1200,
       "data": "2026-06-02",
@@ -30,6 +38,7 @@
     },
     {
       "id": "3",
+      "usuarioId": "1",
       "tipo": "transferencia",
       "valor": 350,
       "data": "2026-06-03",
@@ -37,6 +46,7 @@
     },
     {
       "id": "4",
+      "usuarioId": "1",
       "tipo": "saque",
       "valor": 200,
       "data": "2026-06-03",
@@ -44,6 +54,7 @@
     },
     {
       "id": "5",
+      "usuarioId": "1",
       "tipo": "deposito",
       "valor": 800,
       "data": "2026-05-28",
@@ -51,6 +62,7 @@
     },
     {
       "id": "6",
+      "usuarioId": "1",
       "tipo": "pagamento",
       "valor": 89.9,
       "data": "2026-05-27",
@@ -58,6 +70,7 @@
     },
     {
       "id": "7",
+      "usuarioId": "1",
       "tipo": "pagamento",
       "valor": 450,
       "data": "2026-05-25",
@@ -65,6 +78,7 @@
     },
     {
       "id": "8",
+      "usuarioId": "1",
       "tipo": "transferencia",
       "valor": 150,
       "data": "2026-05-20",
@@ -75,14 +89,46 @@
       "valor": 74.9,
       "data": "2026-06-04",
       "descricao": "Nova depósito",
-      "id": "dN2UAY3"
+      "id": "dN2UAY3",
+      "usuarioId": "1"
     },
     {
       "tipo": "deposito",
       "valor": 5,
       "data": "2026-06-05",
       "descricao": "Pix do mendigo",
-      "id": "PfZESpH"
+      "id": "PfZESpH",
+      "usuarioId": "1"
+    },
+    {
+      "tipo": "deposito",
+      "valor": 100,
+      "data": "2026-06-05",
+      "descricao": "Nova depósito",
+      "id": "-nbXeUb"
+    },
+    {
+      "tipo": "deposito",
+      "valor": 1,
+      "data": "2026-06-05",
+      "descricao": "aaa",
+      "id": "dGYOXqO"
+    },
+    {
+      "tipo": "deposito",
+      "valor": 1,
+      "usuarioId": "1",
+      "data": "2026-06-05",
+      "descricao": "Nova depósito",
+      "id": "rrAFrjK"
+    },
+    {
+      "tipo": "deposito",
+      "valor": 1,
+      "usuarioId": "UCjIEq9",
+      "data": "2026-06-05",
+      "descricao": "Nova depósito",
+      "id": "SU7iTeQ"
     }
   ]
 }

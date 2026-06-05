@@ -6,6 +6,15 @@ import { autenticar } from '@/app/services/usuarios';
 import type { UsuarioPublico } from '@/data/usuarios';
 
 const STORAGE_KEY = 'fincontrol:auth';
+const UID_COOKIE = 'fincontrol_uid';
+
+function setUidCookie(id: string) {
+  document.cookie = `${UID_COOKIE}=${encodeURIComponent(id)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+}
+
+function clearUidCookie() {
+  document.cookie = `${UID_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+}
 
 interface LoginResult {
   success: boolean;
@@ -30,7 +39,9 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
     try {
       const armazenado = localStorage.getItem(STORAGE_KEY);
       if (armazenado) {
-        setUsuario(JSON.parse(armazenado) as UsuarioPublico);
+        const restaurado = JSON.parse(armazenado) as UsuarioPublico;
+        setUsuario(restaurado);
+        setUidCookie(restaurado.id);
       }
     } catch (error) {
       console.error('Erro ao restaurar sessão:', error);
@@ -48,12 +59,14 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
 
     setUsuario(result.data);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(result.data));
+    setUidCookie(result.data.id);
     return { success: true };
   }, []);
 
   const logout = useCallback(() => {
     setUsuario(null);
     localStorage.removeItem(STORAGE_KEY);
+    clearUidCookie();
   }, []);
 
   const value = useMemo<AuthContextValue>(

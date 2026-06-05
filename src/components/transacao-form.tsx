@@ -12,6 +12,7 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { useAuth } from '@/contexts/auth-context';
 import { TIPOS_TRANSACAO, type Transacao } from '@/data/transacoes';
 
 const transacaoSchema = z.object({
@@ -31,6 +32,7 @@ interface TransacaoFormProps {
 
 export function TransacaoForm({ transacao, mode = 'create', onSuccess }: TransacaoFormProps) {
   const router = useRouter();
+  const { usuario } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -50,13 +52,21 @@ export function TransacaoForm({ transacao, mode = 'create', onSuccess }: Transac
   });
 
   async function onSubmit(data: TransacaoFormData) {
+    const usuarioId = mode === 'edit' && transacao ? transacao.usuarioId : usuario?.id;
+
+    if (!usuarioId) {
+      setError('Sessão expirada. Faça login novamente.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
+    const payload = { ...data, usuarioId };
     const result =
       mode === 'edit' && transacao
-        ? await updateTransacao(transacao.id, data)
-        : await createTransacao(data);
+        ? await updateTransacao(transacao.id, payload)
+        : await createTransacao(payload);
 
     setIsSubmitting(false);
 
