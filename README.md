@@ -15,11 +15,11 @@ Como o desafio pedia só o front-end, não tem back-end de verdade aqui. Os dado
 
 ## Stack
 
-- Next.js 16 (App Router) com React 19 e TypeScript
-- Tailwind CSS v4 pra estilização
-- json-server pra simular a API
-- Storybook 10 pra documentar os componentes
-- react-hook-form + Zod nos formulários
+O fin-control é um app Next.js 16 (App Router) com React 19 e TypeScript, onde as telas são majoritariamente Server Components e só o interativo (forms, modais, tabela) vira client. Os dados são mockados por um json-server lendo o `db.json`, os formulários usam react-hook-form + Zod, e a autenticação é fake (sessão no localStorage + cookie pra filtrar transações por usuário).
+
+No visual, é Tailwind v4 com tokens semânticos em CSS (facilita trocar a paleta), variantes via class-variance-authority, ícones do lucide-react e o design system documentado no Storybook 10.
+
+Para rodar, basta `npm install` e depois `npm run dev` — esse comando sobe o Next (em `http://localhost:3000`) e o json-server (em `http://localhost:3001`) ao mesmo tempo. Para ver o design system isolado, use `npm run storybook` (em `http://localhost:6006`).
 
 ## Como ele foi construído
 
@@ -51,10 +51,10 @@ O `AuthGuard` (`src/components/auth-guard.tsx`) fica no layout raiz e protege to
 
 Usuários de teste:
 
-| E-mail | Senha |
-|--------|-------|
-| `maria@fincontrol.com` | `123456` |
-| `joao@fincontrol.com` | `fincontrol` |
+| E-mail                 | Senha        |
+| ---------------------- | ------------ |
+| `maria@fincontrol.com` | `123456`     |
+| `joao@fincontrol.com`  | `fincontrol` |
 
 ### Tailwind na estilização
 
@@ -144,14 +144,14 @@ saldo = soma dos depósitos − soma de (transferências + saques + pagamentos)
 
 Como é json-server, os endpoints seguem o padrão REST em cima de `/transacoes`:
 
-| Método | Endpoint | O que faz |
-|--------|----------|-----------|
-| GET | `/transacoes` | lista tudo |
-| GET | `/transacoes/:id` | pega uma transação |
-| POST | `/transacoes` | cria |
-| PUT | `/transacoes/:id` | atualiza |
-| DELETE | `/transacoes/:id` | apaga |
-| GET | `/usuarios` | lista os usuários (usado no login) |
+| Método | Endpoint          | O que faz                          |
+| ------ | ----------------- | ---------------------------------- |
+| GET    | `/transacoes`     | lista tudo                         |
+| GET    | `/transacoes/:id` | pega uma transação                 |
+| POST   | `/transacoes`     | cria                               |
+| PUT    | `/transacoes/:id` | atualiza                           |
+| DELETE | `/transacoes/:id` | apaga                              |
+| GET    | `/usuarios`       | lista os usuários (usado no login) |
 
 A base é `http://localhost:3001`, e dá pra trocar pelo `NEXT_PUBLIC_API_URL`.
 
@@ -173,15 +173,15 @@ Uma sugestão de ordem pra gravar a demonstração:
 
 ## Scripts
 
-| Script | O que faz |
-|--------|-----------|
-| `npm run dev` | sobe Next + json-server |
-| `npm run dev:next` | só o Next |
-| `npm run dev:api` | só o json-server |
+| Script              | O que faz               |
+| ------------------- | ----------------------- |
+| `npm run dev`       | sobe Next + json-server |
+| `npm run dev:next`  | só o Next               |
+| `npm run dev:api`   | só o json-server        |
 | `npm run storybook` | Storybook na porta 6006 |
-| `npm run build` | build de produção |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier |
+| `npm run build`     | build de produção       |
+| `npm run lint`      | ESLint                  |
+| `npm run format`    | Prettier                |
 
 ## Licença
 

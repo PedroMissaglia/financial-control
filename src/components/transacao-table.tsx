@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { deleteTransacao } from '@/app/services/transacoes';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { isEntrada,TIPO_LABELS, type Transacao } from '@/data/transacoes';
+import { isEntrada, TIPO_LABELS, type Transacao } from '@/data/transacoes';
 import { cn, formatCurrency, formatDateShort } from '@/lib/utils';
 
 interface TransacaoTableProps {
@@ -89,12 +89,7 @@ export function TransacaoTable({ transacoes }: TransacaoTableProps) {
                     <Badge variant={entrada ? 'success' : 'secondary'}>{TIPO_LABELS[transacao.tipo]}</Badge>
                   </td>
                   <td className="text-muted-foreground px-4 py-3">{formatDateShort(transacao.data)}</td>
-                  <td
-                    className={cn(
-                      'px-4 py-3 font-semibold',
-                      entrada ? 'text-success' : 'text-destructive'
-                    )}
-                  >
+                  <td className={cn('px-4 py-3 font-semibold', entrada ? 'text-success' : 'text-destructive')}>
                     {entrada ? '+' : '-'}
                     {formatCurrency(transacao.valor)}
                   </td>

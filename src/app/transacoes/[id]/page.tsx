@@ -5,7 +5,7 @@ import { getTransacaoOrThrow } from '@/app/services/transacoes';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { isEntrada,TIPO_LABELS } from '@/data/transacoes';
+import { isEntrada, TIPO_LABELS } from '@/data/transacoes';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
 interface TransacaoDetalhePageProps {

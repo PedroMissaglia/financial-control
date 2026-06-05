@@ -11,7 +11,7 @@ export function SaldoCard({ saldo }: SaldoCardProps) {
   const isPositive = saldo >= 0;
 
   return (
-    <Card className="border-primary/20 from-white to-accent bg-gradient-to-br">
+    <Card className="border-primary/20 to-accent bg-gradient-to-br from-white">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
           <CardDescription>Saldo em conta</CardDescription>

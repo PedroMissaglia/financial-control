@@ -64,9 +64,7 @@ export function TransacaoForm({ transacao, mode = 'create', onSuccess }: Transac
 
     const payload = { ...data, usuarioId };
     const result =
-      mode === 'edit' && transacao
-        ? await updateTransacao(transacao.id, payload)
-        : await createTransacao(payload);
+      mode === 'edit' && transacao ? await updateTransacao(transacao.id, payload) : await createTransacao(payload);
 
     setIsSubmitting(false);
 

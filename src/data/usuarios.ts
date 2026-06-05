@@ -25,8 +25,6 @@ export function toUsuarioPublico(usuario: Usuario): UsuarioPublico {
 
 export function validarCredenciais(usuarios: Usuario[], email: string, senha: string): UsuarioPublico | undefined {
   const emailNormalizado = email.trim().toLowerCase();
-  const usuario = usuarios.find(
-    item => item.email.toLowerCase() === emailNormalizado && item.senha === senha
-  );
+  const usuario = usuarios.find(item => item.email.toLowerCase() === emailNormalizado && item.senha === senha);
   return usuario ? toUsuarioPublico(usuario) : undefined;
 }

@@ -65,64 +65,68 @@ export default function LoginPage() {
       <Header />
       <main id="main-content" className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-xl" aria-hidden="true">
-            <Wallet className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Fin Control</h1>
-            <p className="text-muted-foreground mt-1 text-sm">Entre para gerenciar suas finanças</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-xl border bg-white p-6 shadow-sm" noValidate>
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              placeholder="voce@exemplo.com"
-              {...register('email')}
-              aria-invalid={!!errors.email}
-            />
-            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
+          <div className="mb-8 flex flex-col items-center gap-3 text-center">
+            <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-xl" aria-hidden="true">
+              <Wallet className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Fin Control</h1>
+              <p className="text-muted-foreground mt-1 text-sm">Entre para gerenciar suas finanças</p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="senha">Senha</Label>
-            <Input
-              id="senha"
-              type="password"
-              autoComplete="current-password"
-              placeholder="••••••"
-              {...register('senha')}
-              aria-invalid={!!errors.senha}
-            />
-            {errors.senha && <p className="text-destructive text-sm">{errors.senha.message}</p>}
-          </div>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4 rounded-xl border bg-white p-6 shadow-sm"
+            noValidate
+          >
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="voce@exemplo.com"
+                {...register('email')}
+                aria-invalid={!!errors.email}
+              />
+              {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
+            </div>
 
-          {error && (
-            <p className="text-destructive text-sm" role="alert">
-              {error}
+            <div className="space-y-2">
+              <Label htmlFor="senha">Senha</Label>
+              <Input
+                id="senha"
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••"
+                {...register('senha')}
+                aria-invalid={!!errors.senha}
+              />
+              {errors.senha && <p className="text-destructive text-sm">{errors.senha.message}</p>}
+            </div>
+
+            {error && (
+              <p className="text-destructive text-sm" role="alert">
+                {error}
+              </p>
+            )}
+
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Entrando...' : 'Entrar'}
+            </Button>
+
+            <p className="text-muted-foreground text-center text-sm">
+              Não tem uma conta?{' '}
+              <button
+                type="button"
+                onClick={() => setIsCriarOpen(true)}
+                className="text-primary font-medium hover:underline focus:outline-none focus-visible:underline"
+              >
+                Criar conta
+              </button>
             </p>
-          )}
-
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Entrando...' : 'Entrar'}
-          </Button>
-
-          <p className="text-muted-foreground text-center text-sm">
-            Não tem uma conta?{' '}
-            <button
-              type="button"
-              onClick={() => setIsCriarOpen(true)}
-              className="text-primary font-medium hover:underline focus:outline-none focus-visible:underline"
-            >
-              Criar conta
-            </button>
-          </p>
-        </form>
+          </form>
         </div>
       </main>
       <Footer />

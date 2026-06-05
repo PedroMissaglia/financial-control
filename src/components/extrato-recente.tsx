@@ -27,9 +27,7 @@ export function ExtratoRecente({ transacoes }: ExtratoRecenteProps) {
         {transacoes.length === 0 ? (
           <p className="text-muted-foreground text-sm">Nenhuma transação registrada.</p>
         ) : (
-          transacoes.map(transacao => (
-            <TransacaoCard key={transacao.id} {...transacao} compact />
-          ))
+          transacoes.map(transacao => <TransacaoCard key={transacao.id} {...transacao} compact />)
         )}
       </CardContent>
     </Card>

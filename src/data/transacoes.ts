@@ -42,9 +42,7 @@ export function calcularSaldo(transacoes: Transacao[]): number {
 }
 
 export function getUltimasTransacoes(transacoes: Transacao[], limit = 5): Transacao[] {
-  return [...transacoes]
-    .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
-    .slice(0, limit);
+  return [...transacoes].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()).slice(0, limit);
 }
 
 export function getTransacaoPorId(transacoes: Transacao[], id: string): Transacao | undefined {
@@ -72,7 +70,14 @@ export function ordenarPorDataDesc(transacoes: Transacao[]): Transacao[] {
 export const seedTransacoes: Transacao[] = [
   { id: '1', usuarioId: '1', tipo: 'deposito', valor: 3500, data: '2026-06-01', descricao: 'Salário' },
   { id: '2', usuarioId: '1', tipo: 'pagamento', valor: 1200, data: '2026-06-02', descricao: 'Aluguel' },
-  { id: '3', usuarioId: '1', tipo: 'transferencia', valor: 350, data: '2026-06-03', descricao: 'Transferência para poupança' },
+  {
+    id: '3',
+    usuarioId: '1',
+    tipo: 'transferencia',
+    valor: 350,
+    data: '2026-06-03',
+    descricao: 'Transferência para poupança',
+  },
   { id: '4', usuarioId: '1', tipo: 'saque', valor: 200, data: '2026-06-03', descricao: 'Saque ATM' },
   { id: '5', usuarioId: '1', tipo: 'deposito', valor: 800, data: '2026-05-28', descricao: 'Freelance' },
   { id: '6', usuarioId: '1', tipo: 'pagamento', valor: 89.9, data: '2026-05-27', descricao: 'Internet' },
