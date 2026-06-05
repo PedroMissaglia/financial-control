@@ -1,0 +1,88 @@
+{
+  "usuarios": [
+    {
+      "id": "1",
+      "nome": "Pedro Missaglia",
+      "email": "pedromissaglia@gmail.com",
+      "senha": "123456"
+    },
+    {
+      "id": "2",
+      "nome": "John Doe",
+      "email": "John@fincontrol.com",
+      "senha": "fincontrol"
+    }
+  ],
+  "transacoes": [
+    {
+      "id": "1",
+      "tipo": "deposito",
+      "valor": 3500,
+      "data": "2026-06-01",
+      "descricao": "Salário"
+    },
+    {
+      "id": "2",
+      "tipo": "pagamento",
+      "valor": 1200,
+      "data": "2026-06-02",
+      "descricao": "Aluguel"
+    },
+    {
+      "id": "3",
+      "tipo": "transferencia",
+      "valor": 350,
+      "data": "2026-06-03",
+      "descricao": "Transferência para poupança"
+    },
+    {
+      "id": "4",
+      "tipo": "saque",
+      "valor": 200,
+      "data": "2026-06-03",
+      "descricao": "Saque ATM"
+    },
+    {
+      "id": "5",
+      "tipo": "deposito",
+      "valor": 800,
+      "data": "2026-05-28",
+      "descricao": "Freelance"
+    },
+    {
+      "id": "6",
+      "tipo": "pagamento",
+      "valor": 89.9,
+      "data": "2026-05-27",
+      "descricao": "Internet"
+    },
+    {
+      "id": "7",
+      "tipo": "pagamento",
+      "valor": 450,
+      "data": "2026-05-25",
+      "descricao": "Supermercado"
+    },
+    {
+      "id": "8",
+      "tipo": "transferencia",
+      "valor": 150,
+      "data": "2026-05-20",
+      "descricao": "Pix para João"
+    },
+    {
+      "tipo": "deposito",
+      "valor": 74.9,
+      "data": "2026-06-04",
+      "descricao": "Nova depósito",
+      "id": "dN2UAY3"
+    },
+    {
+      "tipo": "deposito",
+      "valor": 5,
+      "data": "2026-06-05",
+      "descricao": "Pix do mendigo",
+      "id": "PfZESpH"
+    }
+  ]
+}
