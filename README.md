@@ -17,9 +17,6 @@ Você vai precisar de:
 ```bash
 npm install
 
-# opcional, os valores padrão já funcionam
-cp .env.local.example .env.local
-
 # sobe o Next (porta 3000) e o json-server (porta 3001) juntos
 npm run dev
 ```
