@@ -37,6 +37,11 @@ E pra gerar o build de produção:
 npm run build
 npm start
 ```
+
+## Vídeo de apresentação
+
+O vídeo de apresentação se encontra na raíz do projeto, nomeado APRESENTACAO_FINCONTROL.mkv.
+
 ## Endpoints da API mockada
 
 Como é json-server, os endpoints seguem o padrão REST em cima de `/transacoes`:
