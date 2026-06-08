@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { deleteTransacao } from '@/app/services/transacoes';
+import { ConfirmarExclusaoModal } from '@/components/confirmar-exclusao-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { isEntrada, TIPO_LABELS, type Transacao } from '@/data/transacoes';
@@ -15,26 +16,33 @@ interface TransacaoTableProps {
   transacoes: Transacao[];
 }
 
-export function TransacaoTable({ transacoes }: TransacaoTableProps) {
+export function TransacaoTable({ transacoes }: Readonly<TransacaoTableProps>) {
   const router = useRouter();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [alvo, setAlvo] = useState<Transacao | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleDelete(id: string, descricao: string) {
-    const confirmed = window.confirm(`Deseja excluir a transação "${descricao}"?`);
-    if (!confirmed) return;
+  function handleClose() {
+    if (isDeleting) return;
+    setAlvo(null);
+    setError(null);
+  }
 
-    setDeletingId(id);
+  async function handleConfirm() {
+    if (!alvo) return;
+
+    setIsDeleting(true);
     setError(null);
 
-    const result = await deleteTransacao(id);
-    setDeletingId(null);
+    const result = await deleteTransacao(alvo.id);
+    setIsDeleting(false);
 
     if (!result.success) {
       setError(result.message ?? 'Erro ao excluir transação');
       return;
     }
 
+    setAlvo(null);
     router.refresh();
   }
 
@@ -51,12 +59,6 @@ export function TransacaoTable({ transacoes }: TransacaoTableProps) {
 
   return (
     <div className="space-y-4">
-      {error && (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
-      )}
-
       <div className="overflow-x-auto rounded-xl border bg-white shadow-sm">
         <table className="w-full min-w-[640px] text-left text-sm">
           <caption className="sr-only">Lista de transações financeiras</caption>
@@ -109,8 +111,8 @@ export function TransacaoTable({ transacoes }: TransacaoTableProps) {
                         variant="ghost"
                         size="icon"
                         aria-label={`Excluir ${transacao.descricao}`}
-                        disabled={deletingId === transacao.id}
-                        onClick={() => handleDelete(transacao.id, transacao.descricao)}
+                        disabled={isDeleting && alvo?.id === transacao.id}
+                        onClick={() => setAlvo(transacao)}
                       >
                         <Trash2 className="text-destructive h-4 w-4" />
                       </Button>
@@ -122,6 +124,15 @@ export function TransacaoTable({ transacoes }: TransacaoTableProps) {
           </tbody>
         </table>
       </div>
+
+      <ConfirmarExclusaoModal
+        open={!!alvo}
+        descricao={alvo?.descricao}
+        isDeleting={isDeleting}
+        error={error}
+        onConfirm={handleConfirm}
+        onClose={handleClose}
+      />
     </div>
   );
 }
