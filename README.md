@@ -4,6 +4,11 @@ O Fin Control é um app de gerenciamento financeiro da POSTECH (Tech Challenge F
 
 Os dados vêm da API Nest (`NEXT_PUBLIC_API_URL` no browser, `API_URL` no servidor). O Nest não mora neste repo: rode-o à parte na porta `3001`.
 
+Repositórios à parte:
+
+- [financial-control-api](https://github.com/PedroMissaglia/financial-control-api) — API Nest
+- [financial-control-storybook](https://github.com/PedroMissaglia/financial-control-storybook) — design system (Storybook)
+
 ## Antes de rodar
 
 - Node 20.19+ ou 22.12+
@@ -51,8 +56,6 @@ docker compose up --build
 
 ## Arquitetura
 
-Documentação técnica completa: [ARQUITETURA.md](ARQUITETURA.md).
-
 ```
 Next.js (host / Vercel)
   ├── Home SSR: carrega o remote React do dashboard
@@ -66,6 +69,23 @@ Angular 19 (mf-transacoes)
 React/Vite (mf-dashboard)
   ├── ./DashboardView — gráficos, saldo, extrato e transação rápida
   └── ./DashboardEditor — arrastar painéis e grupos do layout
+```
+
+```
+financial-control/
+├── src/                    # Host Next.js (App Router)
+│   ├── app/                # páginas, layouts, @modal, services
+│   ├── components/         # UI da casca + wrappers dos MFEs
+│   ├── data/               # tipos e regras de domínio
+│   ├── lib/                # API URL, federation, sessão, eventos
+│   ├── store/              # Redux (auth, dashboard)
+│   └── proxy.ts            # gate de cookie
+├── mf-transacoes/          # remote Angular (Native Federation)
+├── mf-dashboard/           # remote React/Vite (view + editor)
+├── shared/                 # temas CSS e contrato do dashboard
+├── docker-compose.yml      # só front (web + MFEs)
+├── Dockerfile              # host standalone
+└── STORYBOOK.md            # inventário do DS (repo apartado)
 ```
 
 Comunicação: cookie `fincontrol_uid` para o usuário; `CustomEvent` (`fincontrol:navigate`, `fincontrol:transacoes-changed`) entre host e remotes. Se o remote Angular não subir, a listagem React entra como fallback.
@@ -91,7 +111,7 @@ Se mudar `NEXT_PUBLIC_*` ou `VITE_API_URL` depois, faça **Redeploy**. No Nest, 
 
 ## API Nest
 
-Base local: `http://127.0.0.1:3001` (`NEXT_PUBLIC_API_URL` / `API_URL`). `npm run dev` não sobe a API.
+Repo: [financial-control-api](https://github.com/PedroMissaglia/financial-control-api). Base local: `http://127.0.0.1:3001` (`NEXT_PUBLIC_API_URL` / `API_URL`). `npm run dev` não sobe a API.
 
 | Método | Endpoint | O que faz |
 |--------|----------|-----------|
