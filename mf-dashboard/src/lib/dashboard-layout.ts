@@ -570,7 +570,15 @@ export function layoutPayloadFromSegments(segments: DashboardLayoutSegment[]): {
 }
 
 export function segmentsLayoutSignature(segments: DashboardLayoutSegment[]): string {
-  return JSON.stringify(segmentsToLayoutPersistence(segments));
+  return JSON.stringify({
+    ...segmentsToLayoutPersistence(segments),
+    widgets: flattenLayoutSegments(segments).map(widget => ({
+      id: widget.id,
+      visible: widget.visible,
+      cols: widget.cols,
+      colStart: widget.colStart,
+    })),
+  });
 }
 
 export function migrateLayoutFromWidgets(widgets: DashboardWidget[]): {
