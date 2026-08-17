@@ -2,8 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Wallet } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -13,6 +12,7 @@ import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { irParaDestinoPosLogin } from '@/lib/auth-redirect';
 import { useAuth } from '@/store/hooks';
 
 const loginSchema = z.object({
@@ -23,8 +23,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login, isAuthenticated, loading } = useAuth();
+  const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCriarOpen, setIsCriarOpen] = useState(false);
@@ -39,12 +38,6 @@ export default function LoginPage() {
     defaultValues: { email: '', senha: '' },
   });
 
-  useEffect(() => {
-    if (!loading && isAuthenticated) {
-      router.replace('/');
-    }
-  }, [loading, isAuthenticated, router]);
-
   async function onSubmit(data: LoginFormData) {
     setIsSubmitting(true);
     setError(null);
@@ -58,7 +51,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.replace('/');
+    irParaDestinoPosLogin();
   }
 
   return (

@@ -2,7 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -11,6 +10,7 @@ import { criarUsuario } from '@/app/services/usuarios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { irParaDestinoPosLogin } from '@/lib/auth-redirect';
 import { useAuth } from '@/store/hooks';
 
 const criarUsuarioSchema = z.object({
@@ -27,7 +27,6 @@ interface CriarUsuarioModalProps {
 }
 
 export function CriarUsuarioModal({ open, onClose }: Readonly<CriarUsuarioModalProps>) {
-  const router = useRouter();
   const { login } = useAuth();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +78,7 @@ export function CriarUsuarioModal({ open, onClose }: Readonly<CriarUsuarioModalP
     }
 
     onClose();
-    router.replace('/');
+    irParaDestinoPosLogin();
   }
 
   return (
