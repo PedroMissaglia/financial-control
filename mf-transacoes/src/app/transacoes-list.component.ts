@@ -72,7 +72,7 @@ function normalizarPageSize(value: unknown): number {
   styleUrl: './transacoes-list.component.css',
 })
 export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
-  @Input() apiUrl = 'http://localhost:3001';
+  @Input() apiUrl = 'http://127.0.0.1:3001';
   @Input() usuarioId = '';
   @Input() accessToken = '';
   @Input() filtros: TransacoesFiltros = FILTROS_VAZIOS;

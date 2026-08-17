@@ -20,7 +20,7 @@ import { TransacoesListComponent } from './transacoes-list.component';
   `,
 })
 export class AppComponent {
-  apiUrl = 'http://localhost:3001';
+  apiUrl = 'http://127.0.0.1:3001';
   usuarioId = readCookie('fincontrol_uid') ?? '1';
   accessToken = readStoredAccessToken() ?? '';
 }

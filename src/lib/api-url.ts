@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = 'http://localhost:3001';
+const DEFAULT_API_URL = 'http://127.0.0.1:3001';
 const API_URL_LOG = '[fincontrol:api-url]';
 
 let lastHostApiUrlLog: string | undefined;

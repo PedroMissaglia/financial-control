@@ -109,7 +109,7 @@ export function TransacoesMicrofrontend() {
           if (!host) throw new Error('O container do microfrontend ainda não está no DOM');
 
           const maybeUnmount = await remote.mount(host, {
-            apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001',
+            apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3001',
             usuarioId: getUsuarioIdFromCookie(),
             accessToken: readStoredSession()?.accessToken ?? undefined,
             filtros,

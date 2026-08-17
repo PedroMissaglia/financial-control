@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -n mf-tx,mf-dash,host \"npm run dev:mf-transacoes\" \"npm run dev:mf-dashboard\" \"npm run dev:next\"",
+    "kill:front": "node scripts/kill-front-ports.mjs",
     "dev:api-mock": "concurrently -n api,mf-tx,mf-dash,host \"npm run dev:api\" \"npm run dev:mf-transacoes\" \"npm run dev:mf-dashboard\" \"npm run dev:host\"",
     "dev:host": "node scripts/wait-for-remotes.mjs && npm run dev:next",
     "dev:next": "next dev",
