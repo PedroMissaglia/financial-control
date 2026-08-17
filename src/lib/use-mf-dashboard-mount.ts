@@ -15,6 +15,7 @@ interface DashboardLayoutSlice {
   metaEconomia: unknown;
   alertaGastos: unknown;
   extratoLimite: unknown;
+  apiUrl?: unknown;
 }
 
 function layoutSignature(props: DashboardLayoutSlice) {
@@ -25,6 +26,7 @@ function layoutSignature(props: DashboardLayoutSlice) {
     metaEconomia: props.metaEconomia,
     alertaGastos: props.alertaGastos,
     extratoLimite: props.extratoLimite,
+    apiUrl: props.apiUrl,
   });
 }
 

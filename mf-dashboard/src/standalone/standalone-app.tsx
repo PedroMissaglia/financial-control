@@ -1,4 +1,5 @@
 import { DashboardViewApp } from '@/apps/dashboard-view-app';
+import { resolveDashboardApiUrl } from '@/lib/api-url';
 import { useStandaloneTransacoes } from '@/standalone/use-standalone-transacoes';
 import { createDefaultDashboardLayout } from '../../../shared/dashboard-default-layout';
 
@@ -22,6 +23,7 @@ export function StandaloneApp() {
           metaEconomia={DEFAULT_META_ECONOMIA}
           alertaGastos={DEFAULT_ALERTA_GASTOS}
           extratoLimite={DEFAULT_EXTRATO_LIMITE}
+          apiUrl={resolveDashboardApiUrl()}
         />
       </main>
     </div>

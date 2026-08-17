@@ -50,6 +50,7 @@ export interface DashboardMfBaseProps {
   metaEconomia: number;
   alertaGastos: number;
   extratoLimite: number;
+  apiUrl: string;
 }
 
 export type DashboardViewProps = DashboardMfBaseProps;

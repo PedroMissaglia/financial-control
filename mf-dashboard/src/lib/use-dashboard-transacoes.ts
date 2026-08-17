@@ -1,15 +1,11 @@
 import { useEffect, useState } from 'react';
 
 import { type Transacao } from '@/data/transacoes';
+import { resolveDashboardApiUrl } from '@/lib/api-url';
 import { authHeaders } from '@/lib/auth-token';
 import { parseTransacoesItems } from '@/lib/transacoes-page';
 
 const MF_TRANSACOES_CHANGED = 'fincontrol:transacoes-changed';
-const DEFAULT_API_URL = 'http://localhost:3001';
-
-function getApiUrl(): string {
-  return import.meta.env.VITE_API_URL ?? DEFAULT_API_URL;
-}
 
 function getUsuarioIdFromCookie(): string | undefined {
   if (typeof document === 'undefined') return undefined;
@@ -24,8 +20,8 @@ function transacoesSignature(items: Transacao[] | undefined) {
     .join('|');
 }
 
-async function fetchTransacoesDoUsuario(usuarioId: string): Promise<Transacao[] | null> {
-  const response = await fetch(`${getApiUrl()}/transacoes?usuarioId=${encodeURIComponent(usuarioId)}`, {
+async function fetchTransacoesDoUsuario(usuarioId: string, apiUrl: string): Promise<Transacao[] | null> {
+  const response = await fetch(`${apiUrl}/transacoes?usuarioId=${encodeURIComponent(usuarioId)}`, {
     cache: 'no-store',
     headers: authHeaders(),
   });
@@ -36,7 +32,8 @@ async function fetchTransacoesDoUsuario(usuarioId: string): Promise<Transacao[] 
 
 const EMPTY_TRANSACOES: Transacao[] = [];
 
-export function useDashboardTransacoes(initial: Transacao[] = []) {
+export function useDashboardTransacoes(initial: Transacao[] = [], apiUrl?: string) {
+  const resolvedApiUrl = resolveDashboardApiUrl(apiUrl);
   const safeInitial = Array.isArray(initial) ? initial : EMPTY_TRANSACOES;
   const [transacoes, setTransacoes] = useState<Transacao[]>(safeInitial);
 
@@ -58,7 +55,7 @@ export function useDashboardTransacoes(initial: Transacao[] = []) {
       if (!usuarioId) return;
 
       try {
-        const data = await fetchTransacoesDoUsuario(usuarioId);
+        const data = await fetchTransacoesDoUsuario(usuarioId, resolvedApiUrl);
         if (!data) return;
         const nextSignature = transacoesSignature(data);
         setTransacoes(prev => (transacoesSignature(prev) === nextSignature ? prev : data));
@@ -70,7 +67,7 @@ export function useDashboardTransacoes(initial: Transacao[] = []) {
     void refresh();
     window.addEventListener(MF_TRANSACOES_CHANGED, refresh);
     return () => window.removeEventListener(MF_TRANSACOES_CHANGED, refresh);
-  }, []);
+  }, [resolvedApiUrl]);
 
   return transacoes;
 }

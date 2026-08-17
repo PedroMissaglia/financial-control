@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import { agoraLocal, sugerirCategoria, TIPOS_TRANSACAO } from '@/data/transacoes';
+import { resolveDashboardApiUrl } from '@/lib/api-url';
 import { authHeaders } from '@/lib/auth-token';
 
 const MF_NAVIGATE = 'fincontrol:navigate';
@@ -16,7 +17,7 @@ function getUsuarioIdFromCookie(): string | undefined {
   return match ? decodeURIComponent(match[1]) : undefined;
 }
 
-export function NovaTransacaoRapida() {
+export function NovaTransacaoRapida({ apiUrl }: Readonly<{ apiUrl?: string }>) {
   const [tipo, setTipo] = useState<'deposito' | 'transferencia' | 'saque' | 'pagamento'>('deposito');
   const [valor, setValor] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -37,12 +38,12 @@ export function NovaTransacaoRapida() {
     setIsSubmitting(true);
     setError(null);
 
-    const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+    const resolvedApiUrl = resolveDashboardApiUrl(apiUrl);
     const descricao = `Nova ${TIPOS_TRANSACAO.find(item => item.value === tipo)?.label.toLowerCase()}`;
     const { data, hora } = agoraLocal();
 
     try {
-      const response = await fetch(`${apiUrl}/transacoes`, {
+      const response = await fetch(`${resolvedApiUrl}/transacoes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
