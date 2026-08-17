@@ -16,7 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Fin Control — Controle Financeiro',
+  title: 'Fin Control',
   description: 'Gerencie suas transações financeiras de forma simples e organizada',
 };
 
