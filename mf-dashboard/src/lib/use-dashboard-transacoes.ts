@@ -22,15 +22,9 @@ function transacoesSignature(items: Transacao[] | undefined) {
 
 async function fetchTransacoesDoUsuario(usuarioId: string, apiUrl: string): Promise<Transacao[] | null> {
   const url = `${apiUrl}/transacoes?usuarioId=${encodeURIComponent(usuarioId)}`;
-  console.info('[fincontrol:api-url]', 'mf-dashboard GET transacoes', { apiUrl, usuarioId, url });
   const response = await fetch(url, {
     cache: 'no-store',
     headers: authHeaders(),
-  });
-  console.info('[fincontrol:api-url]', 'mf-dashboard GET transacoes response', {
-    url,
-    ok: response.ok,
-    status: response.status,
   });
   if (!response.ok) return null;
   const json: unknown = await response.json();
@@ -60,10 +54,6 @@ export function useDashboardTransacoes(initial: Transacao[] = [], apiUrl?: strin
     async function refresh() {
       const usuarioId = getUsuarioIdFromCookie();
       if (!usuarioId) {
-        console.info('[fincontrol:api-url]', 'mf-dashboard GET transacoes skipped', {
-          reason: 'sem fincontrol_uid',
-          apiUrl: resolvedApiUrl,
-        });
         return;
       }
 

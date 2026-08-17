@@ -25,12 +25,6 @@ Abra [http://localhost:3000](http://localhost:3000).
 
 Login de exemplo: `pedromissaglia@gmail.com` / `123456`.
 
-Storybook do design system:
-
-```bash
-npm run storybook
-```
-
 ## Variáveis de ambiente
 
 Copie `.env.example` para `.env.local` se quiser alterar os padrões:

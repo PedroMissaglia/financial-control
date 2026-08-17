@@ -15,9 +15,7 @@
     "build:mfes": "concurrently -n mf-tx,mf-dash \"npm run build:mf-transacoes\" \"npm run build:mf-dashboard\"",
     "start": "next start",
     "lint": "eslint",
-    "format": "prettier --write .",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -35,38 +33,18 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^5.2.1",
     "@eslint/eslintrc": "^3.3.5",
-    "@storybook/addon-a11y": "^10.4.2",
-    "@storybook/addon-docs": "^10.4.2",
-    "@storybook/addon-onboarding": "^10.4.2",
-    "@storybook/addon-vitest": "^10.4.2",
-    "@storybook/nextjs": "^10.4.2",
-    "@storybook/nextjs-vite": "^10.4.2",
-    "@storybook/react": "^10.4.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitest/browser-playwright": "^4.1.8",
-    "@vitest/coverage-v8": "^4.1.8",
     "concurrently": "^10.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "eslint-plugin-simple-import-sort": "^13.0.0",
-    "eslint-plugin-storybook": "^10.4.2",
-    "playwright": "^1.60.0",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
-    "storybook": "^10.4.2",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "vite": "^8.0.16",
-    "vitest": "^4.1.8"
-  },
-  "eslintConfig": {
-    "extends": [
-      "plugin:storybook/recommended"
-    ]
+    "typescript": "^5"
   }
 }

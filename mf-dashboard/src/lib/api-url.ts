@@ -1,5 +1,4 @@
 const DEFAULT_API_URL = 'http://localhost:3001';
-const API_URL_LOG = '[fincontrol:api-url]';
 
 function stripTrailingSlash(url: string) {
   return url.replace(/\/$/, '');
@@ -49,18 +48,5 @@ export function resolveDashboardApiUrl(apiUrl?: string) {
   });
 
   const chosen = inspected.find(item => 'url' in item && item.url && !('skipped' in item));
-  const result = chosen && 'url' in chosen && chosen.url ? chosen.url : DEFAULT_API_URL;
-  const source = chosen && 'url' in chosen && chosen.url ? chosen.source : 'default';
-
-  if (typeof window !== 'undefined') {
-    console.info(API_URL_LOG, 'mf-dashboard resolve', {
-      page: window.location.origin,
-      isLocalPage: isLocalPage(),
-      result,
-      source,
-      candidates: inspected,
-    });
-  }
-
-  return result;
+  return chosen && 'url' in chosen && chosen.url ? chosen.url : DEFAULT_API_URL;
 }

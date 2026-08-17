@@ -37,7 +37,7 @@ export default function RootLayout({
     <html lang="pt-BR" data-fin-theme="cyan">
       <body className={`${inter.variable} flex min-h-screen flex-col font-sans antialiased`}>
         <Script id="fincontrol-api-url" strategy="beforeInteractive">
-          {`window.__FINCONTROL_API_URL__=${JSON.stringify(runtimeApiUrl)};console.info(${JSON.stringify('[fincontrol:api-url]')},'host injected',window.__FINCONTROL_API_URL__,window.location.origin);`}
+          {`window.__FINCONTROL_API_URL__=${JSON.stringify(runtimeApiUrl)};`}
         </Script>
         <Script id="esms-options" strategy="beforeInteractive">
           {`window.esmsInitOptions = { shimMode: true };`}

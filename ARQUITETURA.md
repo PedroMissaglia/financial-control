@@ -17,7 +17,6 @@ Este texto descreve o código como está, não o desenho ideal. Limites acadêmi
 | Estado do host | Redux Toolkit | — |
 | Validação de formulários | Zod 4 + react-hook-form | — |
 | Estilo | Tailwind CSS 4, CVA, tokens CSS compartilhados | — |
-| Design system | Storybook 10 (`@storybook/nextjs-vite`) | `6006` |
 
 `npm run dev` sobe só os remotes e o Next; o Nest **não** sobe neste comando. `dev:host` espera `remoteEntry.json` dos MFEs (`scripts/wait-for-remotes.mjs`, timeout 3 min):
 
@@ -109,7 +108,7 @@ financial-control/
 │   └── dashboard-default-layout.ts # Layout padrão compartilhado
 ├── docker-compose.yml            # Só front (web + MFEs); Nest no host
 ├── Dockerfile                    # Host standalone
-└── .storybook/
+└── STORYBOOK.md                  # Handoff do DS (repo apartado)
 ```
 
 Alias TypeScript do host: `@/*` → `./src/*` (`tsconfig.json`). O remote Angular é excluído do `tsconfig` do host.
@@ -477,11 +476,11 @@ Tailwind v4 entra por `@import 'tailwindcss'` em [`src/app/globals.css`](src/app
 
 Temas ([`src/data/app-themes.ts`](src/data/app-themes.ts)): `teal` (default), `blue`, `emerald`, `slate`, `amber`, `dark`.
 
-### 9.3 Storybook e testes
+### 9.3 Design system e testes
 
-[`.storybook/main.ts`](.storybook/main.ts): framework `@storybook/nextjs-vite`, addons a11y/docs/vitest/chromatic. Stories colocalizadas (`button.stories.tsx`, `transacao-card.stories.tsx`) e demos em `src/stories/`. `npm run storybook` na porta 6006.
+O Storybook **não** vive neste repositório. Inventário e prioridade de stories: [STORYBOOK.md](STORYBOOK.md).
 
-Não há suíte de testes unitários no host: não existem `vitest.config.*` nem arquivos `*.test.*` / `*.spec.*` em `src/`. Vitest e Playwright entram só via addon do Storybook (QA visual/a11y). Lint: [`eslint.config.mjs`](eslint.config.mjs) (Next core-web-vitals + import sort + Storybook). Format: Prettier + plugin Tailwind.
+Não há suíte de testes unitários no host: não existem `vitest.config.*` nem arquivos `*.test.*` / `*.spec.*` em `src/`. Lint: [`eslint.config.mjs`](eslint.config.mjs) (Next core-web-vitals + import sort). Format: Prettier + plugin Tailwind.
 
 No remote, `ng test` (Karma/Jasmine) existe no `package.json`, mas os schematics usam `skipTests: true` — não há specs gerados.
 
@@ -518,7 +517,7 @@ O container `web` usa `API_URL=http://host.docker.internal:3001` (Nest na máqui
 8. **Profile save silencioso** — falha de PUT/POST não chega na UI.
 9. **Remote é client-only** — SEO/SSR do dashboard/listagem não inclui o Angular; o HTML inicial traz só o fallback potencial.
 10. **`NEXT_PUBLIC_*` no build** — trocar URL de API/MF em runtime Docker exige rebuild do host.
-11. **Sem testes automatizados de aplicação** — a superfície de QA é Storybook (host) e um `ng test` sem specs (remote).
+11. **Sem testes automatizados de aplicação** — o host não tem suíte; o remote tem `ng test` sem specs.
 
 ### 10.3 Fronteira host vs remote (resumo)
 

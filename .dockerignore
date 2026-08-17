@@ -4,7 +4,4 @@ node_modules
 mf-transacoes
 *.md
 coverage
-storybook-static
-.storybook
-src/stories
 

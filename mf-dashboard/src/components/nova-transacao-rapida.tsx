@@ -39,10 +39,6 @@ export function NovaTransacaoRapida({ apiUrl }: Readonly<{ apiUrl?: string }>) {
     setError(null);
 
     const resolvedApiUrl = resolveDashboardApiUrl(apiUrl);
-    console.info('[fincontrol:api-url]', 'mf-dashboard POST transacoes', {
-      apiUrl: resolvedApiUrl,
-      url: `${resolvedApiUrl}/transacoes`,
-    });
     const descricao = `Nova ${TIPOS_TRANSACAO.find(item => item.value === tipo)?.label.toLowerCase()}`;
     const { data, hora } = agoraLocal();
 
