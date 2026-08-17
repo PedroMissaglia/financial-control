@@ -1,0 +1,47 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - '3001:3001'
+    volumes:
+      - ./db.json:/app/db.json
+
+  mf-transacoes:
+    build:
+      context: ./mf-transacoes
+      dockerfile: Dockerfile
+      additional_contexts:
+        shared: ./shared
+    ports:
+      - '4200:80'
+
+  mf-dashboard:
+    build:
+      context: ./mf-dashboard
+      dockerfile: Dockerfile
+      additional_contexts:
+        shared: ./shared
+    ports:
+      - '4300:80'
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3001
+        NEXT_PUBLIC_MF_TRANSACOES_URL: http://localhost:4200
+        NEXT_PUBLIC_MF_DASHBOARD_URL: http://localhost:4300
+    ports:
+      - '3000:3000'
+    environment:
+      API_URL: http://api:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_MF_TRANSACOES_URL: http://localhost:4200
+      NEXT_PUBLIC_MF_DASHBOARD_URL: http://localhost:4300
+    depends_on:
+      - api
+      - mf-transacoes
+      - mf-dashboard

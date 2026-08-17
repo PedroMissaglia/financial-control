@@ -46,7 +46,7 @@ export function ConfirmarExclusaoModal({
     >
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
-      <div className="fixed top-[50%] left-[50%] z-50 w-full max-w-sm translate-x-[-50%] translate-y-[-50%] rounded-xl border bg-white p-6 shadow-2xl">
+      <div className="fixed top-[50%] left-[50%] z-50 w-[calc(100%-1rem)] max-h-[min(92dvh,calc(100dvh-1rem))] max-w-sm translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-xl border bg-card p-4 shadow-2xl sm:w-[calc(100%-2rem)] sm:p-6">
         <button
           type="button"
           onClick={onClose}
@@ -56,11 +56,12 @@ export function ConfirmarExclusaoModal({
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
 
-        <h2 id="excluir-transacao-title" className="text-xl font-bold text-gray-900">
+        <h2 id="excluir-transacao-title" className="fc-panel-title text-xl">
           Excluir transação
         </h2>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Tem certeza que deseja excluir {descricao ? <span className="font-medium">&quot;{descricao}&quot;</span> : 'esta transação'}? Essa ação não pode ser desfeita.
+        <p className="text-muted-foreground mt-3 text-sm">
+          Tem certeza que deseja excluir{' '}
+          {descricao ? <span className="text-foreground font-medium">&quot;{descricao}&quot;</span> : 'esta transação'}?
         </p>
 
         {error && (
@@ -69,7 +70,7 @@ export function ConfirmarExclusaoModal({
           </p>
         )}
 
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={onClose} disabled={isDeleting}>
             Cancelar
           </Button>

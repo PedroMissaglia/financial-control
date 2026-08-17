@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
-import { getTransacaoOrThrow } from '@/app/services/transacoes';
+import { fetchTransacaoById } from '@/app/services/transacoes';
+import { ApiUnavailableCard } from '@/components/api-unavailable-card';
 import { TransacaoForm } from '@/components/transacao-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -8,15 +9,15 @@ interface EditarTransacaoPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function EditarTransacaoPage({ params }: EditarTransacaoPageProps) {
+export default async function EditarTransacaoPage({ params }: Readonly<EditarTransacaoPageProps>) {
   const { id } = await params;
 
-  let transacao;
-  try {
-    transacao = await getTransacaoOrThrow(id);
-  } catch {
-    notFound();
+  const result = await fetchTransacaoById(id);
+  if (result.status === 404) notFound();
+  if (!result.success || !result.data) {
+    return <ApiUnavailableCard />;
   }
+  const transacao = result.data;
 
   return (
     <div className="mx-auto max-w-xl">

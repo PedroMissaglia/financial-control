@@ -1,12 +1,34 @@
 export type TipoTransacao = 'deposito' | 'transferencia' | 'saque' | 'pagamento';
 
+export type CategoriaTransacao =
+  | 'salario'
+  | 'freelance'
+  | 'moradia'
+  | 'alimentacao'
+  | 'transporte'
+  | 'saude'
+  | 'educacao'
+  | 'lazer'
+  | 'servicos'
+  | 'transferencias'
+  | 'outros';
+
+export interface TransacaoAnexo {
+  nome: string;
+  mimeType: string;
+  dataUrl: string;
+}
+
 export interface Transacao {
   id: string;
   usuarioId: string;
   tipo: TipoTransacao;
   valor: number;
   data: string;
+  hora: string;
   descricao: string;
+  categoria: CategoriaTransacao;
+  anexo?: TransacaoAnexo | null;
 }
 
 export interface NovaTransacao {
@@ -14,7 +36,23 @@ export interface NovaTransacao {
   tipo: TipoTransacao;
   valor: number;
   data: string;
+  hora: string;
   descricao: string;
+  categoria: CategoriaTransacao;
+  anexo?: TransacaoAnexo | null;
+}
+
+export function agoraLocal() {
+  const n = new Date();
+  const pad = (v: number) => String(v).padStart(2, '0');
+  return {
+    data: `${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())}`,
+    hora: `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`,
+  };
+}
+
+function horaDe(item: Transacao): string {
+  return item.hora || '00:00:00';
 }
 
 export const TIPOS_TRANSACAO: { value: TipoTransacao; label: string }[] = [
@@ -31,6 +69,56 @@ export const TIPO_LABELS: Record<TipoTransacao, string> = {
   pagamento: 'Pagamento',
 };
 
+export const CATEGORIAS_TRANSACAO: { value: CategoriaTransacao; label: string }[] = [
+  { value: 'salario', label: 'Salário' },
+  { value: 'freelance', label: 'Freelance' },
+  { value: 'moradia', label: 'Moradia' },
+  { value: 'alimentacao', label: 'Alimentação' },
+  { value: 'transporte', label: 'Transporte' },
+  { value: 'saude', label: 'Saúde' },
+  { value: 'educacao', label: 'Educação' },
+  { value: 'lazer', label: 'Lazer' },
+  { value: 'servicos', label: 'Serviços' },
+  { value: 'transferencias', label: 'Transferências' },
+  { value: 'outros', label: 'Outros' },
+];
+
+export const CATEGORIA_LABELS: Record<CategoriaTransacao, string> = {
+  salario: 'Salário',
+  freelance: 'Freelance',
+  moradia: 'Moradia',
+  alimentacao: 'Alimentação',
+  transporte: 'Transporte',
+  saude: 'Saúde',
+  educacao: 'Educação',
+  lazer: 'Lazer',
+  servicos: 'Serviços',
+  transferencias: 'Transferências',
+  outros: 'Outros',
+};
+
+const CATEGORIA_KEYWORDS: { pattern: RegExp; categoria: CategoriaTransacao }[] = [
+  { pattern: /sal[aá]rio|pagamento mensal|folha/i, categoria: 'salario' },
+  { pattern: /freelance|freela|projeto|consultoria/i, categoria: 'freelance' },
+  { pattern: /aluguel|condom[ií]nio|iptu|moradia|financiamento/i, categoria: 'moradia' },
+  { pattern: /super(mercado)?|ifood|mercado|padaria|restaurante|almo[cç]o|jantar/i, categoria: 'alimentacao' },
+  { pattern: /uber|99|gasolina|combust[ií]vel|estacionamento|metro|ônibus|onibus|passagem/i, categoria: 'transporte' },
+  { pattern: /farm[aá]cia|plano de sa[uú]de|consulta|m[eé]dico|dentista/i, categoria: 'saude' },
+  { pattern: /curso|faculdade|mensalidade|livro|escola/i, categoria: 'educacao' },
+  { pattern: /cinema|netflix|spotify|viagem|show|lazer/i, categoria: 'lazer' },
+  { pattern: /internet|luz|energia|água|agua|telefone|celular|assinatura/i, categoria: 'servicos' },
+  { pattern: /pix|ted|transfer[eê]ncia|poupan[cç]a/i, categoria: 'transferencias' },
+  { pattern: /saque|atm|caixa/i, categoria: 'outros' },
+];
+
+export function sugerirCategoria(descricao: string): CategoriaTransacao | null {
+  const texto = descricao.trim();
+  if (!texto) return null;
+
+  const match = CATEGORIA_KEYWORDS.find(item => item.pattern.test(texto));
+  return match?.categoria ?? null;
+}
+
 export function isEntrada(tipo: TipoTransacao): boolean {
   return tipo === 'deposito';
 }
@@ -41,46 +129,19 @@ export function calcularSaldo(transacoes: Transacao[]): number {
   }, 0);
 }
 
-export function getUltimasTransacoes(transacoes: Transacao[], limit = 5): Transacao[] {
-  return [...transacoes].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()).slice(0, limit);
-}
-
-export function getTransacaoPorId(transacoes: Transacao[], id: string): Transacao | undefined {
-  return transacoes.find(transacao => transacao.id === id);
-}
-
-export function filtrarPorTipo(transacoes: Transacao[], tipo: TipoTransacao): Transacao[] {
-  return transacoes.filter(transacao => transacao.tipo === tipo);
-}
-
-export function filtrarPorPeriodo(transacoes: Transacao[], inicio: string, fim: string): Transacao[] {
-  const inicioDate = new Date(`${inicio}T00:00:00`);
-  const fimDate = new Date(`${fim}T23:59:59`);
-
-  return transacoes.filter(transacao => {
-    const data = new Date(`${transacao.data}T12:00:00`);
-    return data >= inicioDate && data <= fimDate;
+export function ordenarPorDataDesc(transacoes: Transacao[]): Transacao[] {
+  return [...transacoes].sort((a, b) => {
+    const byData = b.data.localeCompare(a.data);
+    if (byData !== 0) return byData;
+    return horaDe(b).localeCompare(horaDe(a));
   });
 }
 
-export function ordenarPorDataDesc(transacoes: Transacao[]): Transacao[] {
-  return [...transacoes].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+export function normalizarTransacao(transacao: Transacao): Transacao {
+  return {
+    ...transacao,
+    hora: transacao.hora || '00:00:00',
+    categoria: transacao.categoria ?? sugerirCategoria(transacao.descricao) ?? 'outros',
+    anexo: transacao.anexo ?? null,
+  };
 }
-
-export const seedTransacoes: Transacao[] = [
-  { id: '1', usuarioId: '1', tipo: 'deposito', valor: 3500, data: '2026-06-01', descricao: 'Salário' },
-  { id: '2', usuarioId: '1', tipo: 'pagamento', valor: 1200, data: '2026-06-02', descricao: 'Aluguel' },
-  {
-    id: '3',
-    usuarioId: '1',
-    tipo: 'transferencia',
-    valor: 350,
-    data: '2026-06-03',
-    descricao: 'Transferência para poupança',
-  },
-  { id: '4', usuarioId: '1', tipo: 'saque', valor: 200, data: '2026-06-03', descricao: 'Saque ATM' },
-  { id: '5', usuarioId: '1', tipo: 'deposito', valor: 800, data: '2026-05-28', descricao: 'Freelance' },
-  { id: '6', usuarioId: '1', tipo: 'pagamento', valor: 89.9, data: '2026-05-27', descricao: 'Internet' },
-  { id: '7', usuarioId: '1', tipo: 'pagamento', valor: 450, data: '2026-05-25', descricao: 'Supermercado' },
-  { id: '8', usuarioId: '1', tipo: 'transferencia', valor: 150, data: '2026-05-20', descricao: 'Pix para João' },
-];

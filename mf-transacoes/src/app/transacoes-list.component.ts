@@ -1,0 +1,274 @@
+import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
+import { MatPaginator, MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+
+import {
+  CATEGORIA_LABELS,
+  formatCurrency,
+  formatDateShort,
+  isEntrada,
+  TIPO_LABELS,
+  Transacao,
+} from './models';
+import { createPtBrPaginatorIntl } from './paginator-intl.pt-br';
+import { TransacoesService } from './transacoes.service';
+
+export interface TransacoesFiltros {
+  busca: string;
+  tipo: string;
+  categoria: string;
+  dataInicio: string;
+  dataFim: string;
+  valorMin: number | null;
+  valorMax: number | null;
+}
+
+export const FILTROS_VAZIOS: TransacoesFiltros = {
+  busca: '',
+  tipo: '',
+  categoria: '',
+  dataInicio: '',
+  dataFim: '',
+  valorMin: null,
+  valorMax: null,
+};
+
+const PAGE_SIZE_OPTIONS = [5, 8, 10, 20] as const;
+const DEFAULT_PAGE_SIZE = 8;
+const FILTROS_DEBOUNCE_MS = 300;
+
+function normalizarPageSize(value: unknown): number {
+  return PAGE_SIZE_OPTIONS.includes(value as (typeof PAGE_SIZE_OPTIONS)[number])
+    ? (value as number)
+    : DEFAULT_PAGE_SIZE;
+}
+
+@Component({
+  selector: 'mf-transacoes-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatChipsModule,
+    MatIconModule,
+    MatPaginatorModule,
+    MatTableModule,
+  ],
+  providers: [{ provide: MatPaginatorIntl, useFactory: createPtBrPaginatorIntl }],
+  templateUrl: './transacoes-list.component.html',
+  styleUrl: './transacoes-list.component.css',
+})
+export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
+  @Input() apiUrl = 'http://localhost:3001';
+  @Input() usuarioId = '';
+  @Input() accessToken = '';
+  @Input() filtros: TransacoesFiltros = FILTROS_VAZIOS;
+  @Input() pageSize = DEFAULT_PAGE_SIZE;
+
+  pageSizeAtivo = DEFAULT_PAGE_SIZE;
+  page = 1;
+  total = 0;
+  totalUnfiltered = 0;
+
+  @ViewChild(MatPaginator)
+  set paginatorRef(paginator: MatPaginator | undefined) {
+    if (!paginator || this.paginator === paginator) return;
+    this.paginator = paginator;
+    paginator.pageSize = this.pageSizeAtivo;
+    paginator.pageIndex = Math.max(0, this.page - 1);
+    paginator.length = this.total;
+    this.cdr.markForCheck();
+  }
+
+  private paginator?: MatPaginator;
+  private filtrosTimer?: ReturnType<typeof setTimeout>;
+  private loadSeq = 0;
+
+  readonly displayedColumns = ['descricao', 'tipo', 'categoria', 'data', 'valor', 'acoes'] as const;
+  readonly pageSizeOptions = [...PAGE_SIZE_OPTIONS];
+
+  dataSource = new MatTableDataSource<Transacao>([]);
+  items: Transacao[] = [];
+  carregando = false;
+  erro: string | null = null;
+
+  constructor(
+    private readonly service: TransacoesService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void {
+    this.pageSizeAtivo = normalizarPageSize(this.pageSize);
+    window.addEventListener('fincontrol:transacoes-changed', this.onTransacoesChanged);
+    void this.carregar();
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('fincontrol:transacoes-changed', this.onTransacoesChanged);
+    if (this.filtrosTimer) clearTimeout(this.filtrosTimer);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['filtros'] && !changes['filtros'].firstChange) {
+      this.scheduleCarregar(true);
+    }
+
+    if (changes['pageSize'] && !changes['pageSize'].firstChange) {
+      const size = normalizarPageSize(this.pageSize);
+      if (this.pageSizeAtivo !== size) {
+        this.pageSizeAtivo = size;
+        this.page = 1;
+        void this.carregar();
+      }
+    }
+
+    if (
+      (changes['apiUrl'] && !changes['apiUrl'].firstChange)
+      || (changes['usuarioId'] && !changes['usuarioId'].firstChange)
+      || (changes['accessToken'] && !changes['accessToken'].firstChange)
+    ) {
+      void this.carregar();
+    }
+  }
+
+  async carregar(): Promise<void> {
+    if (!this.usuarioId) {
+      this.items = [];
+      this.total = 0;
+      this.totalUnfiltered = 0;
+      this.dataSource.data = [];
+      this.emitMeta();
+      this.syncPaginator();
+      return;
+    }
+
+    const seq = ++this.loadSeq;
+    this.carregando = true;
+    this.erro = null;
+    this.cdr.detectChanges();
+
+    try {
+      const result = await this.service.listar(this.apiUrl, this.usuarioId, this.accessToken, {
+        page: this.page,
+        pageSize: this.pageSizeAtivo,
+        filtros: this.filtros ?? FILTROS_VAZIOS,
+      });
+
+      if (seq !== this.loadSeq) return;
+
+      if (result.items.length === 0 && this.page > 1 && result.total > 0) {
+        this.page = Math.max(1, Math.ceil(result.total / this.pageSizeAtivo));
+        await this.carregar();
+        return;
+      }
+
+      this.items = result.items;
+      this.total = result.total;
+      this.totalUnfiltered = result.totalUnfiltered;
+      this.page = result.page || this.page;
+      this.dataSource.data = result.items;
+      this.emitMeta();
+      this.syncPaginator();
+    } catch {
+      if (seq !== this.loadSeq) return;
+      this.erro = 'Não foi possível carregar as transações.';
+      this.items = [];
+      this.total = 0;
+      this.dataSource.data = [];
+      this.emitMeta();
+      this.syncPaginator();
+    } finally {
+      if (seq === this.loadSeq) {
+        this.carregando = false;
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
+  navegar(href: string): void {
+    window.dispatchEvent(new CustomEvent('fincontrol:navigate', { detail: { href } }));
+  }
+
+  confirmarExclusao(transacao: Transacao): void {
+    window.dispatchEvent(
+      new CustomEvent('fincontrol:delete-transacao', {
+        detail: { id: transacao.id, descricao: transacao.descricao },
+      }),
+    );
+  }
+
+  tipoLabel(tipo: Transacao['tipo']): string {
+    return TIPO_LABELS[tipo];
+  }
+
+  categoriaLabel(categoria: Transacao['categoria']): string {
+    return categoria ? CATEGORIA_LABELS[categoria] : 'Outros';
+  }
+
+  entrada(tipo: Transacao['tipo']): boolean {
+    return isEntrada(tipo);
+  }
+
+  moeda(valor: number): string {
+    return formatCurrency(valor);
+  }
+
+  dataCurta(data: string): string {
+    return formatDateShort(data);
+  }
+
+  onPaginatorChange(event: PageEvent): void {
+    const nextSize = normalizarPageSize(event.pageSize);
+    if (nextSize !== this.pageSizeAtivo) {
+      this.pageSizeAtivo = nextSize;
+      this.page = 1;
+      window.dispatchEvent(
+        new CustomEvent('fincontrol:transacoes-page-size', { detail: { pageSize: nextSize } }),
+      );
+    } else {
+      this.page = event.pageIndex + 1;
+    }
+
+    void this.carregar();
+  }
+
+  private scheduleCarregar(resetPage: boolean): void {
+    if (this.filtrosTimer) clearTimeout(this.filtrosTimer);
+    this.filtrosTimer = setTimeout(() => {
+      if (resetPage) this.page = 1;
+      void this.carregar();
+    }, FILTROS_DEBOUNCE_MS);
+  }
+
+  private syncPaginator(): void {
+    if (!this.paginator) return;
+    this.paginator.length = this.total;
+    this.paginator.pageSize = this.pageSizeAtivo;
+    this.paginator.pageIndex = Math.max(0, this.page - 1);
+  }
+
+  private emitMeta(): void {
+    window.dispatchEvent(
+      new CustomEvent('fincontrol:transacoes-page-meta', {
+        detail: { total: this.total, totalUnfiltered: this.totalUnfiltered },
+      }),
+    );
+  }
+
+  private readonly onTransacoesChanged = (): void => {
+    void this.carregar();
+  };
+}

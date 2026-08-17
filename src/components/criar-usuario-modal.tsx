@@ -11,7 +11,7 @@ import { criarUsuario } from '@/app/services/usuarios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/store/hooks';
 
 const criarUsuarioSchema = z.object({
   nome: z.string().min(2, 'Informe seu nome'),
@@ -50,16 +50,11 @@ export function CriarUsuarioModal({ open, onClose }: Readonly<CriarUsuarioModalP
     }
 
     if (open && !dialog.open) {
+      reset();
+      setError(null);
       dialog.showModal();
     } else if (!open && dialog.open) {
       dialog.close();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) {
-      reset();
-      setError(null);
     }
   }, [open, reset]);
 
@@ -96,7 +91,7 @@ export function CriarUsuarioModal({ open, onClose }: Readonly<CriarUsuarioModalP
     >
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
-      <div className="fixed top-[50%] left-[50%] z-50 w-full max-w-sm translate-x-[-50%] translate-y-[-50%] rounded-xl border bg-white p-6 shadow-2xl">
+      <div className="fixed top-[50%] left-[50%] z-50 w-[calc(100%-1rem)] max-h-[min(92dvh,calc(100dvh-1rem))] max-w-sm translate-x-[-50%] translate-y-[-50%] overflow-y-auto rounded-xl border bg-card p-4 shadow-2xl sm:w-[calc(100%-2rem)] sm:p-6">
         <button
           type="button"
           onClick={onClose}

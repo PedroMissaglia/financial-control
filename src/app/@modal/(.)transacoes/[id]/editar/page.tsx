@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
-import { getTransacaoOrThrow } from '@/app/services/transacoes';
+import { fetchTransacaoById } from '@/app/services/transacoes';
+import { ApiUnavailableCard } from '@/components/api-unavailable-card';
 import { TransacaoModalForm } from '@/components/transacao-modal-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Modal } from '@/components/ui/modal';
@@ -12,12 +13,16 @@ interface ModalEditarTransacaoPageProps {
 export default async function ModalEditarTransacaoPage({ params }: Readonly<ModalEditarTransacaoPageProps>) {
   const { id } = await params;
 
-  let transacao;
-  try {
-    transacao = await getTransacaoOrThrow(id);
-  } catch {
-    notFound();
+  const result = await fetchTransacaoById(id);
+  if (result.status === 404) notFound();
+  if (!result.success || !result.data) {
+    return (
+      <Modal title="Editar transação">
+        <ApiUnavailableCard />
+      </Modal>
+    );
   }
+  const transacao = result.data;
 
   return (
     <Modal title="Editar transação">

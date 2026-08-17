@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/store/hooks';
 
 const ROTAS_PUBLICAS = new Set(['/login']);
 
