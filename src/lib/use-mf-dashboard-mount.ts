@@ -61,6 +61,11 @@ export function useMfDashboardMount<TProps extends DashboardLayoutSlice>(exposeK
           if (!host) throw new Error('O container do microfrontend ainda não está no DOM');
 
           mountFnRef.current = remote.mount;
+          console.info('[fincontrol:api-url]', 'host mount dashboard', {
+            exposeKey,
+            apiUrl: propsRef.current.apiUrl ?? null,
+            window: window.__FINCONTROL_API_URL__ ?? null,
+          });
           const maybeUnmount = await remote.mount(host, propsRef.current);
           if (cancelled) {
             maybeUnmount?.();
