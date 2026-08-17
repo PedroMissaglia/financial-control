@@ -27,9 +27,18 @@ function logHostApiUrl(source: string, result: string) {
   });
 }
 
+export function getServerApiUrl() {
+  return stripTrailingSlash(process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL);
+}
+
+export function getBrowserApiUrl() {
+  const fromNextPublic = process.env.NEXT_PUBLIC_API_URL?.trim();
+  return fromNextPublic ? stripTrailingSlash(fromNextPublic) : DEFAULT_API_URL;
+}
+
 export function getApiUrl() {
   if (typeof window === 'undefined') {
-    return stripTrailingSlash(process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL);
+    return getServerApiUrl();
   }
 
   const fromRuntime = readRuntimeApiUrl();
@@ -38,15 +47,9 @@ export function getApiUrl() {
     return fromRuntime;
   }
 
-  const fromNextPublic = process.env.NEXT_PUBLIC_API_URL?.trim();
-  if (fromNextPublic) {
-    const result = stripTrailingSlash(fromNextPublic);
-    logHostApiUrl('NEXT_PUBLIC_API_URL', result);
-    return result;
-  }
-
-  logHostApiUrl('default', DEFAULT_API_URL);
-  return DEFAULT_API_URL;
+  const result = getBrowserApiUrl();
+  logHostApiUrl(process.env.NEXT_PUBLIC_API_URL?.trim() ? 'NEXT_PUBLIC_API_URL' : 'default', result);
+  return result;
 }
 
 declare global {

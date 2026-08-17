@@ -1,8 +1,8 @@
 # Arquitetura do Fin Control
 
-Documento técnico da arquitetura real do repositório. O Fin Control é o app de gerenciamento financeiro da POSTECH (Tech Challenge Fase 2). O **host** é Next.js 16 (App Router, React 19, TypeScript). A **listagem de transações** é um microfrontend Angular 19 via Native Federation. O **dashboard** (grid, widgets, gráficos, extrato recente, editor DnD) é um microfrontend React 19 em `:4300`, integrado ao host via `mount()` e com **modo standalone** para desenvolvimento isolado. Os dados vêm de um json-server sobre `db.json`.
+Documento técnico da arquitetura real do repositório. O Fin Control é o app de gerenciamento financeiro da POSTECH (Tech Challenge Fase 2). O **host** é Next.js 16 (App Router, React 19, TypeScript). A **listagem de transações** é um microfrontend Angular 19 via Native Federation. O **dashboard** (grid, widgets, gráficos, extrato recente, editor DnD) é um microfrontend React 19 em `:4300`, integrado ao host via `mount()` e com **modo standalone** para desenvolvimento isolado. Os dados vêm da API Nest (repositório separado), apontada por `NEXT_PUBLIC_API_URL` / `API_URL`.
 
-Este texto descreve o código como está, não o desenho ideal. Limites acadêmicos (auth sem JWT, senhas em claro, persistência em arquivo) estão na [seção 10](#10-deploy-limites-e-dívida-técnica).
+Este texto descreve o código como está, não o desenho ideal. Limites acadêmicos (cookie de sessão, CORS no Nest) estão na [seção 10](#10-deploy-limites-e-dívida-técnica).
 
 ---
 
@@ -13,26 +13,29 @@ Este texto descreve o código como está, não o desenho ideal. Limites acadêmi
 | Host / shell | Next.js 16.2.7, React 19.2, TypeScript | `3000` |
 | Remote de transações | Angular 19 + Native Federation + Angular Elements | `4200` |
 | Remote do dashboard | React 19 + Vite (multi-entry) | `4300` |
-| API mock | json-server 0.17 + `db.json` | `3001` |
+| API | Nest (repo/processo separado) | `3001` |
 | Estado do host | Redux Toolkit | — |
 | Validação de formulários | Zod 4 + react-hook-form | — |
 | Estilo | Tailwind CSS 4, CVA, tokens CSS compartilhados | — |
 | Design system | Storybook 10 (`@storybook/nextjs-vite`) | `6006` |
 
-`npm run dev` sobe api + remotes em paralelo; o **host Next só inicia** quando ambos `remoteEntry.json` respondem (`scripts/wait-for-remotes.mjs`, timeout 3 min):
+`npm run dev` sobe só os remotes e o Next; o Nest **não** sobe neste comando. `dev:host` espera `remoteEntry.json` dos MFEs (`scripts/wait-for-remotes.mjs`, timeout 3 min):
 
-```6:8:package.json
-    "dev": "concurrently -n api,mf-tx,mf-dash,host \"npm run dev:api\" \"npm run dev:mf-transacoes\" \"npm run dev:mf-dashboard\" \"npm run dev:host\"",
+```6:9:package.json
+    "dev": "concurrently -n mf-tx,mf-dash,host \"npm run dev:mf-transacoes\" \"npm run dev:mf-dashboard\" \"npm run dev:next\"",
+    "kill:front": "node scripts/kill-front-ports.mjs",
     "dev:host": "node scripts/wait-for-remotes.mjs && npm run dev:next",
+    "dev:next": "next dev",
 ```
 
-Não há Prisma, SQLite, Postgres, rotas `app/api/**` nem Server Actions (`"use server"`). O host e o remote falam **direto** com o json-server. Não existe BFF.
+Não há Prisma, SQLite, Postgres, rotas `app/api/**` nem Server Actions (`"use server"`). O host e os remotes falam **direto** com o Nest. Não existe BFF nem json-server neste repo.
 
 Variáveis públicas (embutidas no bundle no build):
 
 | Variável | Padrão | Uso |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:3001` | Base REST do json-server |
+| `NEXT_PUBLIC_API_URL` | `http://127.0.0.1:3001` | Base REST do Nest no browser |
+| `API_URL` | `http://127.0.0.1:3001` | Base REST do Nest no servidor Next (Docker: `host.docker.internal`) |
 | `NEXT_PUBLIC_MF_TRANSACOES_URL` | `http://localhost:4200` | Origem do `remoteEntry.json` do Angular |
 | `NEXT_PUBLIC_MF_DASHBOARD_URL` | `http://localhost:4300` | Origem do `remoteEntry.json` do dashboard React |
 | `VITE_API_URL` | `http://127.0.0.1:3001` | API usada pelo mf-dashboard em modo standalone |
@@ -44,7 +47,7 @@ Variáveis públicas (embutidas no bundle no build):
 ```mermaid
 flowchart LR
   Browser --> Host["Next.js host :3000"]
-  Host -->|"SSR fetch cache no-store"| Api["json-server :3001"]
+  Host -->|"SSR fetch cache no-store"| Api["Nest :3001"]
   Host -->|"Native Federation runtime"| RemoteTx["Angular mf-transacoes :4200"]
   Host -->|"loadRemote + mount()"| RemoteDash["React mf-dashboard :4300"]
   RemoteTx -->|"HttpClient"| Api
@@ -65,7 +68,7 @@ sequenceDiagram
   participant User
   participant Proxy as proxy.ts
   participant RSC as Server Component
-  participant API as json-server
+  participant API as Nest
   participant Client as Host cliente
   participant MF as Angular remote
 
@@ -104,11 +107,8 @@ financial-control/
 │   ├── fincontrol-themes.css     # Tokens CSS usados pelos runtimes
 │   ├── dashboard-contract.ts     # Tipos e eventos host ↔ mf-dashboard
 │   └── dashboard-default-layout.ts # Layout padrão compartilhado
-├── db.json                       # Persistência do json-server
-├── json-server.json              # Porta 3001, watch
-├── docker-compose.yml
+├── docker-compose.yml            # Só front (web + MFEs); Nest no host
 ├── Dockerfile                    # Host standalone
-├── Dockerfile.api
 └── .storybook/
 ```
 
@@ -243,14 +243,9 @@ O guard mostra “Carregando...” enquanto `loading === true` (antes do `hydrat
 
 RSC **não revalida senha**. Só usa o cookie para filtrar `?usuarioId=`. Quem definir `fincontrol_uid=1` no browser recebe as transações do usuário `1` no HTML. Adequado ao mock acadêmico; insuficiente para produção.
 
-### 5.4 Quirk de seed vs API
+### 5.4 Login e seeds
 
-| Fonte | Email do usuário `1` |
-|---|---|
-| `db.json` (API no ar) | `pedro.missaglia@gmail.com` |
-| `seedUsuarios` (API fora) | `pedromissaglia@gmail.com` |
-
-O README cita o e-mail sem ponto. Com json-server rodando, o login válido é o de `db.json`.
+O login válido é o cadastrado no Nest. O README usa o e-mail de exemplo acadêmico; se a API estiver fora, o host não autentica (não há fallback de usuários neste repo).
 
 ---
 
@@ -258,7 +253,9 @@ O README cita o e-mail sem ponto. Com json-server rodando, o login válido é o 
 
 ### 6.1 Persistência
 
-json-server lê/escreve [`db.json`](db.json). Config em [`json-server.json`](json-server.json): porta `3001`, `watch: true`. Três coleções REST: `usuarios`, `transacoes`, `profiles`.
+### 6.1 Persistência
+
+A persistência fica no Nest (fora deste repo). O front aponta para ela com `NEXT_PUBLIC_API_URL` (browser) e `API_URL` (servidor Next). Contrato REST usado pelo host: `usuarios`, `transacoes`, `profiles` (e `auth/login`).
 
 ### 6.2 Modelo
 
@@ -337,7 +334,7 @@ O Angular usa o mesmo REST via `HttpClient` ([`mf-transacoes/src/app/transacoes.
 
 ### 6.4 Validação
 
-Só no formulário (Zod + `@hookform/resolvers`). A API json-server **não valida** schema.
+Só no formulário (Zod + `@hookform/resolvers`). O Nest fica fora deste repo.
 
 | Formulário | Arquivo | Regras principais |
 |---|---|---|
@@ -499,25 +496,24 @@ No remote, `ng test` (Karma/Jasmine) existe no `package.json`, mas os schematics
 
 ### 10.1 Docker Compose
 
-[`docker-compose.yml`](docker-compose.yml) sobe API, remotes e host:
+[`docker-compose.yml`](docker-compose.yml) sobe só os remotes e o host. Não inclui json-server nem o Nest.
 
 | Serviço | Imagem | Porta host | Papel |
 |---|---|---|---|
-| `api` | [`Dockerfile.api`](Dockerfile.api) | `3001` | json-server; volume `./db.json` |
 | `mf-transacoes` | [`mf-transacoes/Dockerfile`](mf-transacoes/Dockerfile) | `4200` → 80 | nginx servindo o remote Angular |
 | `mf-dashboard` | [`mf-dashboard/Dockerfile`](mf-dashboard/Dockerfile) | `4300` → 80 | nginx servindo o remote React |
 | `web` | [`Dockerfile`](Dockerfile) | `3000` | Next `output: 'standalone'` |
 
-O host recebe `NEXT_PUBLIC_*` como **build args** (valores entram no bundle). Em cloud: Vercel para o host, static hosting + CORS para o remote, json-server ou API FIAP no `NEXT_PUBLIC_API_URL`.
+O container `web` usa `API_URL=http://host.docker.internal:3001` (Nest na máquina host) e `NEXT_PUBLIC_API_URL=http://localhost:3001` (browser). O host recebe `NEXT_PUBLIC_*` como **build args** (valores entram no bundle). Em cloud: Vercel para o host, static hosting + CORS para o remote, Nest no `NEXT_PUBLIC_API_URL` / `API_URL`.
 
 ### 10.2 Limites conscientes (escopo acadêmico)
 
-1. **Auth:** senhas em texto em `db.json`; login baixa todos os usuários; cookie forjável; sem CSRF token além de SameSite=Lax.
-2. **Sem BFF:** o browser fala com a API; CORS do json-server precisa permitir o origin do host e do remote.
-3. **Validação só no cliente.**
-4. **Anexos em data URL** incham `db.json` e não escalam.
+1. **Auth:** login no Nest; cookie `fincontrol_uid` forjável; sem CSRF token além de SameSite=Lax.
+2. **Sem BFF:** o browser fala com a API; CORS do Nest precisa permitir o origin do host e do remote.
+3. **Validação só no cliente** neste repo.
+4. **Anexos em data URL** não escalam.
 5. **Duplicação de domínio** entre `src/data` e `mf-transacoes/src/app`.
-6. **Seeds divergentes** (e-mail do usuário 1).
+6. **Seeds divergentes** no modo standalone do dashboard.
 7. **Fallback de leitura mascara API caída** — o usuário pode ver dados seed sem perceber que a persistência falhou.
 8. **Profile save silencioso** — falha de PUT/POST não chega na UI.
 9. **Remote é client-only** — SEO/SSR do dashboard/listagem não inclui o Angular; o HTML inicial traz só o fallback potencial.
@@ -533,7 +529,7 @@ O host recebe `NEXT_PUBLIC_*` como **build args** (valores entram no bundle). Em
 | Preview interceptado | Host React (RSC + `@modal`) |
 | Dashboard personalizável | Remote React (`mf-dashboard`), erro se offline |
 | Listagem com filtros/paginação/exclusão | Remote Angular, fallback React (`TransacaoTable`) |
-| Persistência REST | json-server |
+| Persistência REST | Nest (`NEXT_PUBLIC_API_URL` / `API_URL`) |
 | Tokens visuais | `shared/fincontrol-themes.css` |
 
-Quando a API da FIAP substituir o json-server, o ponto de troca é `NEXT_PUBLIC_API_URL`, desde que o contrato REST (`/transacoes`, `/usuarios`, `/profiles`) se mantenha.
+O ponto de troca da API é `NEXT_PUBLIC_API_URL` / `API_URL`, desde que o contrato REST (`/transacoes`, `/usuarios`, `/profiles`, `/auth/login`) se mantenha.

@@ -2,7 +2,7 @@
 
 O Fin Control é um app de gerenciamento financeiro da POSTECH (Tech Challenge Fase 2). O **host** é Next.js 16 (App Router, React 19, TypeScript) com SSR, Redux Toolkit e formulários. A **listagem de transações** é um microfrontend Angular 19 (Native Federation) em `/transacoes`. O **dashboard** (visão e editor de layout) é um microfrontend React/Vite em `/` e `/profile`.
 
-Os dados vêm de um json-server (`db.json`). Quando a API da FIAP estiver disponível, troque só o `NEXT_PUBLIC_API_URL`.
+Os dados vêm da API Nest (`NEXT_PUBLIC_API_URL` no browser, `API_URL` no servidor). O Nest não mora neste repo: rode-o à parte na porta `3001`.
 
 ## Antes de rodar
 
@@ -17,7 +17,7 @@ npm install
 npm --prefix mf-transacoes install
 npm --prefix mf-dashboard install
 
-# sobe Next (3000), json-server (3001), Angular (4200) e dashboard (4300)
+# sobe Next (3000), Angular (4200) e dashboard (4300) — o Nest sobe à parte na 3001
 npm run dev
 ```
 
@@ -37,22 +37,23 @@ Copie `.env.example` para `.env.local` se quiser alterar os padrões:
 
 | Variável | Padrão | Uso |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:3001` | API (json-server ou API da FIAP) |
+| `NEXT_PUBLIC_API_URL` | `http://127.0.0.1:3001` | API Nest (browser / bundle) |
+| `API_URL` | `http://127.0.0.1:3001` | API Nest (fetch no servidor Next) |
 | `NEXT_PUBLIC_MF_TRANSACOES_URL` | `http://localhost:4200` | URL pública do remote Angular |
 | `NEXT_PUBLIC_MF_DASHBOARD_URL` | `http://localhost:4300` | URL pública do remote do dashboard |
 
 ## Docker Compose
 
-Sobe API, host Next e os remotes (nginx):
+Sobe só o front (host Next + remotes nginx). Não inclui json-server nem o Nest — a API precisa estar na máquina host na porta `3001`.
 
 ```bash
 docker compose up --build
 ```
 
 - App: [http://localhost:3000](http://localhost:3000)
-- API: [http://localhost:3001](http://localhost:3001)
 - Microfrontend de transações: [http://localhost:4200](http://localhost:4200)
 - Microfrontend do dashboard: [http://localhost:4300](http://localhost:4300)
+- Nest (fora do Compose): [http://localhost:3001](http://localhost:3001)
 
 ## Arquitetura
 
@@ -94,9 +95,9 @@ NEXT_PUBLIC_MF_DASHBOARD_URL=https://mf-dashboard-xxx.vercel.app
 
 Se mudar `NEXT_PUBLIC_*` ou `VITE_API_URL` depois, faça **Redeploy**. No Nest, libere CORS para os três `*.vercel.app`. `output: 'standalone'` continua só para Docker; na Vercel o `next.config.ts` desliga isso sozinho.
 
-## API mockada
+## API Nest
 
-Base: `http://localhost:3001`
+Base local: `http://127.0.0.1:3001` (`NEXT_PUBLIC_API_URL` / `API_URL`). `npm run dev` não sobe a API.
 
 | Método | Endpoint | O que faz |
 |--------|----------|-----------|

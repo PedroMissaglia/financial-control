@@ -1,13 +1,4 @@
 services:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    ports:
-      - '3001:3001'
-    volumes:
-      - ./db.json:/app/db.json
-
   mf-transacoes:
     build:
       context: ./mf-transacoes
@@ -37,11 +28,12 @@ services:
     ports:
       - '3000:3000'
     environment:
-      API_URL: http://api:3001
+      API_URL: http://host.docker.internal:3001
       NEXT_PUBLIC_API_URL: http://localhost:3001
       NEXT_PUBLIC_MF_TRANSACOES_URL: http://localhost:4200
       NEXT_PUBLIC_MF_DASHBOARD_URL: http://localhost:4300
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     depends_on:
-      - api
       - mf-transacoes
       - mf-dashboard

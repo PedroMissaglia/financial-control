@@ -5,10 +5,8 @@
   "scripts": {
     "dev": "concurrently -n mf-tx,mf-dash,host \"npm run dev:mf-transacoes\" \"npm run dev:mf-dashboard\" \"npm run dev:next\"",
     "kill:front": "node scripts/kill-front-ports.mjs",
-    "dev:api-mock": "concurrently -n api,mf-tx,mf-dash,host \"npm run dev:api\" \"npm run dev:mf-transacoes\" \"npm run dev:mf-dashboard\" \"npm run dev:host\"",
     "dev:host": "node scripts/wait-for-remotes.mjs && npm run dev:next",
     "dev:next": "next dev",
-    "dev:api": "npx json-server --watch db.json --host ::1 --port 3001",
     "dev:mf-transacoes": "npm --prefix mf-transacoes start",
     "dev:mf-dashboard": "npm --prefix mf-dashboard run dev",
     "build": "next build",
@@ -57,7 +55,6 @@
     "eslint-config-next": "16.2.7",
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "eslint-plugin-storybook": "^10.4.2",
-    "json-server": "^0.17.4",
     "playwright": "^1.60.0",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",

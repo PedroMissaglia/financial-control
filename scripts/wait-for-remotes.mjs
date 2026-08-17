@@ -1,9 +1,5 @@
 const REMOTES = [
   {
-    name: 'api',
-    urls: ['http://localhost:3001/usuarios', 'http://[::1]:3001/usuarios', 'http://127.0.0.1:3001/usuarios'],
-  },
-  {
     name: 'mf-transacoes',
     urls: ['http://127.0.0.1:4200/remoteEntry.json', 'http://localhost:4200/remoteEntry.json'],
   },

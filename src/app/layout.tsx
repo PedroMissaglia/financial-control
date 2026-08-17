@@ -7,7 +7,7 @@ import Script from 'next/script';
 import { AuthGuard } from '@/components/auth-guard';
 import { AuthTokenRefresher } from '@/components/auth-token-refresher';
 import { MfEventBridge } from '@/components/mf-event-bridge';
-import { getApiUrl } from '@/lib/api-url';
+import { getBrowserApiUrl } from '@/lib/api-url';
 import { StoreProvider } from '@/store/provider';
 
 const inter = Inter({
@@ -31,7 +31,7 @@ export default function RootLayout({
   children,
   modal,
 }: Readonly<{ children: React.ReactNode; modal: React.ReactNode }>) {
-  const runtimeApiUrl = getApiUrl();
+  const runtimeApiUrl = getBrowserApiUrl();
 
   return (
     <html lang="pt-BR" data-fin-theme="cyan">
