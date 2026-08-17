@@ -1,12 +1,95 @@
 import type { NovaTransacao, Transacao } from '@/data/transacoes';
-import { getTransacaoPorId, seedTransacoes } from '@/data/transacoes';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+import { normalizarTransacao } from '@/data/transacoes';
+import { apiFetch } from '@/lib/api-client';
+import { notifyTransacoesChanged } from '@/lib/mf-events';
+import type { TransacoesFiltros } from '@/lib/transacao-filters';
 
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
   message?: string;
+  status?: number;
+}
+
+export interface TransacoesPage {
+  items: Transacao[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalUnfiltered: number;
+}
+
+export interface FetchTransacoesPageParams {
+  usuarioId: string;
+  page: number;
+  pageSize: number;
+  filtros?: TransacoesFiltros;
+}
+
+export function parseTransacoesPage(json: unknown): TransacoesPage {
+  if (Array.isArray(json)) {
+    const items = json as Transacao[];
+    return {
+      items,
+      total: items.length,
+      page: 1,
+      pageSize: items.length,
+      totalUnfiltered: items.length,
+    };
+  }
+
+  if (json && typeof json === 'object' && Array.isArray((json as TransacoesPage).items)) {
+    const page = json as TransacoesPage;
+    const items = page.items;
+    return {
+      items,
+      total: Number(page.total) || 0,
+      page: Math.max(1, Number(page.page) || 1),
+      pageSize: Number(page.pageSize) || items.length,
+      totalUnfiltered: Number(page.totalUnfiltered) || 0,
+    };
+  }
+
+  return { items: [], total: 0, page: 1, pageSize: 0, totalUnfiltered: 0 };
+}
+
+function appendFiltros(search: URLSearchParams, filtros?: TransacoesFiltros) {
+  if (!filtros) return;
+  const busca = filtros.busca.trim();
+  if (busca) search.set('busca', busca);
+  if (filtros.tipo) search.set('tipo', filtros.tipo);
+  if (filtros.categoria) search.set('categoria', filtros.categoria);
+  if (filtros.dataInicio) search.set('dataInicio', filtros.dataInicio);
+  if (filtros.dataFim) search.set('dataFim', filtros.dataFim);
+  if (filtros.valorMin != null) search.set('valorMin', String(filtros.valorMin));
+  if (filtros.valorMax != null) search.set('valorMax', String(filtros.valorMax));
+}
+
+export function buildTransacoesQuery(params: {
+  usuarioId: string;
+  page?: number;
+  pageSize?: number;
+  filtros?: TransacoesFiltros;
+}): string {
+  const search = new URLSearchParams();
+  search.set('usuarioId', params.usuarioId);
+
+  if (params.page != null) {
+    search.set('page', String(Math.max(1, params.page)));
+  }
+  if (params.pageSize != null) {
+    search.set('pageSize', String(params.pageSize));
+  }
+
+  appendFiltros(search, params.filtros);
+  return search.toString();
+}
+
+function normalizePage(page: TransacoesPage): TransacoesPage {
+  return {
+    ...page,
+    items: page.items.map(normalizarTransacao),
+  };
 }
 
 async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
@@ -24,47 +107,71 @@ export async function fetchTransacoes(usuarioId?: string): Promise<ApiResponse<T
     return { success: true, data: [] };
   }
 
-  const seedDoUsuario = seedTransacoes.filter(transacao => transacao.usuarioId === usuarioId);
-
   try {
-    const response = await fetch(`${API_URL}/transacoes?usuarioId=${encodeURIComponent(usuarioId)}`, {
-      cache: 'no-store',
-    });
+    const response = await apiFetch(`/transacoes?${buildTransacoesQuery({ usuarioId })}`);
     if (!response.ok) {
-      return { success: true, data: seedDoUsuario };
+      return { success: false, message: 'Erro ao carregar transações', status: response.status };
     }
-    return handleResponse<Transacao[]>(response);
+    const json: unknown = await response.json();
+    return { success: true, data: normalizePage(parseTransacoesPage(json)).items };
   } catch (error) {
     console.error('Erro ao buscar transações:', error);
-    return { success: true, data: seedDoUsuario };
+    return { success: false, message: 'Não foi possível conectar à API', status: 0 };
+  }
+}
+
+export async function fetchTransacoesPage(params: FetchTransacoesPageParams): Promise<ApiResponse<TransacoesPage>> {
+  try {
+    const query = buildTransacoesQuery({
+      usuarioId: params.usuarioId,
+      page: Math.max(1, params.page),
+      pageSize: params.pageSize,
+      filtros: params.filtros,
+    });
+    const response = await apiFetch(`/transacoes?${query}`);
+    if (!response.ok) {
+      return { success: false, message: 'Erro ao carregar transações', status: response.status };
+    }
+    const json: unknown = await response.json();
+    return { success: true, data: normalizePage(parseTransacoesPage(json)) };
+  } catch (error) {
+    console.error('Erro ao buscar transações:', error);
+    return { success: false, message: 'Não foi possível conectar à API', status: 0 };
   }
 }
 
 export async function fetchTransacaoById(id: string): Promise<ApiResponse<Transacao>> {
   try {
-    const response = await fetch(`${API_URL}/transacoes/${id}`, { cache: 'no-store' });
+    const response = await apiFetch(`/transacoes/${id}`);
     if (!response.ok) {
-      const fallback = getTransacaoPorId(seedTransacoes, id);
-      if (fallback) return { success: true, data: fallback };
-      return { success: false, message: 'Transação não encontrada' };
+      return {
+        success: false,
+        message: response.status === 404 ? 'Transação não encontrada' : 'Não foi possível carregar a transação',
+        status: response.status,
+      };
     }
-    return handleResponse<Transacao>(response);
+    const result = await handleResponse<Transacao>(response);
+    return {
+      ...result,
+      status: response.status,
+      data: result.data ? normalizarTransacao(result.data) : result.data,
+    };
   } catch (error) {
     console.error('Erro ao buscar transação:', error);
-    const fallback = getTransacaoPorId(seedTransacoes, id);
-    if (fallback) return { success: true, data: fallback };
-    return { success: false, message: 'Não foi possível conectar à API' };
+    return { success: false, message: 'Não foi possível conectar à API', status: 0 };
   }
 }
 
 export async function createTransacao(transacao: NovaTransacao): Promise<ApiResponse<Transacao>> {
   try {
-    const response = await fetch(`${API_URL}/transacoes`, {
+    const response = await apiFetch('/transacoes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(transacao),
     });
-    return handleResponse<Transacao>(response);
+    const result = await handleResponse<Transacao>(response);
+    if (result.success) notifyTransacoesChanged();
+    return result;
   } catch (error) {
     console.error('Erro ao criar transação:', error);
     return { success: false, message: 'Não foi possível conectar à API' };
@@ -73,12 +180,14 @@ export async function createTransacao(transacao: NovaTransacao): Promise<ApiResp
 
 export async function updateTransacao(id: string, transacao: NovaTransacao): Promise<ApiResponse<Transacao>> {
   try {
-    const response = await fetch(`${API_URL}/transacoes/${id}`, {
+    const response = await apiFetch(`/transacoes/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...transacao, id }),
     });
-    return handleResponse<Transacao>(response);
+    const result = await handleResponse<Transacao>(response);
+    if (result.success) notifyTransacoesChanged();
+    return result;
   } catch (error) {
     console.error('Erro ao atualizar transação:', error);
     return { success: false, message: 'Não foi possível conectar à API' };
@@ -87,10 +196,11 @@ export async function updateTransacao(id: string, transacao: NovaTransacao): Pro
 
 export async function deleteTransacao(id: string): Promise<ApiResponse<void>> {
   try {
-    const response = await fetch(`${API_URL}/transacoes/${id}`, { method: 'DELETE' });
+    const response = await apiFetch(`/transacoes/${id}`, { method: 'DELETE' });
     if (!response.ok) {
       return { success: false, message: 'Erro ao excluir transação' };
     }
+    notifyTransacoesChanged();
     return { success: true };
   } catch (error) {
     console.error('Erro ao excluir transação:', error);
@@ -98,18 +208,3 @@ export async function deleteTransacao(id: string): Promise<ApiResponse<void>> {
   }
 }
 
-export async function getTransacoesOrThrow(usuarioId?: string): Promise<Transacao[]> {
-  const result = await fetchTransacoes(usuarioId);
-  if (!result.success || !result.data) {
-    throw new Error(result.message ?? 'Erro ao carregar transações');
-  }
-  return result.data;
-}
-
-export async function getTransacaoOrThrow(id: string): Promise<Transacao> {
-  const result = await fetchTransacaoById(id);
-  if (!result.success || !result.data) {
-    throw new Error(result.message ?? 'Transação não encontrada');
-  }
-  return result.data;
-}

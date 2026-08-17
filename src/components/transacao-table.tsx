@@ -9,14 +9,77 @@ import { deleteTransacao } from '@/app/services/transacoes';
 import { ConfirmarExclusaoModal } from '@/components/confirmar-exclusao-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { isEntrada, TIPO_LABELS, type Transacao } from '@/data/transacoes';
+import { Card, CardContent } from '@/components/ui/card';
+import { CATEGORIA_LABELS, isEntrada, TIPO_LABELS, type Transacao } from '@/data/transacoes';
 import { cn, formatCurrency, formatDateShort } from '@/lib/utils';
 
 interface TransacaoTableProps {
   transacoes: Transacao[];
+  emptyLabel?: string;
 }
 
-export function TransacaoTable({ transacoes }: Readonly<TransacaoTableProps>) {
+function TransacaoCardRow({
+  transacao,
+  isDeleting,
+  onDelete,
+}: Readonly<{
+  transacao: Transacao;
+  isDeleting: boolean;
+  onDelete: (transacao: Transacao) => void;
+}>) {
+  const entrada = isEntrada(transacao.tipo);
+
+  return (
+    <Card className="shadow-sm">
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate font-medium">{transacao.descricao}</p>
+            <p className="text-muted-foreground text-sm">
+              {formatDateShort(transacao.data)} · {CATEGORIA_LABELS[transacao.categoria]}
+            </p>
+          </div>
+          <p className={cn('shrink-0 font-semibold', entrada ? 'text-success' : 'text-destructive')}>
+            {entrada ? '+' : '-'}
+            {formatCurrency(transacao.valor)}
+          </p>
+        </div>
+
+        <Badge variant={entrada ? 'success' : 'secondary'}>{TIPO_LABELS[transacao.tipo]}</Badge>
+
+        <div className="flex flex-wrap gap-1 border-t pt-2">
+          <Link href={`/transacoes/${transacao.id}`}>
+            <Button variant="ghost" size="sm" className="gap-1.5">
+              <Eye className="h-4 w-4" aria-hidden="true" />
+              Ver
+            </Button>
+          </Link>
+          <Link href={`/transacoes/${transacao.id}/editar`}>
+            <Button variant="ghost" size="sm" className="gap-1.5">
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+              Editar
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive gap-1.5"
+            disabled={isDeleting}
+            onClick={() => onDelete(transacao)}
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+            Excluir
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function TransacaoTable({
+  transacoes,
+  emptyLabel = 'Nenhuma transação encontrada.',
+}: Readonly<TransacaoTableProps>) {
   const router = useRouter();
   const [alvo, setAlvo] = useState<Transacao | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -48,8 +111,8 @@ export function TransacaoTable({ transacoes }: Readonly<TransacaoTableProps>) {
 
   if (transacoes.length === 0) {
     return (
-      <div className="rounded-xl border bg-white p-8 text-center">
-        <p className="text-muted-foreground">Nenhuma transação encontrada.</p>
+      <div className="bg-card rounded-xl border p-8 text-center">
+        <p className="text-muted-foreground">{emptyLabel}</p>
         <Link href="/transacoes/nova" className="mt-4 inline-block">
           <Button>Adicionar primeira transação</Button>
         </Link>
@@ -59,7 +122,7 @@ export function TransacaoTable({ transacoes }: Readonly<TransacaoTableProps>) {
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-xl border bg-white shadow-sm">
+      <div className="hidden overflow-x-auto rounded-xl border bg-card shadow-sm md:block">
         <table className="w-full min-w-[640px] text-left text-sm">
           <caption className="sr-only">Lista de transações financeiras</caption>
           <thead className="bg-muted/50 border-b">
@@ -69,6 +132,9 @@ export function TransacaoTable({ transacoes }: Readonly<TransacaoTableProps>) {
               </th>
               <th scope="col" className="px-4 py-3 font-medium">
                 Tipo
+              </th>
+              <th scope="col" className="px-4 py-3 font-medium">
+                Categoria
               </th>
               <th scope="col" className="px-4 py-3 font-medium">
                 Data
@@ -90,6 +156,7 @@ export function TransacaoTable({ transacoes }: Readonly<TransacaoTableProps>) {
                   <td className="px-4 py-3">
                     <Badge variant={entrada ? 'success' : 'secondary'}>{TIPO_LABELS[transacao.tipo]}</Badge>
                   </td>
+                  <td className="text-muted-foreground px-4 py-3">{CATEGORIA_LABELS[transacao.categoria]}</td>
                   <td className="text-muted-foreground px-4 py-3">{formatDateShort(transacao.data)}</td>
                   <td className={cn('px-4 py-3 font-semibold', entrada ? 'text-success' : 'text-destructive')}>
                     {entrada ? '+' : '-'}
@@ -123,6 +190,17 @@ export function TransacaoTable({ transacoes }: Readonly<TransacaoTableProps>) {
             })}
           </tbody>
         </table>
+      </div>
+
+      <div className="grid gap-3 md:hidden" aria-label="Lista de transações em cards">
+        {transacoes.map(transacao => (
+          <TransacaoCardRow
+            key={transacao.id}
+            transacao={transacao}
+            isDeleting={isDeleting && alvo?.id === transacao.id}
+            onDelete={setAlvo}
+          />
+        ))}
       </div>
 
       <ConfirmarExclusaoModal

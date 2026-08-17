@@ -19,7 +19,7 @@ export const Default: Story = {
         <CardDescription>Resumo financeiro do mês</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold">R$ 2.560,10</p>
+        <p className="fc-card-metric">R$ 2.560,10</p>
       </CardContent>
     </Card>
   ),

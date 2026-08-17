@@ -1,28 +1,15 @@
 @import 'tailwindcss';
+@import '../../shared/fincontrol-themes.css';
 
 :root {
-  --background: 270 33% 99%;
-  --foreground: 263 35% 12%;
-  --card: 0 0% 100%;
-  --card-foreground: 263 35% 12%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 263 35% 12%;
-  --primary: 262 83% 58%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 270 40% 96%;
-  --secondary-foreground: 263 40% 24%;
-  --muted: 270 30% 96%;
-  --muted-foreground: 255 12% 45%;
-  --accent: 268 60% 95%;
-  --accent-foreground: 262 60% 40%;
-  --destructive: 350 84% 58%;
-  --destructive-foreground: 0 0% 100%;
-  --success: 152 69% 40%;
-  --success-foreground: 0 0% 100%;
-  --border: 270 30% 91%;
-  --input: 270 30% 91%;
-  --ring: 262 83% 58%;
   --radius: 0.75rem;
+  --footer-height: 3.25rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --footer-height: 3.75rem;
+  }
 }
 
 @theme inline {
@@ -55,9 +42,35 @@
   border-color: hsl(var(--border));
 }
 
+mf-transacoes-list svg {
+  display: inline-block;
+  max-width: none;
+  vertical-align: middle;
+}
+
+mf-transacoes-list .mat-mdc-button-persistent-ripple,
+mf-transacoes-list .mat-mdc-button-persistent-ripple::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: transparent;
+}
+
+mf-transacoes-list .mat-mdc-button-persistent-ripple::before {
+  content: '';
+  opacity: 0;
+}
+
+mf-transacoes-list .mat-mdc-button-touch-target {
+  position: absolute;
+  background: transparent;
+}
+
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
+  overflow-x: clip;
+  padding-bottom: var(--footer-height);
 }
 
 section h1,

@@ -1,0 +1,20 @@
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+@import '../../shared/fincontrol-themes.css';
+
+html,
+body {
+  margin: 0;
+  font-family: var(--fc-font-sans);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+mf-transacoes-list {
+  display: block;
+  font-family: var(--fc-font-sans);
+}
+
+mat-card {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}

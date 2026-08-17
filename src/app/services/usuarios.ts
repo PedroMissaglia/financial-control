@@ -1,7 +1,8 @@
+import { defaultProfile } from '@/data/dashboard-profile';
 import type { NovoUsuario, Usuario, UsuarioPublico } from '@/data/usuarios';
-import { seedUsuarios, toUsuarioPublico, validarCredenciais } from '@/data/usuarios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+import { toUsuarioPublico } from '@/data/usuarios';
+import { apiFetch, readApiError } from '@/lib/api-client';
+import { persistSession } from '@/lib/auth-session';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -9,51 +10,68 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-async function carregarUsuarios(): Promise<Usuario[]> {
-  try {
-    const response = await fetch(`${API_URL}/usuarios`, { cache: 'no-store' });
-    if (!response.ok) {
-      return seedUsuarios;
-    }
-    return (await response.json()) as Usuario[];
-  } catch (error) {
-    console.error('Erro ao buscar usuários:', error);
-    return seedUsuarios;
-  }
+interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: 'Bearer';
+  usuario: UsuarioPublico;
 }
 
 export async function autenticar(email: string, senha: string): Promise<ApiResponse<UsuarioPublico>> {
-  const usuarios = await carregarUsuarios();
-  const usuario = validarCredenciais(usuarios, email, senha);
+  try {
+    const response = await apiFetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), senha }),
+      auth: false,
+    });
 
-  if (!usuario) {
-    return { success: false, message: 'E-mail ou senha inválidos' };
+    if (!response.ok) {
+      return { success: false, message: await readApiError(response) };
+    }
+
+    const data = (await response.json()) as LoginResponse;
+    persistSession(data.usuario, {
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      expiresIn: data.expiresIn,
+    });
+    return { success: true, data: data.usuario };
+  } catch (error) {
+    console.error('Erro ao autenticar:', error);
+    return { success: false, message: 'Não foi possível conectar à API' };
   }
-
-  return { success: true, data: usuario };
 }
 
 export async function criarUsuario(novo: NovoUsuario): Promise<ApiResponse<UsuarioPublico>> {
   const email = novo.email.trim().toLowerCase();
 
   try {
-    const usuarios = await carregarUsuarios();
-    if (usuarios.some(usuario => usuario.email.toLowerCase() === email)) {
-      return { success: false, message: 'Este e-mail já está cadastrado' };
-    }
-
-    const response = await fetch(`${API_URL}/usuarios`, {
+    const response = await apiFetch('/usuarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome: novo.nome.trim(), email, senha: novo.senha }),
+      auth: false,
     });
 
     if (!response.ok) {
-      return { success: false, message: 'Não foi possível criar a conta' };
+      return { success: false, message: await readApiError(response) };
     }
 
     const criado = (await response.json()) as Usuario;
-    return { success: true, data: toUsuarioPublico(criado) };
+    const login = await autenticar(email, novo.senha);
+    if (!login.success) {
+      return { success: true, data: toUsuarioPublico(criado) };
+    }
+
+    await apiFetch('/profiles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(defaultProfile(criado.id)),
+    });
+
+    return { success: true, data: login.data ?? toUsuarioPublico(criado) };
   } catch (error) {
     console.error('Erro ao criar usuário:', error);
     return { success: false, message: 'Não foi possível conectar à API' };

@@ -14,11 +14,6 @@ export interface Credenciais {
   senha: string;
 }
 
-export const seedUsuarios: Usuario[] = [
-  { id: '1', nome: 'Pedro Missaglia', email: 'pedromissaglia@gmail.com', senha: '123456' },
-  { id: '2', nome: 'John Doe', email: 'John@fincontrol.com', senha: 'fincontrol' },
-];
-
 export function toUsuarioPublico(usuario: Usuario): UsuarioPublico {
   return { id: usuario.id, nome: usuario.nome, email: usuario.email };
 }

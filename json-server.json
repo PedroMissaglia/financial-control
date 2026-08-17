@@ -1,5 +1,6 @@
 {
   "port": 3001,
+  "host": "::1",
   "watch": true,
   "no-cors": false
 }

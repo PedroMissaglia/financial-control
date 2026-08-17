@@ -1,5 +1,7 @@
 import type { Preview } from '@storybook/nextjs-vite';
 
+import '../src/app/globals.css';
+
 const preview: Preview = {
   parameters: {
     controls: {
@@ -7,6 +9,10 @@ const preview: Preview = {
         color: /(background|color)$/i,
         date: /Date$/i,
       },
+    },
+    layout: 'centered',
+    a11y: {
+      test: 'todo',
     },
   },
 };

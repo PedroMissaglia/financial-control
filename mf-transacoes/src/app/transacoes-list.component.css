@@ -1,0 +1,174 @@
+:host {
+  display: block;
+  font-family: var(--fc-font-sans);
+  color-scheme: light;
+}
+
+:host .mat-mdc-paginator,
+:host .mat-mdc-paginator-container,
+:host .mat-mdc-icon-button,
+:host .mat-mdc-select {
+  border-color: revert;
+}
+
+.mf-wrap {
+  display: grid;
+  gap: 1rem;
+}
+
+.mf-badge {
+  margin: 0;
+  font-size: var(--fc-text-caption);
+  font-weight: var(--fc-weight-semibold);
+  color: hsl(var(--accent-foreground));
+}
+
+.list-table {
+  display: block;
+}
+
+.list-cards {
+  display: none;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.ok {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.bad,
+.error {
+  color: #c62828;
+}
+
+.muted {
+  color: hsl(var(--muted-foreground));
+  font-size: var(--fc-text-body);
+}
+
+.table-card {
+  overflow: hidden;
+}
+
+.transacoes-table {
+  width: 100%;
+  min-width: 720px;
+}
+
+.transacoes-table .mat-mdc-header-cell {
+  font-size: var(--fc-text-body);
+  font-weight: var(--fc-weight-semibold);
+}
+
+.transacoes-table .mat-mdc-cell {
+  font-size: var(--fc-text-body);
+}
+
+.transacao-card {
+  border-radius: 0.75rem;
+}
+
+.transacao-card mat-card-content {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem !important;
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.card-main {
+  min-width: 0;
+}
+
+.card-title {
+  margin: 0;
+  font-size: var(--fc-text-body);
+  font-weight: var(--fc-weight-semibold);
+  line-height: var(--fc-leading-normal);
+}
+
+.card-meta {
+  margin: 0.2rem 0 0;
+  font-size: var(--fc-text-caption);
+  color: hsl(var(--muted-foreground));
+}
+
+.card-value {
+  margin: 0;
+  font-size: var(--fc-text-body);
+  font-weight: var(--fc-weight-bold);
+  white-space: nowrap;
+}
+
+.card-chip {
+  margin: 0;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-top: 1px solid hsl(var(--border));
+  padding-top: 0.5rem;
+}
+
+.action-link {
+  appearance: none;
+  display: inline;
+  margin: 0;
+  padding: 0.15rem 0.35rem;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 500;
+  color: hsl(var(--primary));
+  cursor: pointer;
+  border-radius: 0.25rem;
+}
+
+.action-link:hover,
+.action-link:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
+.table-card mat-paginator {
+  border-top: 1px solid var(--mat-paginator-container-text-color, rgba(0, 0, 0, 0.12));
+  background: hsl(var(--card));
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+@media (max-width: 767px) {
+  .list-table {
+    display: none;
+  }
+
+  .list-cards {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .table-card mat-paginator ::ng-deep .mat-mdc-paginator-container {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+}

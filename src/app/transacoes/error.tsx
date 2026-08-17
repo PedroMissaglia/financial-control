@@ -18,7 +18,7 @@ export default function TransacoesError({ error, reset }: TransacoesErrorProps) 
     <div className="rounded-xl border bg-white p-8 text-center" role="alert">
       <h2 className="text-lg font-semibold">Erro ao carregar transações</h2>
       <p className="text-muted-foreground mt-2 text-sm">
-        Verifique se o json-server está rodando em http://localhost:3001
+        Não foi possível carregar os dados. Verifique se a API está disponível e tente novamente.
       </p>
       <Button className="mt-4" onClick={reset}>
         Tentar novamente
