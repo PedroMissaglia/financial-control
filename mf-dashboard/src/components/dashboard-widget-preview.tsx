@@ -45,6 +45,7 @@ interface DashboardWidgetPreviewProps {
   metaEconomia: number;
   alertaGastos: number;
   extratoLimite: number;
+  apiUrl?: string;
 }
 
 export function DashboardWidgetPreview({
@@ -53,6 +54,7 @@ export function DashboardWidgetPreview({
   metaEconomia,
   alertaGastos,
   extratoLimite,
+  apiUrl,
 }: Readonly<DashboardWidgetPreviewProps>) {
   const saldo = calcularSaldo(transacoes);
   const resumo = resumoFinanceiro(transacoes);
@@ -70,7 +72,7 @@ export function DashboardWidgetPreview({
     case 'saldo':
       return <SaldoCard saldo={saldo} />;
     case 'rapida':
-      return <NovaTransacaoRapida />;
+      return <NovaTransacaoRapida apiUrl={apiUrl} />;
     case 'evolucao':
       return (
         <Suspense fallback={<ChartFallback />}>

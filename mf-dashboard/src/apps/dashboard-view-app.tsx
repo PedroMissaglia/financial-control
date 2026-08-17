@@ -5,7 +5,7 @@ import { useDashboardTransacoes } from '@/lib/use-dashboard-transacoes';
 import type { DashboardViewProps, WidgetId } from '../../../shared/dashboard-contract';
 
 export function DashboardViewApp(props: Readonly<DashboardViewProps>) {
-  const transacoes = useDashboardTransacoes(props.transacoes as Transacao[]);
+  const transacoes = useDashboardTransacoes(props.transacoes as Transacao[], props.apiUrl);
 
   return (
     <DashboardWidgetGrid
@@ -19,6 +19,7 @@ export function DashboardViewApp(props: Readonly<DashboardViewProps>) {
           metaEconomia={props.metaEconomia}
           alertaGastos={props.alertaGastos}
           extratoLimite={props.extratoLimite}
+          apiUrl={props.apiUrl}
         />
       )}
     />

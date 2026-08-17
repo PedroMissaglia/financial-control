@@ -13,7 +13,7 @@ import {
 } from '../../../shared/dashboard-contract';
 
 export function DashboardEditorApp(props: Readonly<DashboardEditorProps>) {
-  const transacoes = useDashboardTransacoes(props.transacoes as Transacao[]);
+  const transacoes = useDashboardTransacoes(props.transacoes as Transacao[], props.apiUrl);
 
   return (
     <DashboardLayoutEditor
@@ -37,6 +37,7 @@ export function DashboardEditorApp(props: Readonly<DashboardEditorProps>) {
             metaEconomia={props.metaEconomia}
             alertaGastos={props.alertaGastos}
             extratoLimite={props.extratoLimite}
+            apiUrl={props.apiUrl}
           />
         </SortableWidget>
       )}

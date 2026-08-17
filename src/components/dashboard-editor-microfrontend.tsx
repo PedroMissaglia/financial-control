@@ -2,10 +2,9 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { ApiUnavailableBanner } from '@/components/api-unavailable-banner';
 import type { Transacao } from '@/data/transacoes';
+import { getApiUrl } from '@/lib/api-url';
 import { MF_DASHBOARD_URL } from '@/lib/load-mf-remote';
-import { useLiveTransacoes } from '@/lib/use-live-transacoes';
 import { useMfDashboardMount } from '@/lib/use-mf-dashboard-mount';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setDashboardLayout, setWidgetCols, toggleWidget } from '@/store/slices/dashboard-slice';
@@ -28,7 +27,6 @@ interface DashboardEditorMicrofrontendProps {
 
 export function DashboardEditorMicrofrontend({ transacoes }: Readonly<DashboardEditorMicrofrontendProps>) {
   const dispatch = useAppDispatch();
-  const live = useLiveTransacoes(transacoes);
 
   const widgets = useAppSelector(state => state.dashboard.widgets);
   const layoutRows = useAppSelector(state => state.dashboard.layoutRows);
@@ -39,15 +37,16 @@ export function DashboardEditorMicrofrontend({ transacoes }: Readonly<DashboardE
 
   const mfProps = useMemo<DashboardEditorProps>(
     () => ({
-      transacoes: live.transacoes ?? [],
+      transacoes: transacoes ?? [],
       widgets: widgets ?? [],
       layoutRows: layoutRows ?? [],
       layoutGroups: layoutGroups ?? [],
       metaEconomia,
       alertaGastos,
       extratoLimite,
+      apiUrl: getApiUrl(),
     }),
-    [live.transacoes, widgets, layoutRows, layoutGroups, metaEconomia, alertaGastos, extratoLimite],
+    [transacoes, widgets, layoutRows, layoutGroups, metaEconomia, alertaGastos, extratoLimite],
   );
 
   const { hostRef, mode } = useMfDashboardMount('./DashboardEditor', mfProps);
@@ -83,7 +82,6 @@ export function DashboardEditorMicrofrontend({ transacoes }: Readonly<DashboardE
 
   return (
     <>
-      {live.error ? <ApiUnavailableBanner onRetry={() => void live.retry()} /> : null}
       {mode === 'loading' && (
         <p className="text-muted-foreground mb-4 text-sm" role="status">
           Carregando editor de layout...
