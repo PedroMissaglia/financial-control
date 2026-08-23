@@ -103,7 +103,7 @@ export function Header() {
   return (
     <header
       role="banner"
-      className="bg-card border-border fixed inset-x-0 top-0 z-50 border-b shadow-sm pt-[env(safe-area-inset-top)]"
+      className="bg-card border-border fixed inset-x-0 top-[env(safe-area-inset-top,0px)] z-50 border-b shadow-sm"
     >
       <div className="mx-auto max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between sm:h-16">
