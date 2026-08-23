@@ -123,6 +123,20 @@ Repo: [financial-control-api](https://github.com/PedroMissaglia/financial-contro
 | GET | `/usuarios` | login |
 | GET/PUT/POST | `/profiles` | preferências e layout do dashboard |
 
+## App iOS (Capacitor)
+
+Casca nativa em [`mobile/`](mobile/) — WebView abre o host HTTPS (Vercel). Não embute o Next; offline fica para depois.
+
+```bash
+cd mobile
+cp .env.example .env.local   # defina CAPACITOR_SERVER_URL
+npm install
+npm run sync
+npm run open:ios
+```
+
+Detalhes, Ad Hoc / `.ipa` e checklist: [`mobile/README.md`](mobile/README.md).
+
 ## Licença
 
 Projeto acadêmico — POSTECH Tech Challenge Fase 2.

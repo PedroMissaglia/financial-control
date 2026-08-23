@@ -2,6 +2,17 @@
 node_modules
 mf-transacoes/node_modules
 mf-dashboard/node_modules
+mobile/node_modules
+
+# Capacitor / Xcode
+mobile/.env
+mobile/.env.local
+mobile/ios/App/Pods
+mobile/ios/DerivedData
+mobile/dist
+mobile/ios/App/App.xcworkspace/xcuserdata
+mobile/ios/App/App.xcodeproj/xcuserdata
+mobile/ios/App/App.xcodeproj/project.xcworkspace/xcuserdata
 
 # next.js
 .next/

@@ -1,0 +1,22 @@
+{
+  "name": "fin-control-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Casca Capacitor iOS do Fin Control (WebView → host HTTPS)",
+  "scripts": {
+    "sync": "./cap.sh sync ios",
+    "open:ios": "./cap.sh open ios",
+    "add:ios": "./cap.sh add ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.6.8",
+    "@capacitor/ios": "^7.6.8",
+    "@capacitor/keyboard": "^7.0.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.6.8",
+    "@types/node": "^22.13.10",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.7.2"
+  }
+}

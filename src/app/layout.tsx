@@ -23,6 +23,9 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export const dynamic = 'force-dynamic';
@@ -35,7 +38,7 @@ export default function RootLayout({
 
   return (
     <html lang="pt-BR" data-fin-theme="cyan">
-      <body className={`${inter.variable} flex min-h-screen flex-col font-sans antialiased`}>
+      <body className={`${inter.variable} flex min-h-dvh flex-col font-sans antialiased`}>
         <Script id="fincontrol-api-url" strategy="beforeInteractive">
           {`window.__FINCONTROL_API_URL__=${JSON.stringify(runtimeApiUrl)};`}
         </Script>

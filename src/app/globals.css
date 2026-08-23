@@ -3,12 +3,17 @@
 
 :root {
   --radius: 0.75rem;
-  --footer-height: 3.25rem;
+  /* h-14 / sm:h-16 do header (sem safe-area) */
+  --header-bar-height: 3.5rem;
+  --header-offset: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px));
+  /* py-4 (~1rem*2) + linha de texto + safe-area inferior */
+  --footer-height: calc(3.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 640px) {
   :root {
-    --footer-height: 3.75rem;
+    --header-bar-height: 4rem;
+    --footer-height: calc(3.75rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -66,11 +71,20 @@ mf-transacoes-list .mat-mdc-button-touch-target {
   background: transparent;
 }
 
+html {
+  background-color: hsl(var(--background));
+}
+
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  overflow-x: clip;
+  /* clip no eixo X quebra sticky/fixed no WKWebView (Capacitor) */
+  overflow-x: hidden;
+  min-height: 100dvh;
+  padding-top: var(--header-offset);
   padding-bottom: var(--footer-height);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
 section h1,
