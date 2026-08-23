@@ -75,6 +75,19 @@ html {
   background-color: hsl(var(--background));
 }
 
+/* Máscara da safe area: o header fica abaixo; sem isso o scroll sobe no espaço do status bar */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  height: env(safe-area-inset-top, 0px);
+  pointer-events: none;
+  background-color: hsl(var(--background));
+}
+
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
