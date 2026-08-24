@@ -81,10 +81,12 @@ function normalizarPageSize(value: unknown): number {
 export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
   @Input() apiUrl = 'http://127.0.0.1:3001';
   @Input() usuarioId = '';
+  @Input() usuarioIds: string[] = [];
   @Input() accessToken = '';
   @Input() filtros: TransacoesFiltros = FILTROS_VAZIOS;
   @Input() pageSize = DEFAULT_PAGE_SIZE;
   @Input() categoriaLabels: Record<string, string> = {};
+  @Input() donoLabels: Record<string, string> = {};
 
   pageSizeAtivo = DEFAULT_PAGE_SIZE;
   page = 1;
@@ -125,6 +127,17 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
     return temFiltrosAtivos(this.filtros);
   }
 
+  get resolvedUsuarioIds(): string[] {
+    if (Array.isArray(this.usuarioIds) && this.usuarioIds.length > 0) {
+      return this.usuarioIds.filter(Boolean);
+    }
+    return this.usuarioId ? [this.usuarioId] : [];
+  }
+
+  get mostraDono(): boolean {
+    return this.resolvedUsuarioIds.length > 1;
+  }
+
   get mostraLista(): boolean {
     return this.filtrosAtivos || this.mesAberto != null;
   }
@@ -133,6 +146,7 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
     this.pageSizeAtivo = normalizarPageSize(this.pageSize);
     window.addEventListener('fincontrol:transacoes-changed', this.onTransacoesChanged);
     window.addEventListener('fincontrol:categorias-changed', this.onCategoriasChanged);
+    window.addEventListener('fincontrol:visao-changed', this.onVisaoChanged);
     this.meses = mesesAteCorrente();
     void this.carregarLabels();
     void this.carregar();
@@ -141,6 +155,7 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
   ngOnDestroy(): void {
     window.removeEventListener('fincontrol:transacoes-changed', this.onTransacoesChanged);
     window.removeEventListener('fincontrol:categorias-changed', this.onCategoriasChanged);
+    window.removeEventListener('fincontrol:visao-changed', this.onVisaoChanged);
     if (this.filtrosTimer) clearTimeout(this.filtrosTimer);
   }
 
@@ -163,19 +178,23 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
     if (
       (changes['apiUrl'] && !changes['apiUrl'].firstChange)
       || (changes['usuarioId'] && !changes['usuarioId'].firstChange)
+      || (changes['usuarioIds'] && !changes['usuarioIds'].firstChange)
       || (changes['accessToken'] && !changes['accessToken'].firstChange)
     ) {
       void this.carregar();
       void this.carregarLabels();
     }
 
-    if (changes['categoriaLabels'] && !changes['categoriaLabels'].firstChange) {
+    if (
+      (changes['categoriaLabels'] && !changes['categoriaLabels'].firstChange)
+      || (changes['donoLabels'] && !changes['donoLabels'].firstChange)
+    ) {
       this.cdr.markForCheck();
     }
   }
 
   async carregar(): Promise<void> {
-    if (!this.usuarioId) {
+    if (this.resolvedUsuarioIds.length === 0) {
       this.items = [];
       this.total = 0;
       this.totalUnfiltered = 0;
@@ -196,7 +215,7 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
     this.cdr.detectChanges();
 
     try {
-      const result = await this.service.listar(this.apiUrl, this.usuarioId, this.accessToken, {
+      const result = await this.service.listar(this.apiUrl, this.resolvedUsuarioIds, this.accessToken, {
         page: this.page,
         pageSize: this.pageSizeAtivo,
         filtros: this.filtrosDaLista(),
@@ -341,7 +360,7 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
     this.syncPaginator();
 
     try {
-      const result = await this.service.listar(this.apiUrl, this.usuarioId, this.accessToken, {
+      const result = await this.service.listar(this.apiUrl, this.resolvedUsuarioIds, this.accessToken, {
         page: 1,
         pageSize: 1,
         filtros: FILTROS_VAZIOS,
@@ -358,7 +377,7 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
   }
 
   private async carregarLabels(): Promise<void> {
-    if (!this.usuarioId) {
+    if (this.resolvedUsuarioIds.length === 0) {
       this.fetchedLabels = {};
       return;
     }
@@ -366,13 +385,18 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
     try {
       this.fetchedLabels = await this.service.listarCategoriaLabels(
         this.apiUrl,
-        this.usuarioId,
+        this.resolvedUsuarioIds,
         this.accessToken,
       );
       this.cdr.markForCheck();
     } catch {
       this.fetchedLabels = {};
     }
+  }
+
+  donoLabel(usuarioId: string | undefined): string {
+    if (!usuarioId || !this.mostraDono) return '';
+    return this.donoLabels?.[usuarioId] ?? '';
   }
 
   private scheduleCarregar(resetPage: boolean): void {
@@ -403,6 +427,16 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
   };
 
   private readonly onCategoriasChanged = (): void => {
+    void this.carregarLabels();
+  };
+
+  private readonly onVisaoChanged = (event: Event): void => {
+    const detail = (event as CustomEvent<{ usuarioIds?: string[] }>).detail;
+    if (detail?.usuarioIds?.length) {
+      this.usuarioIds = detail.usuarioIds;
+      this.usuarioId = detail.usuarioIds[0] ?? '';
+    }
+    void this.carregar();
     void this.carregarLabels();
   };
 }

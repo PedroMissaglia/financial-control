@@ -3,6 +3,7 @@ import { normalizarTransacao } from '@/data/transacoes';
 import { apiFetch, readApiError } from '@/lib/api-client';
 import { notifyTransacoesChanged } from '@/lib/mf-events';
 import type { TransacoesFiltros } from '@/lib/transacao-filters';
+import { appendUsuarioIds, normalizeUsuarioIds } from '@/lib/usuario-ids';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -20,7 +21,7 @@ export interface TransacoesPage {
 }
 
 export interface FetchTransacoesPageParams {
-  usuarioId: string;
+  usuarioId?: string | string[];
   page: number;
   pageSize: number;
   filtros?: TransacoesFiltros;
@@ -67,13 +68,13 @@ function appendFiltros(search: URLSearchParams, filtros?: TransacoesFiltros) {
 }
 
 export function buildTransacoesQuery(params: {
-  usuarioId: string;
+  usuarioId?: string | string[];
   page?: number;
   pageSize?: number;
   filtros?: TransacoesFiltros;
 }): string {
   const search = new URLSearchParams();
-  search.set('usuarioId', params.usuarioId);
+  appendUsuarioIds(search, normalizeUsuarioIds(params.usuarioId));
 
   if (params.page != null) {
     search.set('page', String(Math.max(1, params.page)));
@@ -103,13 +104,14 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
   return { success: true, data };
 }
 
-export async function fetchTransacoes(usuarioId?: string): Promise<ApiResponse<Transacao[]>> {
-  if (!usuarioId) {
+export async function fetchTransacoes(usuarioId?: string | string[]): Promise<ApiResponse<Transacao[]>> {
+  const ids = normalizeUsuarioIds(usuarioId);
+  if (ids.length === 0) {
     return { success: true, data: [] };
   }
 
   try {
-    const response = await apiFetch(`/transacoes?${buildTransacoesQuery({ usuarioId })}`);
+    const response = await apiFetch(`/transacoes?${buildTransacoesQuery({ usuarioId: ids })}`);
     if (!response.ok) {
       return { success: false, message: 'Erro ao carregar transações', status: response.status };
     }

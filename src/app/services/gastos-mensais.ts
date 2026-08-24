@@ -1,6 +1,7 @@
 import type { GastoMensal, GastoMensalInput } from '@/data/gastos-mensais';
 import { apiFetch, readApiError } from '@/lib/api-client';
 import { notifyGastosMensaisChanged, notifyTransacoesChanged } from '@/lib/mf-events';
+import { appendUsuarioIds, fetchAllByUsuarioIds, normalizeUsuarioIds } from '@/lib/usuario-ids';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -10,17 +11,30 @@ interface ApiResponse<T> {
 }
 
 export async function fetchGastosMensais(
-  usuarioId: string,
+  usuarioId: string | string[],
   competencia: string,
 ): Promise<ApiResponse<GastoMensal[]>> {
+  const ids = normalizeUsuarioIds(usuarioId);
+  if (ids.length === 0) return { success: true, data: [] };
+
   try {
-    const search = new URLSearchParams({ usuarioId, competencia });
+    const search = new URLSearchParams({ competencia });
+    appendUsuarioIds(search, ids);
     const response = await apiFetch(`/gastos-mensais?${search.toString()}`);
-    if (!response.ok) {
-      return { success: false, message: await readApiError(response), status: response.status };
+    if (response.ok) {
+      const data = (await response.json()) as GastoMensal[];
+      return { success: true, data: Array.isArray(data) ? data : [] };
     }
-    const data = (await response.json()) as GastoMensal[];
-    return { success: true, data: Array.isArray(data) ? data : [] };
+
+    if (ids.length > 1) {
+      const merged = await fetchAllByUsuarioIds(ids, async id => {
+        const one = await fetchGastosMensais(id, competencia);
+        return one.data ?? [];
+      });
+      return { success: true, data: merged };
+    }
+
+    return { success: false, message: await readApiError(response), status: response.status };
   } catch (error) {
     console.error('Erro ao buscar gastos mensais:', error);
     return { success: false, message: 'Não foi possível conectar à API', status: 0 };

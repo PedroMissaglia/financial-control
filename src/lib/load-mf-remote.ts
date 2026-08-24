@@ -20,10 +20,13 @@ export function getMfDashboardUrl(): string {
 export interface TransacoesMfMountProps {
   apiUrl: string;
   usuarioId?: string;
+  /** Escopo Eu / Cônjuge / Conjunta. Quando informado, prevalece sobre usuarioId. */
+  usuarioIds?: string[];
   accessToken?: string;
   filtros: TransacoesFiltros;
   pageSize: number;
   categoriaLabels?: Record<string, string>;
+  donoLabels?: Record<string, string>;
 }
 
 export type MfMountFn<TProps> = (

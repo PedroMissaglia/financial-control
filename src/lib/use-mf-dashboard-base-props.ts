@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import type { Transacao } from '@/data/transacoes';
 import { getApiUrl } from '@/lib/api-url';
 import { useCategorias } from '@/lib/use-categorias';
+import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 import { useAppSelector } from '@/store/hooks';
 
 import type { DashboardMfBaseProps } from '../../shared/dashboard-contract';
@@ -14,11 +15,9 @@ export function useMfDashboardBaseProps(transacoes: Transacao[]): DashboardMfBas
   const widgets = useAppSelector(state => state.dashboard.widgets);
   const layoutRows = useAppSelector(state => state.dashboard.layoutRows);
   const layoutGroups = useAppSelector(state => state.dashboard.layoutGroups);
-  const metaEconomia = useAppSelector(state => state.dashboard.metaEconomia);
-  const alertaGastos = useAppSelector(state => state.dashboard.alertaGastos);
   const extratoLimite = useAppSelector(state => state.dashboard.extratoLimite);
-  const usuarioId = useAppSelector(state => state.auth.usuario?.id);
-  const { labels: categoriaLabels } = useCategorias(usuarioId);
+  const { usuarioIds, metaEconomiaEfetiva, alertaGastosEfetivo } = useEscopoFinanceiro();
+  const { labels: categoriaLabels } = useCategorias(usuarioIds);
 
   return useMemo(
     () => ({
@@ -26,21 +25,23 @@ export function useMfDashboardBaseProps(transacoes: Transacao[]): DashboardMfBas
       widgets: widgets ?? [],
       layoutRows: layoutRows ?? [],
       layoutGroups: layoutGroups ?? [],
-      metaEconomia,
-      alertaGastos,
+      metaEconomia: metaEconomiaEfetiva,
+      alertaGastos: alertaGastosEfetivo,
       extratoLimite,
       apiUrl: getApiUrl(),
       categoriaLabels,
+      usuarioIds,
     }),
     [
       transacoes,
       widgets,
       layoutRows,
       layoutGroups,
-      metaEconomia,
-      alertaGastos,
+      metaEconomiaEfetiva,
+      alertaGastosEfetivo,
       extratoLimite,
       categoriaLabels,
+      usuarioIds,
     ],
   );
 }

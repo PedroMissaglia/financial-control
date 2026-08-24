@@ -14,6 +14,7 @@ import { EntityListRow } from '@/components/entity-list-row';
 import { Badge } from '@/components/ui/badge';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,11 +28,12 @@ import {
   shiftCompetencia,
 } from '@/data/gastos-mensais';
 import { type FormaPagamento, FORMAS_PAGAMENTO } from '@/data/transacoes';
+import { DonoBadge } from '@/components/dono-badge';
 import { useCategorias } from '@/lib/use-categorias';
+import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 import { useGastosMensais } from '@/lib/use-gastos-mensais';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { formatCurrency } from '@/lib/utils';
-import { useAuth } from '@/store/hooks';
 
 const DIA_OPTIONS = Array.from({ length: 31 }, (_, index) => {
   const dia = String(index + 1);
@@ -77,11 +79,11 @@ function fromGasto(gasto: GastoMensal): FormState {
 }
 
 export function GastosMensaisBoard() {
-  const { usuario } = useAuth();
+  const { usuarioIds, usuarioIdEscrita, visao, parceiro } = useEscopoFinanceiro();
   const isDesktop = useMediaQuery('(min-width: 640px)');
   const [competencia, setCompetencia] = useState(competenciaAtual);
-  const { gastos, loading, reload } = useGastosMensais(usuario?.id, competencia);
-  const { categorias } = useCategorias(usuario?.id);
+  const { gastos, loading, reload } = useGastosMensais(usuarioIds, competencia);
+  const { categorias } = useCategorias(usuarioIds);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<FormState>(EMPTY_FORM);
@@ -124,11 +126,12 @@ export function GastosMensaisBoard() {
 
   async function handleCreate() {
     const input = toInput(form);
-    if (!input.titulo || input.titulo.length < 2 || !usuario?.id) return;
+    const ownerId = usuarioIdEscrita;
+    if (!input.titulo || input.titulo.length < 2 || !ownerId) return;
 
     setBusy(true);
     setError(null);
-    const result = await createGastoMensal(usuario.id, input);
+    const result = await createGastoMensal(ownerId, input);
     setBusy(false);
 
     if (!result.success) {
@@ -296,21 +299,23 @@ export function GastosMensaisBoard() {
                   }`}
                   titleClassName={item.pago ? 'text-muted-foreground line-through' : undefined}
                   badge={
-                    atrasado ? (
-                      <Badge
-                        variant="destructive"
-                        className="shrink-0 border-transparent bg-destructive/14 text-destructive"
-                      >
-                        Atrasado
-                      </Badge>
-                    ) : null
+                    <>
+                      <DonoBadge usuarioId={item.usuarioId} />
+                      {atrasado ? (
+                        <Badge
+                          variant="destructive"
+                          className="shrink-0 border-transparent bg-destructive/14 text-destructive"
+                        >
+                          Atrasado
+                        </Badge>
+                      ) : null}
+                    </>
                   }
                   leading={
-                    <input
-                      type="checkbox"
-                      className="accent-primary h-4 w-4 shrink-0"
+                    <Checkbox
                       checked={item.pago}
                       disabled={busy || busyId === item.id}
+                      tone={atrasado ? 'danger' : 'default'}
                       aria-label={`Marcar ${item.titulo} como pago em ${labelCompetencia(competencia)}${
                         atrasado ? ', atrasado' : ''
                       }`}
@@ -366,12 +371,15 @@ export function GastosMensaisBoard() {
           <Button
             type="button"
             className="gap-1.5"
-            disabled={busy || loading || form.titulo.trim().length < 2}
+            disabled={busy || loading || form.titulo.trim().length < 2 || !usuarioIdEscrita}
             onClick={() => void handleCreate()}
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Criar
           </Button>
+          {visao === 'parceiro' && parceiro && (
+            <p className="text-muted-foreground text-xs">O gasto será criado na conta de {parceiro.nome}.</p>
+          )}
         </section>
       ) : (
         <Button type="button" className="w-full gap-1.5" onClick={openCreateSheet}>

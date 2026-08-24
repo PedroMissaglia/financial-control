@@ -59,10 +59,14 @@ docker compose up --build
 ```
 Next.js (host / Vercel)
   ├── Home SSR: carrega o remote React do dashboard
-  ├── /profile: editor de layout e preferências
+  ├── /profile: editor de layout, preferências e conta conjunta
   ├── Formulário: validação Zod, sugestão de categoria, anexos
   └── /transacoes → carrega o remote Angular (Native Federation)
+```
 
+Conta conjunta (protótipo + contrato da API): [docs/CONTA_CONJUNTA_PROTOTIPO.md](docs/CONTA_CONJUNTA_PROTOTIPO.md).
+
+```
 Angular 19 (mf-transacoes)
   └── ./Transacoes — listagem com busca, filtros, paginação e exclusão
 

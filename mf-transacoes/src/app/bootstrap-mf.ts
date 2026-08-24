@@ -6,10 +6,12 @@ import { FILTROS_VAZIOS, TransacoesFiltros, TransacoesListComponent } from './tr
 export interface TransacoesMfProps {
   apiUrl: string;
   usuarioId?: string;
+  usuarioIds?: string[];
   accessToken?: string;
   filtros: TransacoesFiltros;
   pageSize: number;
   categoriaLabels?: Record<string, string>;
+  donoLabels?: Record<string, string>;
 }
 
 export type { TransacoesFiltros };
@@ -30,10 +32,12 @@ export async function mount(element: HTMLElement, props: TransacoesMfProps): Pro
   const node = document.createElement(CUSTOM_ELEMENT_TAG) as HTMLElement & TransacoesMfProps;
   node.apiUrl = props.apiUrl;
   node.usuarioId = props.usuarioId ?? '';
+  node.usuarioIds = props.usuarioIds ?? (props.usuarioId ? [props.usuarioId] : []);
   node.accessToken = props.accessToken ?? '';
   node.filtros = props.filtros ?? FILTROS_VAZIOS;
   node.pageSize = props.pageSize ?? 8;
   node.categoriaLabels = props.categoriaLabels ?? {};
+  node.donoLabels = props.donoLabels ?? {};
   element.replaceChildren(node);
 
   return () => {

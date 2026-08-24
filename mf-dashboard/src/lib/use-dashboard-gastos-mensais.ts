@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { competenciaAtual, type GastoMensal } from '@/data/gastos-mensais';
 import { resolveDashboardApiUrl } from '@/lib/api-url';
@@ -6,11 +6,20 @@ import { authHeaders } from '@/lib/auth-token';
 
 const MF_TRANSACOES_CHANGED = 'fincontrol:transacoes-changed';
 const MF_GASTOS_MENSAIS_CHANGED = 'fincontrol:gastos-mensais-changed';
+const MF_VISAO_CHANGED = 'fincontrol:visao-changed';
 
 function getUsuarioIdFromCookie(): string | undefined {
   if (typeof document === 'undefined') return undefined;
   const match = /(?:^|; )fincontrol_uid=([^;]*)/.exec(document.cookie);
   return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+function buildQuery(usuarioIds: string[], competencia: string): string {
+  const search = new URLSearchParams({ competencia });
+  if (usuarioIds.length === 0) return search.toString();
+  search.set('usuarioId', usuarioIds[0]);
+  if (usuarioIds.length > 1) search.set('usuarioIds', usuarioIds.join(','));
+  return search.toString();
 }
 
 function parseGastos(json: unknown): GastoMensal[] {
@@ -41,9 +50,9 @@ function gastosSignature(items: GastoMensal[]) {
     .join('|');
 }
 
-async function fetchGastosDoUsuario(usuarioId: string, apiUrl: string, competencia: string): Promise<GastoMensal[] | null> {
-  const search = new URLSearchParams({ usuarioId, competencia });
-  const response = await fetch(`${apiUrl}/gastos-mensais?${search.toString()}`, {
+async function fetchGastos(usuarioIds: string[], apiUrl: string, competencia: string): Promise<GastoMensal[] | null> {
+  if (usuarioIds.length === 0) return [];
+  const response = await fetch(`${apiUrl}/gastos-mensais?${buildQuery(usuarioIds, competencia)}`, {
     cache: 'no-store',
     headers: authHeaders(),
   });
@@ -51,17 +60,31 @@ async function fetchGastosDoUsuario(usuarioId: string, apiUrl: string, competenc
   return parseGastos(await response.json());
 }
 
-export function useDashboardGastosMensais(apiUrl?: string) {
+export function useDashboardGastosMensais(apiUrl?: string, usuarioIdsProp?: string[]) {
   const resolvedApiUrl = resolveDashboardApiUrl(apiUrl);
   const [gastos, setGastos] = useState<GastoMensal[]>([]);
+  const scopeRef = useRef<string[]>(usuarioIdsProp?.length ? usuarioIdsProp : []);
 
   useEffect(() => {
-    async function refresh() {
-      const usuarioId = getUsuarioIdFromCookie();
-      if (!usuarioId) return;
+    if (usuarioIdsProp?.length) scopeRef.current = usuarioIdsProp;
+  }, [usuarioIdsProp]);
+
+  useEffect(() => {
+    async function refresh(event?: Event) {
+      const detailIds = (event as CustomEvent<{ usuarioIds?: string[] }> | undefined)?.detail?.usuarioIds;
+      if (detailIds?.length) scopeRef.current = detailIds;
+
+      const ids =
+        scopeRef.current.length > 0
+          ? scopeRef.current
+          : (() => {
+              const cookieId = getUsuarioIdFromCookie();
+              return cookieId ? [cookieId] : [];
+            })();
+      if (ids.length === 0) return;
 
       try {
-        const data = await fetchGastosDoUsuario(usuarioId, resolvedApiUrl, competenciaAtual());
+        const data = await fetchGastos(ids, resolvedApiUrl, competenciaAtual());
         if (!data) return;
         const nextSignature = gastosSignature(data);
         setGastos(prev => (gastosSignature(prev) === nextSignature ? prev : data));
@@ -73,9 +96,11 @@ export function useDashboardGastosMensais(apiUrl?: string) {
     void refresh();
     window.addEventListener(MF_TRANSACOES_CHANGED, refresh);
     window.addEventListener(MF_GASTOS_MENSAIS_CHANGED, refresh);
+    window.addEventListener(MF_VISAO_CHANGED, refresh);
     return () => {
       window.removeEventListener(MF_TRANSACOES_CHANGED, refresh);
       window.removeEventListener(MF_GASTOS_MENSAIS_CHANGED, refresh);
+      window.removeEventListener(MF_VISAO_CHANGED, refresh);
     };
   }, [resolvedApiUrl]);
 

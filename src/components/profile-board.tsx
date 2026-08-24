@@ -3,6 +3,7 @@
 import { User } from 'lucide-react';
 
 import { DashboardEditorMicrofrontend } from '@/components/dashboard-editor-microfrontend';
+import { ContaConjuntaSection } from '@/components/conta-conjunta-section';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,6 +44,8 @@ export function ProfileBoard({ transacoes }: Readonly<ProfileBoardProps>) {
           </div>
         </CardHeader>
       </Card>
+
+      <ContaConjuntaSection />
 
       <section className="bg-card space-y-6 rounded-xl border p-4 shadow-sm sm:p-6" aria-label="Preferências do dashboard">
         <div>

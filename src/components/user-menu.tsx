@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
+import { useAppSelector } from '@/store/hooks';
 
 interface UserMenuProps {
   nome?: string | null;
@@ -17,6 +18,7 @@ export function UserMenu({ nome, onLogout }: Readonly<UserMenuProps>) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const inicial = nome?.trim().charAt(0).toUpperCase();
+  const conviteRecebido = useAppSelector(state => state.contaConjunta.status === 'convite_recebido');
 
   useEffect(() => {
     if (!open) return;
@@ -55,10 +57,13 @@ export function UserMenu({ nome, onLogout }: Readonly<UserMenuProps>) {
       >
         {inicial ? (
           <div
-            className="bg-primary flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white"
+            className="bg-primary relative flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white"
             title={nome ?? undefined}
           >
             {inicial}
+            {conviteRecebido && (
+              <span className="bg-destructive absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-card" aria-hidden="true" />
+            )}
           </div>
         ) : (
           <div
@@ -91,6 +96,7 @@ export function UserMenu({ nome, onLogout }: Readonly<UserMenuProps>) {
             onClick={closeMenu}
           >
             Meu perfil
+            {conviteRecebido ? ' · convite' : ''}
           </Link>
           <button
             type="button"

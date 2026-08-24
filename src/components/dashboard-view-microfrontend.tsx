@@ -5,10 +5,10 @@ import { useEffect, useState } from 'react';
 import { fetchTransacoes } from '@/app/services/transacoes';
 import type { Transacao } from '@/data/transacoes';
 import { MF_DASHBOARD_URL } from '@/lib/load-mf-remote';
-import { MF_TRANSACOES_CHANGED } from '@/lib/mf-events';
+import { MF_TRANSACOES_CHANGED, MF_VISAO_CHANGED } from '@/lib/mf-events';
+import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 import { useMfDashboardBaseProps } from '@/lib/use-mf-dashboard-base-props';
 import { useMfDashboardMount } from '@/lib/use-mf-dashboard-mount';
-import { useAppSelector } from '@/store/hooks';
 
 interface DashboardViewMicrofrontendProps {
   transacoes?: Transacao[];
@@ -17,7 +17,8 @@ interface DashboardViewMicrofrontendProps {
 export function DashboardViewMicrofrontend({
   transacoes: transacoesProp = [],
 }: Readonly<DashboardViewMicrofrontendProps>) {
-  const usuarioId = useAppSelector(state => state.auth.usuario?.id);
+  const { usuarioIds } = useEscopoFinanceiro();
+  const idsKey = usuarioIds.join(',');
   const [transacoes, setTransacoes] = useState<Transacao[]>(transacoesProp);
 
   useEffect(() => {
@@ -27,23 +28,25 @@ export function DashboardViewMicrofrontend({
   }, [transacoesProp]);
 
   useEffect(() => {
-    if (!usuarioId) return;
-    const uid = usuarioId;
+    if (!idsKey) return;
+    const ids = idsKey.split(',');
     let cancelled = false;
 
     async function reload() {
-      const result = await fetchTransacoes(uid);
+      const result = await fetchTransacoes(ids);
       if (cancelled || !result.success || !result.data) return;
       setTransacoes(result.data);
     }
 
     void reload();
     window.addEventListener(MF_TRANSACOES_CHANGED, reload);
+    window.addEventListener(MF_VISAO_CHANGED, reload);
     return () => {
       cancelled = true;
       window.removeEventListener(MF_TRANSACOES_CHANGED, reload);
+      window.removeEventListener(MF_VISAO_CHANGED, reload);
     };
-  }, [usuarioId]);
+  }, [idsKey]);
 
   const mfProps = useMfDashboardBaseProps(transacoes);
   const { hostRef, mode } = useMfDashboardMount('./DashboardView', mfProps);

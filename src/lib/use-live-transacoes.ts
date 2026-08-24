@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { fetchTransacoes } from '@/app/services/transacoes';
 import type { Transacao } from '@/data/transacoes';
-import { getUsuarioIdFromCookie, MF_TRANSACOES_CHANGED } from '@/lib/mf-events';
+import { MF_TRANSACOES_CHANGED, MF_VISAO_CHANGED } from '@/lib/mf-events';
+import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 
 function transacoesSignature(items: Transacao[] | undefined) {
   return (items ?? [])
@@ -14,6 +15,8 @@ function transacoesSignature(items: Transacao[] | undefined) {
 }
 
 export function useLiveTransacoes(transacoes: Transacao[] = []) {
+  const { usuarioIds } = useEscopoFinanceiro();
+  const idsKey = usuarioIds.join(',');
   const safe = Array.isArray(transacoes) ? transacoes : [];
   const [live, setLive] = useState(safe);
   const [error, setError] = useState<string | null>(null);
@@ -33,10 +36,9 @@ export function useLiveTransacoes(transacoes: Transacao[] = []) {
   }, [transacoes]);
 
   const reload = useCallback(async () => {
-    const usuarioId = getUsuarioIdFromCookie();
-    if (!usuarioId) return;
+    if (!idsKey) return;
 
-    const result = await fetchTransacoes(usuarioId);
+    const result = await fetchTransacoes(idsKey.split(','));
     if (!result.success || !result.data) {
       setError(result.message ?? 'Não foi possível conectar à API');
       return;
@@ -46,7 +48,7 @@ export function useLiveTransacoes(transacoes: Transacao[] = []) {
     const nextSignature = transacoesSignature(result.data);
     liveSignature.current = nextSignature;
     setLive(prev => (transacoesSignature(prev) === nextSignature ? prev : result.data ?? prev));
-  }, []);
+  }, [idsKey]);
 
   useEffect(() => {
     void reload();
@@ -58,7 +60,11 @@ export function useLiveTransacoes(transacoes: Transacao[] = []) {
     }
 
     window.addEventListener(MF_TRANSACOES_CHANGED, onChanged);
-    return () => window.removeEventListener(MF_TRANSACOES_CHANGED, onChanged);
+    window.addEventListener(MF_VISAO_CHANGED, onChanged);
+    return () => {
+      window.removeEventListener(MF_TRANSACOES_CHANGED, onChanged);
+      window.removeEventListener(MF_VISAO_CHANGED, onChanged);
+    };
   }, [reload]);
 
   return { transacoes: live, error, retry: reload };

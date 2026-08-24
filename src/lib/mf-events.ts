@@ -5,6 +5,7 @@ export const MF_NAVIGATE = 'fincontrol:navigate';
 export const MF_TRANSACOES_PAGE_SIZE = 'fincontrol:transacoes-page-size';
 export const MF_TRANSACOES_PAGE_META = 'fincontrol:transacoes-page-meta';
 export const MF_DELETE_TRANSACAO = 'fincontrol:delete-transacao';
+export const MF_VISAO_CHANGED = 'fincontrol:visao-changed';
 
 export type MfNavigateDetail = {
   href: string;
@@ -24,6 +25,11 @@ export type MfDeleteTransacaoDetail = {
   descricao: string;
 };
 
+export type MfVisaoChangedDetail = {
+  visao: 'eu' | 'parceiro' | 'conjunto';
+  usuarioIds: string[];
+};
+
 export function notifyTransacoesChanged() {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(MF_TRANSACOES_CHANGED));
@@ -37,6 +43,11 @@ export function notifyCategoriasChanged() {
 export function notifyGastosMensaisChanged() {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(MF_GASTOS_MENSAIS_CHANGED));
+}
+
+export function notifyVisaoChanged(detail: MfVisaoChangedDetail) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent<MfVisaoChangedDetail>(MF_VISAO_CHANGED, { detail }));
 }
 
 export function getUsuarioIdFromCookie(): string | undefined {

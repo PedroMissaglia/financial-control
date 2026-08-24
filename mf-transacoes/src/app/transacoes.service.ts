@@ -68,9 +68,12 @@ function parseTransacoesPage(json: unknown): TransacoesPage {
   return { items: [], total: 0, page: 1, pageSize: 0, totalUnfiltered: 0 };
 }
 
-function buildQuery(usuarioId: string, params: ListarTransacoesParams): string {
+function buildQuery(usuarioIds: string[], params: ListarTransacoesParams): string {
   const search = new URLSearchParams();
-  search.set('usuarioId', usuarioId);
+  if (usuarioIds.length > 0) {
+    search.set('usuarioId', usuarioIds[0]);
+    if (usuarioIds.length > 1) search.set('usuarioIds', usuarioIds.join(','));
+  }
   search.set('page', String(Math.max(1, params.page)));
   search.set('pageSize', String(params.pageSize));
 
@@ -94,11 +97,12 @@ function buildQuery(usuarioId: string, params: ListarTransacoesParams): string {
 export class TransacoesService {
   listar(
     apiUrl: string,
-    usuarioId: string,
+    usuarioIds: string | string[],
     accessToken: string | undefined,
     params: ListarTransacoesParams,
   ): Promise<TransacoesPage> {
-    const url = `${apiUrl}/transacoes?${buildQuery(usuarioId, params)}`;
+    const ids = Array.isArray(usuarioIds) ? usuarioIds.filter(Boolean) : usuarioIds ? [usuarioIds] : [];
+    const url = `${apiUrl}/transacoes?${buildQuery(ids, params)}`;
     const token = readAccessToken(accessToken);
     const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
@@ -112,10 +116,16 @@ export class TransacoesService {
 
   listarCategoriaLabels(
     apiUrl: string,
-    usuarioId: string,
+    usuarioIds: string | string[],
     accessToken: string | undefined,
   ): Promise<Record<string, string>> {
-    const url = `${apiUrl}/categorias?usuarioId=${encodeURIComponent(usuarioId)}`;
+    const ids = Array.isArray(usuarioIds) ? usuarioIds.filter(Boolean) : usuarioIds ? [usuarioIds] : [];
+    const search = new URLSearchParams();
+    if (ids.length > 0) {
+      search.set('usuarioId', ids[0]);
+      if (ids.length > 1) search.set('usuarioIds', ids.join(','));
+    }
+    const url = `${apiUrl}/categorias?${search.toString()}`;
     const token = readAccessToken(accessToken);
     const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 

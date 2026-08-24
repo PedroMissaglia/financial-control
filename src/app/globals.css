@@ -3,7 +3,7 @@
 
 :root {
   --radius: 0.75rem;
-  /* h-14 / sm:h-16 do header (sem safe-area) */
+  /* h-14 / sm:h-16 do header (sem safe-area); Header sincroniza via ResizeObserver */
   --header-bar-height: 3.5rem;
   --header-offset: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px));
   /* py-4 (~1rem*2) + linha de texto + safe-area inferior */

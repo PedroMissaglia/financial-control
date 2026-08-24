@@ -7,6 +7,7 @@ import { clearPersistedUsuario, persistUsuario, readStoredUsuario } from '@/lib/
 import { store } from '@/store';
 import { useAppDispatch } from '@/store/hooks';
 import { hydrateFromStorage } from '@/store/slices/auth-slice';
+import { hydrateVisao, loadContaConjunta } from '@/store/slices/conta-conjunta-slice';
 import { loadDashboardProfile } from '@/store/slices/dashboard-slice';
 
 function StoreHydration({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -20,8 +21,10 @@ function StoreHydration({ children }: Readonly<{ children: React.ReactNode }>) {
       clearPersistedUsuario();
     }
     dispatch(hydrateFromStorage());
+    dispatch(hydrateVisao());
     if (usuario?.id) {
       void dispatch(loadDashboardProfile(usuario.id));
+      void dispatch(loadContaConjunta());
     }
   }, [dispatch]);
 

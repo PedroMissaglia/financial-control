@@ -16,6 +16,7 @@ import {
 } from '@/lib/mf-events';
 import { type TransacoesFiltros } from '@/lib/transacao-filters';
 import { useCategorias } from '@/lib/use-categorias';
+import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { syncTransacoesFiltros, syncTransacoesPageSize } from '@/store/slices/dashboard-slice';
 
@@ -36,10 +37,13 @@ export function TransacoesMicrofrontend() {
   const [mode, setMode] = useState<'loading' | 'remote' | 'error'>('loading');
   const filtros = useAppSelector(state => state.dashboard.transacoesFiltros);
   const pageSize = useAppSelector(state => state.dashboard.transacoesPageSize);
-  const usuarioId = useAppSelector(state => state.auth.usuario?.id);
-  const { labels: categoriaLabels } = useCategorias(usuarioId);
+  const { usuarioIds, donoLabels } = useEscopoFinanceiro();
+  const { labels: categoriaLabels } = useCategorias(usuarioIds);
   const [total, setTotal] = useState(0);
   const [totalUnfiltered, setTotalUnfiltered] = useState(0);
+  const usuarioIdsKey = usuarioIds.join(',');
+  const scopeIds = usuarioIdsKey ? usuarioIdsKey.split(',') : [];
+  const primaryUsuarioId = scopeIds[0] || getUsuarioIdFromCookie();
 
   useEffect(() => {
     const usuarioId = getUsuarioIdFromCookie();
@@ -113,11 +117,13 @@ export function TransacoesMicrofrontend() {
 
           const maybeUnmount = await remote.mount(host, {
             apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3001',
-            usuarioId: getUsuarioIdFromCookie(),
+            usuarioId: primaryUsuarioId,
+            usuarioIds: scopeIds,
             accessToken: readStoredSession()?.accessToken ?? undefined,
             filtros,
             pageSize,
             categoriaLabels,
+            donoLabels,
           });
           if (cancelled) {
             maybeUnmount?.();
@@ -163,6 +169,13 @@ export function TransacoesMicrofrontend() {
     if (mode !== 'remote' || !mfNodeRef.current) return;
     mfNodeRef.current.categoriaLabels = categoriaLabels;
   }, [categoriaLabels, mode]);
+
+  useEffect(() => {
+    if (mode !== 'remote' || !mfNodeRef.current) return;
+    mfNodeRef.current.usuarioId = primaryUsuarioId ?? '';
+    mfNodeRef.current.usuarioIds = scopeIds;
+    mfNodeRef.current.donoLabels = donoLabels;
+  }, [donoLabels, mode, primaryUsuarioId, scopeIds, usuarioIdsKey]);
 
   function handleFiltrosChange(next: TransacoesFiltros) {
     dispatch(syncTransacoesFiltros(next));

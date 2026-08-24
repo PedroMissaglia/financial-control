@@ -4,24 +4,27 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { fetchCategorias } from '@/app/services/categorias';
 import { type Categoria, categoriasToLabels } from '@/data/categorias';
+import { normalizeUsuarioIds } from '@/lib/usuario-ids';
 
-export function useCategorias(usuarioId?: string) {
+export function useCategorias(usuarioId?: string | string[]) {
+  const idsKey = normalizeUsuarioIds(usuarioId).join(',');
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [loading, setLoading] = useState(Boolean(usuarioId));
+  const [loading, setLoading] = useState(Boolean(idsKey));
   const requestId = useRef(0);
 
   const reload = useCallback(async () => {
     const id = ++requestId.current;
-    if (!usuarioId) {
+    const ids = idsKey ? idsKey.split(',') : [];
+    if (ids.length === 0) {
       setCategorias([]);
       setLoading(false);
       return;
     }
-    const result = await fetchCategorias(usuarioId);
+    const result = await fetchCategorias(ids);
     if (id !== requestId.current) return;
     setCategorias(result.data ?? []);
     setLoading(false);
-  }, [usuarioId]);
+  }, [idsKey]);
 
   useEffect(() => {
     let cancelled = false;

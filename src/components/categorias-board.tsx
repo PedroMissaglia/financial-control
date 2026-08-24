@@ -1,20 +1,23 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { createCategoria, deleteCategoria, updateCategoria } from '@/app/services/categorias';
+import { DonoBadge } from '@/components/dono-badge';
 import { EntityListRow } from '@/components/entity-list-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Categoria } from '@/data/categorias';
 import { useCategorias } from '@/lib/use-categorias';
+import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 import { useAuth } from '@/store/hooks';
 
 export function CategoriasBoard() {
   const { usuario } = useAuth();
-  const { categorias, loading, reload } = useCategorias(usuario?.id);
+  const { usuarioIds, usuarioIdEscrita, visao, parceiro } = useEscopoFinanceiro();
+  const { categorias, loading, reload } = useCategorias(usuarioIds);
   const [nome, setNome] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNome, setEditNome] = useState('');
@@ -22,15 +25,26 @@ export function CategoriasBoard() {
   const [busy, setBusy] = useState(false);
 
   const padrao = categorias.filter(item => item.sistema);
-  const minhas = categorias.filter(item => !item.sistema);
+  const personalizadas = useMemo(() => categorias.filter(item => !item.sistema), [categorias]);
+
+  const minhas = useMemo(() => {
+    if (visao !== 'conjunto' || !usuario?.id) return personalizadas;
+    return personalizadas.filter(item => !item.usuarioId || item.usuarioId === usuario.id);
+  }, [personalizadas, usuario?.id, visao]);
+
+  const doParceiro = useMemo(() => {
+    if (visao !== 'conjunto' || !parceiro) return [];
+    return personalizadas.filter(item => item.usuarioId === parceiro.id);
+  }, [parceiro, personalizadas, visao]);
 
   async function handleCreate() {
     const trimmed = nome.trim();
-    if (!trimmed || !usuario?.id) return;
+    const ownerId = usuarioIdEscrita;
+    if (!trimmed || !ownerId) return;
 
     setBusy(true);
     setError(null);
-    const result = await createCategoria(usuario.id, trimmed);
+    const result = await createCategoria(ownerId, trimmed);
     setBusy(false);
 
     if (!result.success) {
@@ -78,16 +92,16 @@ export function CategoriasBoard() {
     await reload();
   }
 
-  function renderMinhas() {
-    if (loading && minhas.length === 0) {
+  function renderLista(items: Categoria[], emptyMessage: string) {
+    if (loading && items.length === 0) {
       return <p className="text-muted-foreground text-sm">Carregando categorias...</p>;
     }
-    if (minhas.length === 0) {
-      return <p className="text-muted-foreground text-sm">Você ainda não criou categorias personalizadas.</p>;
+    if (items.length === 0) {
+      return <p className="text-muted-foreground text-sm">{emptyMessage}</p>;
     }
     return (
       <ul className="divide-border divide-y rounded-lg border">
-        {minhas.map(item => (
+        {items.map(item => (
           <li
             key={item.id}
             className={
@@ -130,6 +144,7 @@ export function CategoriasBoard() {
             ) : (
               <EntityListRow
                 title={item.nome}
+                badge={<DonoBadge usuarioId={item.usuarioId} />}
                 editLabel={`Renomear ${item.nome}`}
                 deleteLabel={`Excluir ${item.nome}`}
                 disabled={busy}
@@ -184,13 +199,16 @@ export function CategoriasBoard() {
           <Button
             type="button"
             className="gap-1.5 sm:w-auto"
-            disabled={busy || loading || !nome.trim()}
+            disabled={busy || loading || !nome.trim() || !usuarioIdEscrita}
             onClick={() => void handleCreate()}
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Criar
           </Button>
         </div>
+        {visao === 'parceiro' && parceiro && (
+          <p className="text-muted-foreground text-xs">A categoria será criada na conta de {parceiro.nome}.</p>
+        )}
       </div>
 
       {error && (
@@ -199,7 +217,26 @@ export function CategoriasBoard() {
         </p>
       )}
 
-      {renderMinhas()}
+      <div className="space-y-2">
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          {visao === 'conjunto' ? 'Suas' : 'Personalizadas'}
+        </p>
+        {renderLista(
+          minhas,
+          visao === 'conjunto'
+            ? 'Você ainda não criou categorias personalizadas.'
+            : 'Nenhuma categoria personalizada nesta visão.',
+        )}
+      </div>
+
+      {visao === 'conjunto' && (
+        <div className="space-y-2">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Do cônjuge
+          </p>
+          {renderLista(doParceiro, 'O cônjuge ainda não criou categorias personalizadas.')}
+        </div>
+      )}
     </section>
   );
 }

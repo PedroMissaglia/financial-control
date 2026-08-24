@@ -32,6 +32,7 @@ import {
 } from '@/data/transacoes';
 import { useCategorias } from '@/lib/use-categorias';
 import { useAuth } from '@/store/hooks';
+import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 
 const hoje = () => {
   const now = new Date();
@@ -83,8 +84,20 @@ export function TransacaoForm({
 }: Readonly<TransacaoFormProps>) {
   const router = useRouter();
   const { usuario } = useAuth();
-  const usuarioIdCategorias = mode === 'edit' && transacao ? transacao.usuarioId : usuario?.id;
-  const { categorias } = useCategorias(usuarioIdCategorias);
+  const { visao, usuarioIdEscrita, parceiro } = useEscopoFinanceiro();
+  const [donoId, setDonoId] = useState(usuarioIdEscrita ?? usuario?.id ?? '');
+  const categoriasOwner = mode === 'edit' && transacao ? transacao.usuarioId : donoId || usuarioIdEscrita;
+  const { categorias } = useCategorias(
+    mode === 'edit' && transacao
+      ? transacao.usuarioId
+      : visao === 'conjunto'
+        ? [usuario?.id, parceiro?.id].filter(Boolean) as string[]
+        : categoriasOwner,
+  );
+
+  useEffect(() => {
+    if (usuarioIdEscrita) setDonoId(usuarioIdEscrita);
+  }, [usuarioIdEscrita]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [anexo, setAnexo] = useState<TransacaoAnexo | null>(transacao?.anexo ?? null);
@@ -133,6 +146,10 @@ export function TransacaoForm({
   }, [categorias, transacao?.categoria]);
 
   useEffect(() => {
+    if (mode === 'create' && usuarioIdEscrita) setDonoId(usuarioIdEscrita);
+  }, [mode, usuarioIdEscrita]);
+
+  useEffect(() => {
     if (!transacao?.anexoId || transacao.anexo) return;
     let cancelled = false;
 
@@ -159,11 +176,11 @@ export function TransacaoForm({
 
   async function handleNovaCategoria() {
     const nome = novaCategoria.trim();
-    if (!nome || !usuarioIdCategorias) return;
+    if (!nome || !categoriasOwner) return;
 
     setSalvandoCategoria(true);
     setError(null);
-    const result = await createCategoria(usuarioIdCategorias, nome);
+    const result = await createCategoria(categoriasOwner, nome);
     setSalvandoCategoria(false);
 
     if (!result.success || !result.data) {
@@ -178,7 +195,7 @@ export function TransacaoForm({
   }
 
   async function onSubmit(data: TransacaoFormData) {
-    const usuarioId = mode === 'edit' && transacao ? transacao.usuarioId : usuario?.id;
+    const usuarioId = mode === 'edit' && transacao ? transacao.usuarioId : donoId || usuarioIdEscrita;
 
     if (!usuarioId) {
       setError('Sessão expirada. Faça login novamente.');
@@ -229,6 +246,21 @@ export function TransacaoForm({
 
   return (
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      {mode === 'create' && visao === 'conjunto' && usuario && parceiro && (
+        <div className="space-y-2">
+          <Label htmlFor="dono">Lançar em nome de</Label>
+          <SelectMenu
+            id="dono"
+            value={donoId || usuario.id}
+            onChange={setDonoId}
+            options={[
+              { value: usuario.id, label: `Você (${usuario.nome})` },
+              { value: parceiro.id, label: parceiro.nome },
+            ]}
+            aria-label="Lançar em nome de"
+          />
+        </div>
+      )}
       <div className="space-y-2">
         <Label htmlFor="tipo">Tipo de transação</Label>
         <Controller

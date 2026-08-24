@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { type Transacao } from '@/data/transacoes';
 import { resolveDashboardApiUrl } from '@/lib/api-url';
@@ -6,11 +6,20 @@ import { authHeaders } from '@/lib/auth-token';
 import { parseTransacoesItems } from '@/lib/transacoes-page';
 
 const MF_TRANSACOES_CHANGED = 'fincontrol:transacoes-changed';
+const MF_VISAO_CHANGED = 'fincontrol:visao-changed';
 
 function getUsuarioIdFromCookie(): string | undefined {
   if (typeof document === 'undefined') return undefined;
   const match = /(?:^|; )fincontrol_uid=([^;]*)/.exec(document.cookie);
   return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+function buildQuery(usuarioIds: string[]): string {
+  const search = new URLSearchParams();
+  if (usuarioIds.length === 0) return '';
+  search.set('usuarioId', usuarioIds[0]);
+  if (usuarioIds.length > 1) search.set('usuarioIds', usuarioIds.join(','));
+  return search.toString();
 }
 
 function transacoesSignature(items: Transacao[] | undefined) {
@@ -20,8 +29,9 @@ function transacoesSignature(items: Transacao[] | undefined) {
     .join('|');
 }
 
-async function fetchTransacoesDoUsuario(usuarioId: string, apiUrl: string): Promise<Transacao[] | null> {
-  const url = `${apiUrl}/transacoes?usuarioId=${encodeURIComponent(usuarioId)}`;
+async function fetchTransacoes(usuarioIds: string[], apiUrl: string): Promise<Transacao[] | null> {
+  if (usuarioIds.length === 0) return [];
+  const url = `${apiUrl}/transacoes?${buildQuery(usuarioIds)}`;
   const response = await fetch(url, {
     cache: 'no-store',
     headers: authHeaders(),
@@ -33,10 +43,19 @@ async function fetchTransacoesDoUsuario(usuarioId: string, apiUrl: string): Prom
 
 const EMPTY_TRANSACOES: Transacao[] = [];
 
-export function useDashboardTransacoes(initial: Transacao[] = [], apiUrl?: string) {
+export function useDashboardTransacoes(
+  initial: Transacao[] = [],
+  apiUrl?: string,
+  usuarioIdsProp?: string[],
+) {
   const resolvedApiUrl = resolveDashboardApiUrl(apiUrl);
   const safeInitial = Array.isArray(initial) ? initial : EMPTY_TRANSACOES;
   const [transacoes, setTransacoes] = useState<Transacao[]>(safeInitial);
+  const scopeRef = useRef<string[]>(usuarioIdsProp?.length ? usuarioIdsProp : []);
+
+  useEffect(() => {
+    if (usuarioIdsProp?.length) scopeRef.current = usuarioIdsProp;
+  }, [usuarioIdsProp]);
 
   useEffect(() => {
     const list = Array.isArray(initial) ? initial : EMPTY_TRANSACOES;
@@ -51,14 +70,21 @@ export function useDashboardTransacoes(initial: Transacao[] = [], apiUrl?: strin
   }, [initial]);
 
   useEffect(() => {
-    async function refresh() {
-      const usuarioId = getUsuarioIdFromCookie();
-      if (!usuarioId) {
-        return;
-      }
+    async function refresh(event?: Event) {
+      const detailIds = (event as CustomEvent<{ usuarioIds?: string[] }> | undefined)?.detail?.usuarioIds;
+      if (detailIds?.length) scopeRef.current = detailIds;
+
+      const ids =
+        scopeRef.current.length > 0
+          ? scopeRef.current
+          : (() => {
+              const cookieId = getUsuarioIdFromCookie();
+              return cookieId ? [cookieId] : [];
+            })();
+      if (ids.length === 0) return;
 
       try {
-        const data = await fetchTransacoesDoUsuario(usuarioId, resolvedApiUrl);
+        const data = await fetchTransacoes(ids, resolvedApiUrl);
         if (!data) return;
         const nextSignature = transacoesSignature(data);
         setTransacoes(prev => (transacoesSignature(prev) === nextSignature ? prev : data));
@@ -70,8 +96,11 @@ export function useDashboardTransacoes(initial: Transacao[] = [], apiUrl?: strin
     void refresh();
 
     window.addEventListener(MF_TRANSACOES_CHANGED, refresh);
-    return () => window.removeEventListener(MF_TRANSACOES_CHANGED, refresh);
-    // Only re-bind when API URL changes; host data sync is handled above.
+    window.addEventListener(MF_VISAO_CHANGED, refresh);
+    return () => {
+      window.removeEventListener(MF_TRANSACOES_CHANGED, refresh);
+      window.removeEventListener(MF_VISAO_CHANGED, refresh);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: avoid refetch loops on props identity
   }, [resolvedApiUrl]);
 

@@ -19,9 +19,9 @@ import {
 } from '../../../shared/dashboard-contract';
 
 export function DashboardEditorApp(props: Readonly<DashboardEditorProps>) {
-  const transacoes = useDashboardTransacoes(props.transacoes as Transacao[], props.apiUrl);
+  const transacoes = useDashboardTransacoes(props.transacoes as Transacao[], props.apiUrl, props.usuarioIds);
   const categoriaLabels = useDashboardCategoriaLabels(props.categoriaLabels, props.apiUrl);
-  const gastos = useDashboardGastosMensais(props.apiUrl);
+  const gastos = useDashboardGastosMensais(props.apiUrl, props.usuarioIds);
   const analytics = useMemo(
     () => buildWidgetAnalytics(transacoes, categoriaLabels, gastos),
     [transacoes, categoriaLabels, gastos],

@@ -8,6 +8,9 @@ import { useEffect, useRef, useState } from 'react';
 import { ThemeModeToggle } from '@/components/theme-mode-toggle';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/user-menu';
+import { VisaoSwitcher } from '@/components/visao-switcher';
+import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
+import { useMediaQuery } from '@/lib/use-media-query';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/store/hooks';
 
@@ -96,6 +99,34 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { usuario, isAuthenticated, logout } = useAuth();
+  const { ativa } = useEscopoFinanceiro();
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const headerRef = useRef<HTMLElement>(null);
+  const showMobileVisao = isAuthenticated && ativa && !isDesktop;
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    function syncOffset() {
+      if (!headerRef.current) return;
+      const height = headerRef.current.getBoundingClientRect().height;
+      document.documentElement.style.setProperty('--header-bar-height', `${height}px`);
+      document.documentElement.style.setProperty('--header-visao-row', '0px');
+    }
+
+    syncOffset();
+    const observer = new ResizeObserver(syncOffset);
+    observer.observe(header);
+    window.addEventListener('resize', syncOffset);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', syncOffset);
+      document.documentElement.style.removeProperty('--header-bar-height');
+      document.documentElement.style.removeProperty('--header-visao-row');
+    };
+  }, [showMobileVisao, isAuthenticated, ativa]);
 
   function handleLogout() {
     logout();
@@ -104,11 +135,12 @@ export function Header() {
 
   return (
     <header
+      ref={headerRef}
       role="banner"
       className="bg-card border-border fixed inset-x-0 top-[env(safe-area-inset-top,0px)] z-50 border-b shadow-sm"
     >
       <div className="mx-auto max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
-        <div className="flex h-14 items-center justify-between sm:h-16">
+        <div className="flex h-14 items-center justify-between gap-2 sm:h-16">
           <Link
             href="/"
             className="focus:ring-primary flex min-w-0 items-center gap-2 rounded-md focus:ring-2 focus:ring-offset-2 focus:outline-none"
@@ -121,7 +153,7 @@ export function Header() {
           </Link>
 
           {isAuthenticated && (
-            <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
               <nav className="hidden items-center gap-6 md:flex" aria-label="Navegação principal">
                 {navItems.map(item => (
                   <Link
@@ -141,12 +173,19 @@ export function Header() {
                 </Link>
               </nav>
 
+              {isDesktop && <VisaoSwitcher />}
               <NavMenu pathname={pathname} />
               <UserMenu nome={usuario?.nome} onLogout={handleLogout} />
               <ThemeModeToggle />
             </div>
           )}
         </div>
+
+        {showMobileVisao && (
+          <div className="border-border flex items-center border-t pt-2 pb-2.5">
+            <VisaoSwitcher fullWidth />
+          </div>
+        )}
       </div>
     </header>
   );

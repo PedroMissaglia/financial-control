@@ -56,6 +56,8 @@ export interface DashboardMfBaseProps {
   extratoLimite: number;
   apiUrl: string;
   categoriaLabels?: Record<string, string>;
+  /** Escopo da visão Eu / Cônjuge / Conjunta (host). */
+  usuarioIds?: string[];
 }
 
 export type DashboardViewProps = DashboardMfBaseProps;

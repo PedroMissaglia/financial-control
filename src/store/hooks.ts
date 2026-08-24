@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 
 import { loginThunk, logoutThunk } from '@/store/slices/auth-slice';
+import { loadContaConjunta, resetContaConjunta } from '@/store/slices/conta-conjunta-slice';
 
 import type { AppDispatch, RootState } from './index';
 
@@ -19,6 +20,7 @@ export function useAuth() {
     login: async (email: string, senha: string) => {
       try {
         await dispatch(loginThunk({ email, senha })).unwrap();
+        void dispatch(loadContaConjunta());
         return { success: true as const };
       } catch (error) {
         return {
@@ -28,6 +30,7 @@ export function useAuth() {
       }
     },
     logout: () => {
+      dispatch(resetContaConjunta());
       void dispatch(logoutThunk());
     },
   };
