@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { fetchTransacaoById } from '@/app/services/transacoes';
 import { ApiUnavailableCard } from '@/components/api-unavailable-card';
 import { TransacaoModalForm } from '@/components/transacao-modal-form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Modal } from '@/components/ui/modal';
 
 interface ModalEditarTransacaoPageProps {
@@ -25,16 +24,11 @@ export default async function ModalEditarTransacaoPage({ params }: Readonly<Moda
   const transacao = result.data;
 
   return (
-    <Modal title="Editar transação">
-      <Card className="border-0 shadow-none">
-        <CardHeader>
-          <CardTitle>Editar transação</CardTitle>
-          <CardDescription>Atualize as informações de &quot;{transacao.descricao}&quot;</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TransacaoModalForm transacao={transacao} mode="edit" />
-        </CardContent>
-      </Card>
-    </Modal>
+    <TransacaoModalForm
+      title="Editar transação"
+      description={`Atualize as informações de "${transacao.descricao}"`}
+      transacao={transacao}
+      mode="edit"
+    />
   );
 }

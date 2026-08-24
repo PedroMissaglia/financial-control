@@ -1,6 +1,7 @@
 'use client';
 
-import { FilterX, Search, X } from 'lucide-react';
+import { Filter, FilterX, Search, X } from 'lucide-react';
+import { useEffect, useId, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,8 @@ import {
   temFiltrosAtivos,
   type TransacoesFiltros,
 } from '@/lib/transacao-filters';
+import { useMediaQuery } from '@/lib/use-media-query';
+import { cn } from '@/lib/utils';
 
 interface TransacoesFiltersProps {
   filtros: TransacoesFiltros;
@@ -26,159 +29,358 @@ interface TransacoesFiltersProps {
   onChange: (filtros: TransacoesFiltros) => void;
 }
 
+const SHEET_ANIMATION_MS = 300;
+
+function parseValor(value: string): number | null {
+  if (!value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function AdvancedFilterFields({
+  filtros,
+  onPatch,
+  idPrefix = '',
+}: Readonly<{
+  filtros: TransacoesFiltros;
+  onPatch: (partial: Partial<TransacoesFiltros>) => void;
+  idPrefix?: string;
+}>) {
+  const tipoId = `${idPrefix}filtro-tipo`;
+  const categoriaId = `${idPrefix}filtro-categoria`;
+  const deId = `${idPrefix}filtro-de`;
+  const ateId = `${idPrefix}filtro-ate`;
+  const minId = `${idPrefix}filtro-min`;
+  const maxId = `${idPrefix}filtro-max`;
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="space-y-2">
+        <Label htmlFor={tipoId}>Tipo</Label>
+        <SelectMenu
+          id={tipoId}
+          value={filtros.tipo}
+          onChange={tipo => onPatch({ tipo })}
+          options={TIPOS_FILTRO.map(item => ({ value: item.value, label: item.label }))}
+          aria-label="Filtrar por tipo"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={categoriaId}>Categoria</Label>
+        <SelectMenu
+          id={categoriaId}
+          value={filtros.categoria}
+          onChange={categoria => onPatch({ categoria })}
+          options={CATEGORIAS_FILTRO.map(item => ({ value: item.value, label: item.label }))}
+          aria-label="Filtrar por categoria"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={deId}>De</Label>
+        <DatePicker
+          id={deId}
+          value={filtros.dataInicio}
+          max={filtros.dataFim || undefined}
+          onChange={dataInicio => onPatch({ dataInicio })}
+          aria-label="Data inicial"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={ateId}>Até</Label>
+        <DatePicker
+          id={ateId}
+          value={filtros.dataFim}
+          min={filtros.dataInicio || undefined}
+          align="end"
+          onChange={dataFim => onPatch({ dataFim })}
+          aria-label="Data final"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={minId}>Valor mín.</Label>
+        <div className="relative">
+          <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm">
+            R$
+          </span>
+          <Input
+            id={minId}
+            type="number"
+            min={0}
+            step="0.01"
+            placeholder="0,00"
+            className="ps-9"
+            value={filtros.valorMin ?? ''}
+            onChange={event => onPatch({ valorMin: parseValor(event.target.value) })}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={maxId}>Valor máx.</Label>
+        <div className="relative">
+          <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm">
+            R$
+          </span>
+          <Input
+            id={maxId}
+            type="number"
+            min={0}
+            step="0.01"
+            placeholder="0,00"
+            className="ps-9"
+            value={filtros.valorMax ?? ''}
+            onChange={event => onPatch({ valorMax: parseValor(event.target.value) })}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilterChips({
+  chips,
+  filtros,
+  onChange,
+  showClear,
+}: Readonly<{
+  chips: ReturnType<typeof chipsFiltros>;
+  filtros: TransacoesFiltros;
+  onChange: (filtros: TransacoesFiltros) => void;
+  showClear?: boolean;
+}>) {
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2" aria-label="Filtros ativos">
+      {chips.map(chip => (
+        <Badge key={chip.key} variant="secondary" className="gap-1 pr-1">
+          {chip.label}
+          <button
+            type="button"
+            className="hover:bg-background/60 rounded-full p-0.5"
+            aria-label={`Remover filtro ${chip.label}`}
+            onClick={() => onChange(removerFiltro(filtros, chip.key))}
+          >
+            <X className="h-3 w-3" aria-hidden="true" />
+          </button>
+        </Badge>
+      ))}
+      {showClear && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-1 px-2 text-xs"
+          onClick={() => onChange(FILTROS_VAZIOS)}
+        >
+          <FilterX className="h-3.5 w-3.5" aria-hidden="true" />
+          Limpar
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readonly<TransacoesFiltersProps>) {
+  const isDesktop = useMediaQuery('(min-width: 640px)');
+  const [sheetMounted, setSheetMounted] = useState(false);
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const titleId = useId();
   const ativos = temFiltrosAtivos(filtros);
   const resumo = contagemResultados(total, visiveis, filtros);
   const chips = chipsFiltros(filtros);
+  const advancedCount = chips.filter(chip => chip.key !== 'busca').length;
 
   function patch(partial: Partial<TransacoesFiltros>) {
     onChange({ ...filtros, ...partial });
   }
 
-  function parseValor(value: string): number | null {
-    if (!value.trim()) return null;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
+  function openSheet() {
+    setSheetMounted(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setSheetVisible(true));
+    });
   }
 
+  function closeSheet() {
+    setSheetVisible(false);
+    window.setTimeout(() => setSheetMounted(false), SHEET_ANIMATION_MS);
+  }
+
+  useEffect(() => {
+    if (isDesktop && sheetMounted) {
+      setSheetVisible(false);
+      setSheetMounted(false);
+    }
+  }, [isDesktop, sheetMounted]);
+
+  useEffect(() => {
+    if (!sheetMounted) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') closeSheet();
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sheetMounted]);
+
   return (
-    <section className="bg-card mb-4 rounded-xl border p-4 shadow-sm" aria-label="Filtros de transações">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <section className="bg-card mb-4 rounded-xl border p-3 shadow-sm sm:p-4" aria-label="Filtros de transações">
+      <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div>
           <h2 className="fc-section-title">Filtros</h2>
           <p className="fc-caption">{resumo}</p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full shrink-0 gap-2 self-stretch sm:w-auto sm:self-start"
-          disabled={!ativos}
-          onClick={() => onChange(FILTROS_VAZIOS)}
-        >
-          <FilterX className="h-4 w-4" aria-hidden="true" />
-          Limpar filtros
-        </Button>
+        {isDesktop && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full shrink-0 gap-2 self-stretch sm:w-auto sm:self-start"
+            disabled={!ativos}
+            onClick={() => onChange(FILTROS_VAZIOS)}
+          >
+            <FilterX className="h-4 w-4" aria-hidden="true" />
+            Limpar filtros
+          </Button>
+        )}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <div className="space-y-2 xl:col-span-6">
-          <Label htmlFor="filtro-busca">Buscar</Label>
-          <div className="relative">
-            <Search
-              className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
-              aria-hidden="true"
-            />
-            <Input
-              id="filtro-busca"
-              type="search"
-              placeholder="Descrição ou palavra-chave"
-              className="ps-9"
-              value={filtros.busca}
-              onChange={event => patch({ busca: event.target.value })}
-            />
+      {!isDesktop ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Search
+                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+                aria-hidden="true"
+              />
+              <Input
+                id="filtro-busca-mobile"
+                type="search"
+                placeholder="Descrição ou palavra-chave"
+                className="ps-9"
+                value={filtros.busca}
+                onChange={event => patch({ busca: event.target.value })}
+                aria-label="Buscar transações"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="relative shrink-0 gap-1.5 px-3"
+              onClick={openSheet}
+              aria-expanded={sheetMounted}
+              aria-haspopup="dialog"
+            >
+              <Filter className="h-4 w-4" aria-hidden="true" />
+              Filtros
+              {advancedCount > 0 && (
+                <span className="bg-primary text-primary-foreground absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold">
+                  {advancedCount}
+                </span>
+              )}
+            </Button>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="filtro-tipo">Tipo</Label>
-          <SelectMenu
-            id="filtro-tipo"
-            value={filtros.tipo}
-            onChange={tipo => patch({ tipo })}
-            options={TIPOS_FILTRO.map(item => ({ value: item.value, label: item.label }))}
-            aria-label="Filtrar por tipo"
-          />
+          <FilterChips chips={chips} filtros={filtros} onChange={onChange} showClear />
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="filtro-categoria">Categoria</Label>
-          <SelectMenu
-            id="filtro-categoria"
-            value={filtros.categoria}
-            onChange={categoria => patch({ categoria })}
-            options={CATEGORIAS_FILTRO.map(item => ({ value: item.value, label: item.label }))}
-            aria-label="Filtrar por categoria"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="filtro-de">De</Label>
-          <DatePicker
-            id="filtro-de"
-            value={filtros.dataInicio}
-            max={filtros.dataFim || undefined}
-            onChange={dataInicio => patch({ dataInicio })}
-            aria-label="Data inicial"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="filtro-ate">Até</Label>
-          <DatePicker
-            id="filtro-ate"
-            value={filtros.dataFim}
-            min={filtros.dataInicio || undefined}
-            align="end"
-            onChange={dataFim => patch({ dataFim })}
-            aria-label="Data final"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="filtro-min">Valor mín.</Label>
-          <div className="relative">
-            <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm">
-              R$
-            </span>
-            <Input
-              id="filtro-min"
-              type="number"
-              min={0}
-              step="0.01"
-              placeholder="0,00"
-              className="ps-9"
-              value={filtros.valorMin ?? ''}
-              onChange={event => patch({ valorMin: parseValor(event.target.value) })}
-            />
+      ) : (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="filtro-busca">Buscar</Label>
+            <div className="relative">
+              <Search
+                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+                aria-hidden="true"
+              />
+              <Input
+                id="filtro-busca"
+                type="search"
+                placeholder="Descrição ou palavra-chave"
+                className="ps-9"
+                value={filtros.busca}
+                onChange={event => patch({ busca: event.target.value })}
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="filtro-max">Valor máx.</Label>
-          <div className="relative">
-            <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm">
-              R$
-            </span>
-            <Input
-              id="filtro-max"
-              type="number"
-              min={0}
-              step="0.01"
-              placeholder="0,00"
-              className="ps-9"
-              value={filtros.valorMax ?? ''}
-              onChange={event => patch({ valorMax: parseValor(event.target.value) })}
-            />
-          </div>
-        </div>
-      </div>
+          <AdvancedFilterFields filtros={filtros} onPatch={patch} />
 
-      {ativos && (
-        <div className="mt-4 flex flex-wrap gap-2 border-t pt-4" aria-label="Filtros ativos">
-          {chips.map(chip => (
-            <Badge key={chip.key} variant="secondary" className="gap-1 pr-1">
-              {chip.label}
-              <button
+          {ativos && (
+            <div className="border-t pt-4">
+              <FilterChips chips={chips} filtros={filtros} onChange={onChange} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {sheetMounted && !isDesktop && (
+        <div role="presentation">
+          <button
+            type="button"
+            className={cn(
+              'fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-out',
+              sheetVisible ? 'opacity-100' : 'opacity-0',
+            )}
+            aria-label="Fechar filtros"
+            onClick={closeSheet}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            className={cn(
+              'bg-card border-border fixed inset-x-0 bottom-0 z-[80] flex max-h-[min(88dvh,calc(100dvh-env(safe-area-inset-top,0px)))] flex-col rounded-t-2xl border shadow-2xl',
+              'pb-[env(safe-area-inset-bottom,0px)] transition-transform duration-300 ease-out',
+              sheetVisible ? 'translate-y-0' : 'translate-y-full',
+            )}
+          >
+            <div className="border-border shrink-0 border-b px-4 pt-2 pb-3">
+              <div className="mb-2 flex justify-center" aria-hidden="true">
+                <div className="bg-muted h-1 w-10 rounded-full" />
+              </div>
+              <div className="flex items-center gap-3">
+                <h3 id={titleId} className="text-foreground min-w-0 flex-1 text-lg font-semibold">
+                  Filtros
+                </h3>
+                <Button type="button" variant="ghost" size="icon" aria-label="Fechar" onClick={closeSheet}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="fc-caption mt-0.5">{resumo}</p>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3">
+              <AdvancedFilterFields filtros={filtros} onPatch={patch} idPrefix="sheet-" />
+            </div>
+
+            <div className="border-border flex shrink-0 gap-2 border-t px-4 py-3">
+              <Button
                 type="button"
-                className="hover:bg-background/60 rounded-full p-0.5"
-                aria-label={`Remover filtro ${chip.label}`}
-                onClick={() => onChange(removerFiltro(filtros, chip.key))}
+                variant="outline"
+                className="flex-1 gap-2"
+                disabled={!ativos}
+                onClick={() => onChange(FILTROS_VAZIOS)}
               >
-                <X className="h-3 w-3" aria-hidden="true" />
-              </button>
-            </Badge>
-          ))}
+                <FilterX className="h-4 w-4" aria-hidden="true" />
+                Limpar
+              </Button>
+              <Button type="button" className="flex-1" onClick={closeSheet}>
+                Aplicar
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </section>

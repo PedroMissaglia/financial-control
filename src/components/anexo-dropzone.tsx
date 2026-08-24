@@ -103,7 +103,8 @@ export function AnexoDropzone({ id, anexo, errorId, onAnexoChange, onError }: Re
             </Button>
           </div>
           <label htmlFor={id} className="text-muted-foreground block cursor-pointer text-center text-xs hover:underline">
-            Clique ou arraste outro arquivo para substituir
+            <span className="sm:hidden">Toque para trocar o arquivo</span>
+            <span className="hidden sm:inline">Clique ou arraste outro arquivo para substituir</span>
           </label>
         </div>
       ) : (
@@ -112,8 +113,10 @@ export function AnexoDropzone({ id, anexo, errorId, onAnexoChange, onError }: Re
             <FileUp className="h-4 w-4" aria-hidden="true" />
           </span>
           <span className="min-w-0">
-            <span className="block text-sm font-medium">Arraste o recibo ou comprovante</span>
-            <span className="text-muted-foreground block text-xs">
+            <span className="block text-sm font-medium sm:hidden">Toque para escolher foto ou PDF</span>
+            <span className="hidden text-sm font-medium sm:block">Arraste o recibo ou comprovante</span>
+            <span className="text-muted-foreground block text-xs sm:hidden">PDF ou imagem até 2 MB</span>
+            <span className="text-muted-foreground hidden text-xs sm:block">
               ou clique para escolher o arquivo · PDF ou imagem até 2 MB
             </span>
           </span>

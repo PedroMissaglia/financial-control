@@ -15,7 +15,6 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
   { id: 'evolucao', visible: true, cols: 6, colStart: 1 },
   { id: 'comparativo', visible: true, cols: 6, colStart: 7 },
   { id: 'categorias', visible: true, cols: 12, colStart: 1 },
-  { id: 'rapida', visible: true, cols: 6, colStart: 7 },
   { id: 'extrato', visible: true, cols: 12, colStart: 1 },
   { id: 'meta', visible: true, cols: 6, colStart: 7 },
   { id: 'alerta', visible: true, cols: 6, colStart: 1 },
@@ -43,7 +42,7 @@ export function createDefaultDashboardLayout(): {
         name: 'Visão geral',
         left: ['saldo'],
         center: [],
-        right: ['rapida'],
+        right: [],
       },
       {
         id: DEFAULT_LAYOUT_GROUP_IDS.graficos,

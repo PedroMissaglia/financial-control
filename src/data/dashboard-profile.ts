@@ -20,7 +20,6 @@ export type WidgetId =
   | 'comparativo'
   | 'categorias'
   | 'extrato'
-  | 'rapida'
   | 'meta'
   | 'alerta';
 
@@ -164,12 +163,15 @@ export function defaultProfile(usuarioId: string): DashboardProfile {
 }
 
 function normalizeLayoutGroup(group: LayoutGroupDefinition): LayoutGroupDefinition {
+  const known = new Set(DEFAULT_WIDGETS.map(item => item.id));
+  const keep = (ids: WidgetId[]) => ids.filter(id => known.has(id));
+
   return {
     id: group.id,
     name: group.name || 'Grupo de painéis',
-    left: Array.isArray(group.left) ? group.left : [],
-    center: Array.isArray(group.center) ? group.center : [],
-    right: Array.isArray(group.right) ? group.right : [],
+    left: keep(Array.isArray(group.left) ? group.left : []),
+    center: keep(Array.isArray(group.center) ? group.center : []),
+    right: keep(Array.isArray(group.right) ? group.right : []),
   };
 }
 

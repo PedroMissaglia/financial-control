@@ -2,7 +2,6 @@ import { lazy, Suspense } from 'react';
 import { AlertTriangle, PiggyBank } from 'lucide-react';
 
 import { ExtratoRecente } from '@/components/extrato-recente';
-import { NovaTransacaoRapida } from '@/components/nova-transacao-rapida';
 import { SaldoCard } from '@/components/saldo-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { evolucaoSaldo, resumoFinanceiro, totaisPorCategoria } from '@/data/analises';
@@ -33,7 +32,6 @@ export const WIDGET_LABELS: Record<WidgetId, string> = {
   evolucao: 'Evolução do saldo',
   comparativo: 'Receitas vs despesas',
   categorias: 'Gastos por categoria',
-  rapida: 'Transação rápida',
   extrato: 'Extrato recente',
   meta: 'Meta de economia',
   alerta: 'Alerta de gastos',
@@ -54,7 +52,6 @@ export function DashboardWidgetPreview({
   metaEconomia,
   alertaGastos,
   extratoLimite,
-  apiUrl,
 }: Readonly<DashboardWidgetPreviewProps>) {
   const saldo = calcularSaldo(transacoes);
   const resumo = resumoFinanceiro(transacoes);
@@ -71,8 +68,6 @@ export function DashboardWidgetPreview({
   switch (id) {
     case 'saldo':
       return <SaldoCard saldo={saldo} />;
-    case 'rapida':
-      return <NovaTransacaoRapida apiUrl={apiUrl} />;
     case 'evolucao':
       return (
         <Suspense fallback={<ChartFallback />}>

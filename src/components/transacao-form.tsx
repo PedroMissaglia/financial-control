@@ -67,9 +67,21 @@ interface TransacaoFormProps {
   transacao?: Transacao;
   mode?: 'create' | 'edit';
   onSuccess?: () => void;
+  /** HTML id for the form element (needed when actions live outside via form=). */
+  formId?: string;
+  /** Hide Cancel/Submit — use with Modal footer + form= attribute. */
+  hideActions?: boolean;
+  onSubmittingChange?: (isSubmitting: boolean) => void;
 }
 
-export function TransacaoForm({ transacao, mode = 'create', onSuccess }: TransacaoFormProps) {
+export function TransacaoForm({
+  transacao,
+  mode = 'create',
+  onSuccess,
+  formId: formIdProp,
+  hideActions = false,
+  onSubmittingChange,
+}: TransacaoFormProps) {
   const router = useRouter();
   const { usuario } = useAuth();
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +89,13 @@ export function TransacaoForm({ transacao, mode = 'create', onSuccess }: Transac
   const [anexo, setAnexo] = useState<TransacaoAnexo | null>(transacao?.anexo ?? null);
   const [anexoError, setAnexoError] = useState<string | null>(null);
   const [sugestao, setSugestao] = useState<CategoriaTransacao | null>(null);
-  const formId = useId();
+  const generatedId = useId();
+  const formId = formIdProp ?? generatedId;
+
+  function setSubmitting(next: boolean) {
+    setIsSubmitting(next);
+    onSubmittingChange?.(next);
+  }
 
   const {
     register,
@@ -116,7 +134,7 @@ export function TransacaoForm({ transacao, mode = 'create', onSuccess }: Transac
       return;
     }
 
-    setIsSubmitting(true);
+    setSubmitting(true);
     setError(null);
 
     const payload = {
@@ -128,7 +146,7 @@ export function TransacaoForm({ transacao, mode = 'create', onSuccess }: Transac
     const result =
       mode === 'edit' && transacao ? await updateTransacao(transacao.id, payload) : await createTransacao(payload);
 
-    setIsSubmitting(false);
+    setSubmitting(false);
 
     if (!result.success) {
       setError(result.message ?? 'Erro ao salvar transação');
@@ -150,7 +168,7 @@ export function TransacaoForm({ transacao, mode = 'create', onSuccess }: Transac
   const anexoErrorId = `${formId}-anexo-error`;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+    <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="tipo">Tipo de transação</Label>
         <Controller
@@ -289,14 +307,16 @@ export function TransacaoForm({ transacao, mode = 'create', onSuccess }: Transac
         </p>
       )}
 
-      <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>
-          Cancelar
-        </Button>
-        <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
-          {isSubmitting ? 'Salvando...' : mode === 'edit' ? 'Salvar alterações' : 'Adicionar transação'}
-        </Button>
-      </div>
+      {!hideActions && (
+        <div className="border-border mt-2 flex flex-col gap-2 border-t pt-3 sm:mt-0 sm:flex-row sm:justify-end sm:gap-3 sm:border-0 sm:pt-2">
+          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>
+            Cancelar
+          </Button>
+          <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
+            {isSubmitting ? 'Salvando...' : mode === 'edit' ? 'Salvar alterações' : 'Adicionar transação'}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

@@ -6,7 +6,6 @@ export type WidgetId =
   | 'comparativo'
   | 'categorias'
   | 'extrato'
-  | 'rapida'
   | 'meta'
   | 'alerta';
 
