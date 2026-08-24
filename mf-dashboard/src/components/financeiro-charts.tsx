@@ -15,6 +15,22 @@ function formatTooltipValue(value: unknown) {
   return typeof value === 'number' ? formatCurrency(value) : String(value ?? '');
 }
 
+function ChartTooltip() {
+  return (
+    <Tooltip
+      formatter={formatTooltipValue}
+      contentStyle={{
+        backgroundColor: 'hsl(var(--popover))',
+        border: '1px solid hsl(var(--border))',
+        borderRadius: '0.5rem',
+        color: 'hsl(var(--popover-foreground))',
+      }}
+      itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+      labelStyle={{ color: 'hsl(var(--popover-foreground))', fontWeight: 600 }}
+    />
+  );
+}
+
 function formatAxisValue(value: number) {
   return new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
 }
@@ -116,7 +132,7 @@ export function EvolucaoSaldoChart({ evolucao }: Readonly<EvolucaoSaldoChartProp
               interval="preserveStartEnd"
             />
             <YAxis width={44} tick={{ fontSize: 10, fill: colors.axis }} tickFormatter={formatAxisValue} />
-            <Tooltip formatter={formatTooltipValue} />
+            <ChartTooltip />
             <Bar dataKey="saldo" fill={colors.line} name="Saldo" isAnimationActive={false} maxBarSize={48} />
           </BarChart>
         </ResponsiveContainer>
@@ -166,7 +182,7 @@ export function VolumePorTipoChart({ porTipo }: Readonly<VolumePorTipoChartProps
                 width={isMobile ? 88 : 108}
                 tick={{ fontSize: isMobile ? 11 : 12, fill: colors.axis }}
               />
-              <Tooltip formatter={formatTooltipValue} />
+              <ChartTooltip />
               <Bar dataKey="valor" name="Volume" isAnimationActive={false} maxBarSize={28}>
                 {porTipo.map(entry => {
                   const swatch = colors.tipo[entry.chave];
@@ -246,7 +262,7 @@ export function SaidasPorFormaChart({ porForma }: Readonly<SaidasPorFormaChartPr
                 width={isMobile ? 72 : 88}
                 tick={{ fontSize: isMobile ? 11 : 12, fill: colors.axis }}
               />
-              <Tooltip formatter={formatTooltipValue} />
+              <ChartTooltip />
               <Bar dataKey="valor" name="Saídas" isAnimationActive={false} maxBarSize={28}>
                 {porForma.map(entry => {
                   const swatch = colors.forma[entry.chave];
@@ -333,7 +349,7 @@ export function ReceitasDespesasChart({ receitasDespesas }: Readonly<ReceitasDes
                 );
               })}
             </Pie>
-            <Tooltip formatter={formatTooltipValue} />
+            <ChartTooltip />
             <Legend
               content={() => (
                 <ContrastLegend
@@ -388,8 +404,17 @@ export function ReceitasDespesasAnoChart({ receitasDespesasAno }: Readonly<Recei
               minTickGap={isMobile ? 4 : 8}
             />
             <YAxis width={44} tick={{ fontSize: 10, fill: colors.axis }} tickFormatter={formatAxisValue} />
-            <Tooltip formatter={formatTooltipValue} />
-            <Legend />
+            <ChartTooltip />
+            <Legend
+              content={() => (
+                <ContrastLegend
+                  items={[
+                    { label: 'Receitas', color: receitas.stroke },
+                    { label: 'Despesas', color: despesas.stroke },
+                  ]}
+                />
+              )}
+            />
             <Bar
               dataKey="receitas"
               name="Receitas"
@@ -456,7 +481,7 @@ export function GastosCategoriaChart({ porCategoria }: Readonly<GastosCategoriaC
                 width={isMobile ? 96 : 120}
                 tick={{ fontSize: isMobile ? 11 : 12, fill: colors.axis }}
               />
-              <Tooltip formatter={formatTooltipValue} />
+              <ChartTooltip />
               <Bar dataKey="valor" name="Gastos" isAnimationActive={false} maxBarSize={28}>
                 {porCategoria.map((entry, index) => {
                   const swatch = pastelFromHsl(colors.series[index % colors.series.length] ?? colors.line);

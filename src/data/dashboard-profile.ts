@@ -209,7 +209,10 @@ function placeUnplacedWidgets(
       continue;
     }
 
-    const graficos = groups.find(group => group.id === 'default-graficos') ?? groups[0];
+    const graficos =
+      groups.find(group => group.id === 'default-graficos') ??
+      groups.find(group => group.id === 'default-resumo') ??
+      groups[0];
     if (graficos) {
       const bucket = widget.colStart === 7 || widget.colStart === 9 ? 'right' : 'left';
       graficos[bucket].push(widget.id);
