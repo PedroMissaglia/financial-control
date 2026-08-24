@@ -106,6 +106,7 @@ export function EvolucaoSaldoChart({ evolucao }: Readonly<EvolucaoSaldoChartProp
   const isMobile = useIsMobile();
   const colors = useChartThemeColors();
   const chartHeight = isMobile ? 220 : 280;
+  const swatch = pastelFromHsl(colors.line);
 
   return (
     <ChartFrame
@@ -133,7 +134,15 @@ export function EvolucaoSaldoChart({ evolucao }: Readonly<EvolucaoSaldoChartProp
             />
             <YAxis width={44} tick={{ fontSize: 10, fill: colors.axis }} tickFormatter={formatAxisValue} />
             <ChartTooltip />
-            <Bar dataKey="saldo" fill={colors.line} name="Saldo" isAnimationActive={false} maxBarSize={48} />
+            <Bar
+              dataKey="saldo"
+              fill={swatch.fill}
+              stroke={swatch.stroke}
+              strokeWidth={1}
+              name="Saldo"
+              isAnimationActive={false}
+              maxBarSize={48}
+            />
           </BarChart>
         </ResponsiveContainer>
       )}

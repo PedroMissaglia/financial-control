@@ -1,5 +1,8 @@
 :host {
   display: block;
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
   font-family: var(--fc-font-sans);
   color-scheme: light;
 }
@@ -50,8 +53,97 @@
   font-size: var(--fc-text-body);
 }
 
-.table-card {
-  overflow: hidden;
+.table-card,
+:host ::ng-deep .table-card.mat-mdc-card,
+:host ::ng-deep .table-card.mdc-card {
+  overflow: visible;
+}
+
+.meses-accordion {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.mes-bloco {
+  overflow: visible;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+
+.mes-heading {
+  margin: 0;
+  font: inherit;
+  background: hsl(var(--card));
+}
+
+.mes-heading--fixo {
+  position: sticky;
+  top: var(--header-offset, 3.5rem);
+  z-index: 20;
+  border-bottom: 1px solid hsl(var(--border));
+  box-shadow: 0 0.5rem 0.75rem -0.5rem hsl(var(--background) / 0.7);
+}
+
+.mes-toggle {
+  appearance: none;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  font: inherit;
+  font-weight: var(--fc-weight-semibold);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mes-toggle:hover,
+.mes-toggle:focus-visible {
+  background: hsl(var(--muted) / 0.45);
+  outline: none;
+}
+
+.mes-toggle[aria-expanded='true'] {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.mes-chevron {
+  width: 0.45rem;
+  height: 0.45rem;
+  flex-shrink: 0;
+  border-right: 2px solid hsl(var(--muted-foreground));
+  border-bottom: 2px solid hsl(var(--muted-foreground));
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.mes-toggle[aria-expanded='true'] .mes-chevron {
+  transform: translateY(0.15rem) rotate(225deg);
+}
+
+.mes-panel {
+  overflow: visible;
+}
+
+.mes-status {
+  margin: 0;
+  padding: 1rem;
+}
+
+.mes-panel .table-card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
 .transacoes-table {
@@ -69,6 +161,8 @@
 }
 
 .transacao-card {
+  position: relative;
+  z-index: 0;
   border-radius: 0.75rem;
 }
 
@@ -216,7 +310,17 @@
 }
 
 .table-card mat-paginator {
-  border-top: 1px solid var(--mat-paginator-container-text-color, rgba(0, 0, 0, 0.12));
+  position: sticky;
+  bottom: var(--footer-height, 3.75rem);
+  z-index: 30;
+  display: block;
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  box-shadow: 0 -0.5rem 0.75rem -0.5rem hsl(var(--background) / 0.7);
+}
+
+.table-card mat-paginator ::ng-deep .mat-mdc-paginator,
+.table-card mat-paginator ::ng-deep .mat-mdc-paginator-container {
   background: hsl(var(--card));
 }
 
@@ -239,10 +343,17 @@
     padding: 0.75rem;
   }
 
+  .table-card mat-paginator {
+    bottom: 0;
+    padding-bottom: var(--footer-height, 3.25rem);
+    box-shadow: none;
+  }
+
   .table-card mat-paginator ::ng-deep .mat-mdc-paginator-container {
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.5rem;
     padding: 0.5rem;
+    box-shadow: 0 -0.5rem 0.75rem -0.5rem hsl(var(--background) / 0.7);
   }
 }

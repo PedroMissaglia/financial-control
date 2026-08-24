@@ -190,7 +190,7 @@ export function TransacoesMicrofrontend() {
         onChange={handleFiltrosChange}
       />
 
-      <p className="fc-caption mb-3 font-semibold">Tabela de transações</p>
+      <p className="fc-caption mb-3 font-semibold">Listagem</p>
 
       {mode === 'loading' && (
         <p className="text-muted-foreground mb-4 text-sm" role="status">

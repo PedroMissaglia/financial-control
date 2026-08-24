@@ -71,6 +71,10 @@ export function ensureHostIsolationStyles(): void {
       max-width: none !important;
       vertical-align: middle !important;
     }
+    mf-transacoes-list .table-card.mdc-card,
+    mf-transacoes-list .table-card.mat-mdc-card {
+      overflow: visible !important;
+    }
   `;
   document.head.appendChild(style);
 }

@@ -25,6 +25,12 @@ import {
   type TipoTransacao,
 } from './models';
 import { createPtBrPaginatorIntl } from './paginator-intl.pt-br';
+import {
+  intervaloCompetencia,
+  mesesAteCorrente,
+  temFiltrosAtivos,
+  type MesLista,
+} from './transacoes-meses';
 import { TransacoesService } from './transacoes.service';
 
 export interface TransacoesFiltros {
@@ -84,11 +90,13 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
   page = 1;
   total = 0;
   totalUnfiltered = 0;
+  mesAberto: string | null = null;
+  meses: MesLista[] = mesesAteCorrente();
 
   @ViewChild(MatPaginator)
   set paginatorRef(paginator: MatPaginator | undefined) {
-    if (!paginator || this.paginator === paginator) return;
     this.paginator = paginator;
+    if (!paginator) return;
     paginator.pageSize = this.pageSizeAtivo;
     paginator.pageIndex = Math.max(0, this.page - 1);
     paginator.length = this.total;
@@ -113,12 +121,21 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
+  get filtrosAtivos(): boolean {
+    return temFiltrosAtivos(this.filtros);
+  }
+
+  get mostraLista(): boolean {
+    return this.filtrosAtivos || this.mesAberto != null;
+  }
+
   ngOnInit(): void {
     this.pageSizeAtivo = normalizarPageSize(this.pageSize);
     window.addEventListener('fincontrol:transacoes-changed', this.onTransacoesChanged);
     window.addEventListener('fincontrol:categorias-changed', this.onCategoriasChanged);
-    void this.carregar();
+    this.meses = mesesAteCorrente();
     void this.carregarLabels();
+    void this.carregar();
   }
 
   ngOnDestroy(): void {
@@ -129,6 +146,8 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['filtros'] && !changes['filtros'].firstChange) {
+      this.mesAberto = null;
+      this.limparLista();
       this.scheduleCarregar(true);
     }
 
@@ -166,6 +185,11 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
       return;
     }
 
+    if (!this.mostraLista) {
+      await this.carregarMeta();
+      return;
+    }
+
     const seq = ++this.loadSeq;
     this.carregando = true;
     this.erro = null;
@@ -175,7 +199,7 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
       const result = await this.service.listar(this.apiUrl, this.usuarioId, this.accessToken, {
         page: this.page,
         pageSize: this.pageSizeAtivo,
-        filtros: this.filtros ?? FILTROS_VAZIOS,
+        filtros: this.filtrosDaLista(),
       });
 
       if (seq !== this.loadSeq) return;
@@ -207,6 +231,28 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
         this.cdr.detectChanges();
       }
     }
+  }
+
+  alternarMes(competencia: string): void {
+    if (this.mesAberto === competencia) {
+      this.mesAberto = null;
+      this.limparLista();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.mesAberto = competencia;
+    this.page = 1;
+    this.limparLista();
+    void this.carregar();
+  }
+
+  trackByCompetencia(_index: number, mes: MesLista): string {
+    return mes.competencia;
+  }
+
+  panelId(competencia: string): string {
+    return `mes-panel-${competencia}`;
   }
 
   navegar(href: string): void {
@@ -266,6 +312,49 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
     }
 
     void this.carregar();
+  }
+
+  private limparLista(): void {
+    this.loadSeq += 1;
+    this.items = [];
+    this.total = 0;
+    this.dataSource.data = [];
+    this.erro = null;
+    this.carregando = false;
+    this.syncPaginator();
+  }
+
+  private filtrosDaLista(): TransacoesFiltros {
+    if (!this.filtrosAtivos && this.mesAberto) {
+      const intervalo = intervaloCompetencia(this.mesAberto);
+      return { ...FILTROS_VAZIOS, dataInicio: intervalo.dataInicio, dataFim: intervalo.dataFim };
+    }
+    return this.filtros ?? FILTROS_VAZIOS;
+  }
+
+  private async carregarMeta(): Promise<void> {
+    const seq = ++this.loadSeq;
+    this.items = [];
+    this.total = 0;
+    this.dataSource.data = [];
+    this.erro = null;
+    this.syncPaginator();
+
+    try {
+      const result = await this.service.listar(this.apiUrl, this.usuarioId, this.accessToken, {
+        page: 1,
+        pageSize: 1,
+        filtros: FILTROS_VAZIOS,
+      });
+      if (seq !== this.loadSeq) return;
+      this.totalUnfiltered = result.totalUnfiltered;
+      this.emitMeta();
+    } catch {
+      if (seq !== this.loadSeq) return;
+      this.emitMeta();
+    } finally {
+      if (seq === this.loadSeq) this.cdr.detectChanges();
+    }
   }
 
   private async carregarLabels(): Promise<void> {
