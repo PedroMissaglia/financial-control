@@ -14,6 +14,7 @@ import { useAuth } from '@/store/hooks';
 const navItems = [
   { href: '/', label: 'Início' },
   { href: '/transacoes', label: 'Transações' },
+  { href: '/categorias', label: 'Categorias' },
 ];
 
 const mobileNavItems = [...navItems, { href: '/transacoes/nova', label: 'Nova transação' }];

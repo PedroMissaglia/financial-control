@@ -1,9 +1,10 @@
 import {
-  CATEGORIA_LABELS,
-  CATEGORIAS_TRANSACAO,
+  FORMA_PAGAMENTO_LABELS,
+  FORMAS_PAGAMENTO,
   TIPO_LABELS,
   TIPOS_TRANSACAO,
-  type CategoriaTransacao,
+  labelCategoria,
+  type FormaPagamento,
   type TipoTransacao,
   type Transacao,
 } from '@/data/transacoes';
@@ -13,6 +14,7 @@ export interface TransacoesFiltros {
   busca: string;
   tipo: string;
   categoria: string;
+  formaPagamento: string;
   dataInicio: string;
   dataFim: string;
   valorMin: number | null;
@@ -23,6 +25,7 @@ export const FILTROS_VAZIOS: TransacoesFiltros = {
   busca: '',
   tipo: '',
   categoria: '',
+  formaPagamento: '',
   dataInicio: '',
   dataFim: '',
   valorMin: null,
@@ -39,6 +42,7 @@ export function temFiltrosAtivos(filtros: TransacoesFiltros): boolean {
     filtros.busca.trim()
     || filtros.tipo
     || filtros.categoria
+    || filtros.formaPagamento
     || filtros.dataInicio
     || filtros.dataFim
     || filtros.valorMin != null
@@ -64,16 +68,17 @@ export function filtrarTransacoes(items: Transacao[], filtros: TransacoesFiltros
       const matchBusca = !termo || item.descricao.toLowerCase().includes(termo);
       const matchTipo = !filtros.tipo || item.tipo === filtros.tipo;
       const matchCategoria = !filtros.categoria || item.categoria === filtros.categoria;
+      const matchForma = !filtros.formaPagamento || item.formaPagamento === filtros.formaPagamento;
       const matchInicio = !filtros.dataInicio || item.data >= filtros.dataInicio;
       const matchFim = !filtros.dataFim || item.data <= filtros.dataFim;
       const matchMin = filtros.valorMin == null || item.valor >= filtros.valorMin;
       const matchMax = filtros.valorMax == null || item.valor <= filtros.valorMax;
-      return matchBusca && matchTipo && matchCategoria && matchInicio && matchFim && matchMin && matchMax;
+      return matchBusca && matchTipo && matchCategoria && matchForma && matchInicio && matchFim && matchMin && matchMax;
     })
     .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 }
 
-export function chipsFiltros(filtros: TransacoesFiltros): FiltroChip[] {
+export function chipsFiltros(filtros: TransacoesFiltros, categoriaLabels?: Record<string, string>): FiltroChip[] {
   const chips: FiltroChip[] = [];
   const termo = filtros.busca.trim();
 
@@ -85,8 +90,18 @@ export function chipsFiltros(filtros: TransacoesFiltros): FiltroChip[] {
   }
 
   if (filtros.categoria) {
-    const categoria = filtros.categoria as CategoriaTransacao;
-    chips.push({ key: 'categoria', label: `Categoria: ${CATEGORIA_LABELS[categoria] ?? filtros.categoria}` });
+    chips.push({
+      key: 'categoria',
+      label: `Categoria: ${labelCategoria(filtros.categoria, categoriaLabels)}`,
+    });
+  }
+
+  if (filtros.formaPagamento) {
+    const forma = filtros.formaPagamento as FormaPagamento;
+    chips.push({
+      key: 'formaPagamento',
+      label: `Pagamento: ${FORMA_PAGAMENTO_LABELS[forma] ?? filtros.formaPagamento}`,
+    });
   }
 
   if (filtros.dataInicio) {
@@ -110,7 +125,14 @@ export function chipsFiltros(filtros: TransacoesFiltros): FiltroChip[] {
 
 export const TIPOS_FILTRO = [{ value: '', label: 'Todos os tipos' }, ...TIPOS_TRANSACAO] as const;
 
-export const CATEGORIAS_FILTRO = [{ value: '', label: 'Todas as categorias' }, ...CATEGORIAS_TRANSACAO] as const;
+export const FORMAS_PAGAMENTO_FILTRO = [
+  { value: '', label: 'Todas as formas' },
+  ...FORMAS_PAGAMENTO,
+] as const;
+
+export function categoriasFiltro(options: { value: string; label: string }[]) {
+  return [{ value: '', label: 'Todas as categorias' }, ...options];
+}
 
 export function removerFiltro(filtros: TransacoesFiltros, key: keyof TransacoesFiltros): TransacoesFiltros {
   switch (key) {
@@ -120,6 +142,8 @@ export function removerFiltro(filtros: TransacoesFiltros, key: keyof TransacoesF
       return { ...filtros, tipo: '' };
     case 'categoria':
       return { ...filtros, categoria: '' };
+    case 'formaPagamento':
+      return { ...filtros, formaPagamento: '' };
     case 'dataInicio':
       return { ...filtros, dataInicio: '' };
     case 'dataFim':
@@ -137,19 +161,22 @@ export function mergeTransacoesFiltros(stored: Partial<TransacoesFiltros> | null
   if (!stored || typeof stored !== 'object') return { ...FILTROS_VAZIOS };
 
   const tiposValidos = new Set<string>(TIPOS_TRANSACAO.map(item => item.value));
-  const categoriasValidas = new Set<string>(CATEGORIAS_TRANSACAO.map(item => item.value));
+  const formasValidas = new Set<string>(FORMAS_PAGAMENTO.map(item => item.value));
 
   const tipo =
     typeof stored.tipo === 'string' && (stored.tipo === '' || tiposValidos.has(stored.tipo)) ? stored.tipo : '';
-  const categoria =
-    typeof stored.categoria === 'string' && (stored.categoria === '' || categoriasValidas.has(stored.categoria))
-      ? stored.categoria
+  const categoria = typeof stored.categoria === 'string' ? stored.categoria : '';
+  const formaPagamento =
+    typeof stored.formaPagamento === 'string'
+    && (stored.formaPagamento === '' || formasValidas.has(stored.formaPagamento))
+      ? stored.formaPagamento
       : '';
 
   return {
     busca: typeof stored.busca === 'string' ? stored.busca : '',
     tipo,
     categoria,
+    formaPagamento,
     dataInicio: typeof stored.dataInicio === 'string' ? stored.dataInicio : '',
     dataFim: typeof stored.dataFim === 'string' ? stored.dataFim : '',
     valorMin: typeof stored.valorMin === 'number' && Number.isFinite(stored.valorMin) ? stored.valorMin : null,

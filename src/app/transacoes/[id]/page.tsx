@@ -1,20 +1,22 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { fetchTransacaoById } from '@/app/services/transacoes';
+import { fetchCategorias } from '@/app/services/categorias';
+import { fetchTransacaoById, hydrateTransacaoAnexo } from '@/app/services/transacoes';
 import { AnexoPreview } from '@/components/anexo-preview';
 import { ApiUnavailableCard } from '@/components/api-unavailable-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CATEGORIA_LABELS, isEntrada, TIPO_LABELS } from '@/data/transacoes';
+import { categoriasToLabels } from '@/data/categorias';
+import { isEntrada, labelCategoria, labelFormaPagamento, TIPO_LABELS } from '@/data/transacoes';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
 interface TransacaoDetalhePageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function TransacaoDetalhePage({ params }: TransacaoDetalhePageProps) {
+export default async function TransacaoDetalhePage({ params }: Readonly<TransacaoDetalhePageProps>) {
   const { id } = await params;
 
   const result = await fetchTransacaoById(id);
@@ -22,9 +24,12 @@ export default async function TransacaoDetalhePage({ params }: TransacaoDetalheP
   if (!result.success || !result.data) {
     return <ApiUnavailableCard />;
   }
-  const transacao = result.data;
+  const transacao = await hydrateTransacaoAnexo(result.data);
+  const categoriasResult = await fetchCategorias(transacao.usuarioId);
+  const categoriaLabels = categoriasToLabels(categoriasResult.data ?? []);
 
   const entrada = isEntrada(transacao.tipo);
+  const anexo = transacao.anexo ?? null;
 
   return (
     <div className="mx-auto max-w-xl">
@@ -57,7 +62,11 @@ export default async function TransacaoDetalhePage({ params }: TransacaoDetalheP
             </div>
             <div className="flex justify-between border-b pb-2">
               <dt className="text-muted-foreground">Categoria</dt>
-              <dd>{CATEGORIA_LABELS[transacao.categoria]}</dd>
+              <dd>{labelCategoria(transacao.categoria, categoriaLabels)}</dd>
+            </div>
+            <div className="flex justify-between border-b pb-2">
+              <dt className="text-muted-foreground">Pagamento</dt>
+              <dd>{labelFormaPagamento(transacao.formaPagamento)}</dd>
             </div>
             <div className="flex justify-between gap-4 border-b pb-2">
               <dt className="text-muted-foreground shrink-0">ID</dt>
@@ -65,16 +74,12 @@ export default async function TransacaoDetalhePage({ params }: TransacaoDetalheP
             </div>
           </dl>
 
-          {transacao.anexo && (
+          {anexo && (
             <div className="space-y-2">
               <h2 className="text-sm font-medium">Anexo</h2>
-              <AnexoPreview anexo={transacao.anexo} alt={`Comprovante de ${transacao.descricao}`} />
-              <a
-                href={transacao.anexo.dataUrl}
-                download={transacao.anexo.nome}
-                className="text-primary text-sm underline"
-              >
-                Baixar {transacao.anexo.nome}
+              <AnexoPreview anexo={anexo} alt={`Comprovante de ${transacao.descricao}`} />
+              <a href={anexo.dataUrl} download={anexo.nome} className="text-primary text-sm underline">
+                Baixar {anexo.nome}
               </a>
             </div>
           )}

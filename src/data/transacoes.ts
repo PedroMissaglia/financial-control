@@ -1,5 +1,9 @@
 export type TipoTransacao = 'deposito' | 'transferencia' | 'saque' | 'pagamento';
 
+export const FORMAS_PAGAMENTO_IDS = ['credito', 'debito', 'pix', 'vr_va'] as const;
+
+export type FormaPagamento = (typeof FORMAS_PAGAMENTO_IDS)[number];
+
 export type CategoriaTransacao =
   | 'salario'
   | 'freelance'
@@ -14,6 +18,7 @@ export type CategoriaTransacao =
   | 'outros';
 
 export interface TransacaoAnexo {
+  id?: string;
   nome: string;
   mimeType: string;
   dataUrl: string;
@@ -27,7 +32,9 @@ export interface Transacao {
   data: string;
   hora: string;
   descricao: string;
-  categoria: CategoriaTransacao;
+  categoria: string;
+  formaPagamento?: FormaPagamento | null;
+  anexoId?: string | null;
   anexo?: TransacaoAnexo | null;
 }
 
@@ -38,7 +45,8 @@ export interface NovaTransacao {
   data: string;
   hora: string;
   descricao: string;
-  categoria: CategoriaTransacao;
+  categoria: string;
+  formaPagamento?: FormaPagamento | null;
   anexo?: TransacaoAnexo | null;
 }
 
@@ -69,6 +77,20 @@ export const TIPO_LABELS: Record<TipoTransacao, string> = {
   pagamento: 'Pagamento',
 };
 
+export const FORMAS_PAGAMENTO: { value: FormaPagamento; label: string }[] = [
+  { value: 'credito', label: 'Crédito' },
+  { value: 'debito', label: 'Débito' },
+  { value: 'pix', label: 'Pix' },
+  { value: 'vr_va', label: 'VR/VA' },
+];
+
+export const FORMA_PAGAMENTO_LABELS: Record<FormaPagamento, string> = {
+  credito: 'Crédito',
+  debito: 'Débito',
+  pix: 'Pix',
+  vr_va: 'VR/VA',
+};
+
 export const CATEGORIAS_TRANSACAO: { value: CategoriaTransacao; label: string }[] = [
   { value: 'salario', label: 'Salário' },
   { value: 'freelance', label: 'Freelance' },
@@ -83,7 +105,7 @@ export const CATEGORIAS_TRANSACAO: { value: CategoriaTransacao; label: string }[
   { value: 'outros', label: 'Outros' },
 ];
 
-export const CATEGORIA_LABELS: Record<CategoriaTransacao, string> = {
+export const CATEGORIA_LABELS: Record<string, string> = {
   salario: 'Salário',
   freelance: 'Freelance',
   moradia: 'Moradia',
@@ -119,6 +141,17 @@ export function sugerirCategoria(descricao: string): CategoriaTransacao | null {
   return match?.categoria ?? null;
 }
 
+export function labelCategoria(id: string | undefined | null, extras?: Record<string, string>): string {
+  if (!id) return 'Outros';
+  if (extras?.[id]) return extras[id];
+  return CATEGORIA_LABELS[id] ?? id;
+}
+
+export function labelFormaPagamento(value: FormaPagamento | null | undefined): string {
+  if (!value) return '—';
+  return FORMA_PAGAMENTO_LABELS[value] ?? value;
+}
+
 export function isEntrada(tipo: TipoTransacao): boolean {
   return tipo === 'deposito';
 }
@@ -142,6 +175,8 @@ export function normalizarTransacao(transacao: Transacao): Transacao {
     ...transacao,
     hora: transacao.hora || '00:00:00',
     categoria: transacao.categoria ?? sugerirCategoria(transacao.descricao) ?? 'outros',
+    formaPagamento: transacao.formaPagamento ?? null,
+    anexoId: transacao.anexoId ?? null,
     anexo: transacao.anexo ?? null,
   };
 }

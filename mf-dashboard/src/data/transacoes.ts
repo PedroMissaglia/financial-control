@@ -1,5 +1,7 @@
 export type TipoTransacao = 'deposito' | 'transferencia' | 'saque' | 'pagamento';
 
+export type FormaPagamento = 'credito' | 'debito' | 'pix' | 'vr_va';
+
 export type CategoriaTransacao =
   | 'salario'
   | 'freelance'
@@ -14,6 +16,7 @@ export type CategoriaTransacao =
   | 'outros';
 
 export interface TransacaoAnexo {
+  id?: string;
   nome: string;
   mimeType: string;
   dataUrl: string;
@@ -27,7 +30,9 @@ export interface Transacao {
   data: string;
   hora: string;
   descricao: string;
-  categoria: CategoriaTransacao;
+  categoria: string;
+  formaPagamento?: FormaPagamento | null;
+  anexoId?: string | null;
   anexo?: TransacaoAnexo | null;
 }
 
@@ -38,7 +43,8 @@ export interface NovaTransacao {
   data: string;
   hora: string;
   descricao: string;
-  categoria: CategoriaTransacao;
+  categoria: string;
+  formaPagamento?: FormaPagamento | null;
   anexo?: TransacaoAnexo | null;
 }
 
@@ -83,7 +89,7 @@ export const CATEGORIAS_TRANSACAO: { value: CategoriaTransacao; label: string }[
   { value: 'outros', label: 'Outros' },
 ];
 
-export const CATEGORIA_LABELS: Record<CategoriaTransacao, string> = {
+export const CATEGORIA_LABELS: Record<string, string> = {
   salario: 'Salário',
   freelance: 'Freelance',
   moradia: 'Moradia',
@@ -117,6 +123,12 @@ export function sugerirCategoria(descricao: string): CategoriaTransacao | null {
 
   const match = CATEGORIA_KEYWORDS.find(item => item.pattern.test(texto));
   return match?.categoria ?? null;
+}
+
+export function labelCategoria(id: string | undefined | null, extras?: Record<string, string>): string {
+  if (!id) return 'Outros';
+  if (extras?.[id]) return extras[id];
+  return CATEGORIA_LABELS[id] ?? id;
 }
 
 export function isEntrada(tipo: TipoTransacao): boolean {
@@ -174,6 +186,8 @@ export function normalizarTransacao(transacao: Transacao): Transacao {
     ...transacao,
     hora: transacao.hora || '00:00:00',
     categoria: transacao.categoria ?? sugerirCategoria(transacao.descricao) ?? 'outros',
+    formaPagamento: transacao.formaPagamento ?? null,
+    anexoId: transacao.anexoId ?? null,
     anexo: transacao.anexo ?? null,
   };
 }

@@ -3,11 +3,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useId, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { createTransacao, updateTransacao } from '@/app/services/transacoes';
+import { createCategoria } from '@/app/services/categorias';
+import { createTransacao, fetchAnexo, updateTransacao } from '@/app/services/transacoes';
 import { AnexoDropzone } from '@/components/anexo-dropzone';
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
@@ -20,11 +21,16 @@ import {
   CATEGORIA_LABELS,
   CATEGORIAS_TRANSACAO,
   type CategoriaTransacao,
+  type FormaPagamento,
+  FORMAS_PAGAMENTO,
+  FORMAS_PAGAMENTO_IDS,
+  type NovaTransacao,
   sugerirCategoria,
   TIPOS_TRANSACAO,
   type Transacao,
   type TransacaoAnexo,
 } from '@/data/transacoes';
+import { useCategorias } from '@/lib/use-categorias';
 import { useAuth } from '@/store/hooks';
 
 const hoje = () => {
@@ -43,25 +49,18 @@ const transacaoSchema = z.object({
     .min(1, 'Informe a data')
     .refine(value => value <= hoje(), 'A data não pode ser futura'),
   descricao: z.string().trim().min(2, 'Descrição deve ter ao menos 2 caracteres').max(80, 'Máximo de 80 caracteres'),
-  categoria: z.enum([
-    'salario',
-    'freelance',
-    'moradia',
-    'alimentacao',
-    'transporte',
-    'saude',
-    'educacao',
-    'lazer',
-    'servicos',
-    'transferencias',
-    'outros',
-  ]),
+  categoria: z.string().min(1, 'Selecione uma categoria'),
+  formaPagamento: z.enum(FORMAS_PAGAMENTO_IDS).or(z.literal('')),
 });
 
 type TransacaoFormData = z.infer<typeof transacaoSchema>;
 
 const TIPO_OPTIONS = TIPOS_TRANSACAO.map(tipo => ({ value: tipo.value, label: tipo.label }));
-const CATEGORIA_OPTIONS = CATEGORIAS_TRANSACAO.map(item => ({ value: item.value, label: item.label }));
+const FORMA_PAGAMENTO_OPTIONS = [
+  { value: '', label: 'Nenhuma' },
+  ...FORMAS_PAGAMENTO.map(item => ({ value: item.value, label: item.label })),
+];
+const CATEGORIA_FALLBACK = CATEGORIAS_TRANSACAO.map(item => ({ value: item.value, label: item.label }));
 
 interface TransacaoFormProps {
   transacao?: Transacao;
@@ -81,14 +80,20 @@ export function TransacaoForm({
   formId: formIdProp,
   hideActions = false,
   onSubmittingChange,
-}: TransacaoFormProps) {
+}: Readonly<TransacaoFormProps>) {
   const router = useRouter();
   const { usuario } = useAuth();
+  const usuarioIdCategorias = mode === 'edit' && transacao ? transacao.usuarioId : usuario?.id;
+  const { categorias } = useCategorias(usuarioIdCategorias);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [anexo, setAnexo] = useState<TransacaoAnexo | null>(transacao?.anexo ?? null);
+  const [anexoTouched, setAnexoTouched] = useState(Boolean(transacao?.anexo));
   const [anexoError, setAnexoError] = useState<string | null>(null);
   const [sugestao, setSugestao] = useState<CategoriaTransacao | null>(null);
+  const [novaCategoria, setNovaCategoria] = useState('');
+  const [criandoCategoria, setCriandoCategoria] = useState(false);
+  const [salvandoCategoria, setSalvandoCategoria] = useState(false);
   const generatedId = useId();
   const formId = formIdProp ?? generatedId;
 
@@ -112,8 +117,34 @@ export function TransacaoForm({
       data: transacao?.data ?? hoje(),
       descricao: transacao?.descricao ?? '',
       categoria: transacao?.categoria ?? 'outros',
+      formaPagamento: transacao?.formaPagamento ?? '',
     },
   });
+
+  const categoriaOptions = useMemo(() => {
+    const items = categorias.length
+      ? categorias.map(item => ({ value: item.id, label: item.nome }))
+      : CATEGORIA_FALLBACK;
+    const atual = transacao?.categoria;
+    if (atual && !items.some(item => item.value === atual)) {
+      return [...items, { value: atual, label: CATEGORIA_LABELS[atual] ?? atual }];
+    }
+    return items;
+  }, [categorias, transacao?.categoria]);
+
+  useEffect(() => {
+    if (!transacao?.anexoId || transacao.anexo) return;
+    let cancelled = false;
+
+    void fetchAnexo(transacao.anexoId).then(result => {
+      if (cancelled || !result.success || !result.data) return;
+      setAnexo(result.data);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [transacao?.anexo, transacao?.anexoId]);
 
   function atualizarSugestao(descricao: string) {
     const sugerida = sugerirCategoria(descricao);
@@ -124,6 +155,26 @@ export function TransacaoForm({
       return;
     }
     setSugestao(sugerida && sugerida !== categoriaAtual ? sugerida : null);
+  }
+
+  async function handleNovaCategoria() {
+    const nome = novaCategoria.trim();
+    if (!nome || !usuarioIdCategorias) return;
+
+    setSalvandoCategoria(true);
+    setError(null);
+    const result = await createCategoria(usuarioIdCategorias, nome);
+    setSalvandoCategoria(false);
+
+    if (!result.success || !result.data) {
+      setError(result.message ?? 'Não foi possível criar a categoria');
+      return;
+    }
+
+    setValue('categoria', result.data.id);
+    setNovaCategoria('');
+    setCriandoCategoria(false);
+    setSugestao(null);
   }
 
   async function onSubmit(data: TransacaoFormData) {
@@ -137,12 +188,21 @@ export function TransacaoForm({
     setSubmitting(true);
     setError(null);
 
-    const payload = {
-      ...data,
+    const payload: NovaTransacao = {
       usuarioId,
-      anexo,
+      tipo: data.tipo,
+      valor: data.valor,
+      data: data.data,
+      descricao: data.descricao,
+      categoria: data.categoria,
+      formaPagamento: (data.formaPagamento || null) as FormaPagamento | null,
       hora: mode === 'edit' && transacao ? transacao.hora || '00:00:00' : agoraLocal().hora,
     };
+
+    if (mode === 'create' || anexoTouched || anexo) {
+      payload.anexo = anexo;
+    }
+
     const result =
       mode === 'edit' && transacao ? await updateTransacao(transacao.id, payload) : await createTransacao(payload);
 
@@ -260,7 +320,7 @@ export function TransacaoForm({
               id="categoria"
               value={field.value}
               onChange={field.onChange}
-              options={CATEGORIA_OPTIONS}
+              options={categoriaOptions}
               aria-label="Categoria da transação"
             />
           )}
@@ -278,6 +338,49 @@ export function TransacaoForm({
             Sugestão: {CATEGORIA_LABELS[sugestao]}. Aplicar?
           </button>
         )}
+        {criandoCategoria ? (
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              value={novaCategoria}
+              onChange={event => setNovaCategoria(event.target.value)}
+              placeholder="Nome da nova categoria"
+              aria-label="Nome da nova categoria"
+              maxLength={40}
+            />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                className="flex-1 sm:flex-none"
+                disabled={salvandoCategoria || !novaCategoria.trim()}
+                onClick={() => void handleNovaCategoria()}
+              >
+                {salvandoCategoria ? 'Criando...' : 'Criar'}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="flex-1 sm:flex-none"
+                disabled={salvandoCategoria}
+                onClick={() => {
+                  setCriandoCategoria(false);
+                  setNovaCategoria('');
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="text-primary text-sm hover:underline"
+            onClick={() => setCriandoCategoria(true)}
+          >
+            Nova categoria…
+          </button>
+        )}
         {errors.categoria && (
           <p id={categoriaErrorId} className="text-destructive text-sm">
             {errors.categoria.message}
@@ -286,12 +389,33 @@ export function TransacaoForm({
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="formaPagamento">Forma de pagamento</Label>
+        <Controller
+          control={control}
+          name="formaPagamento"
+          render={({ field }) => (
+            <SelectMenu
+              id="formaPagamento"
+              value={field.value}
+              onChange={field.onChange}
+              options={FORMA_PAGAMENTO_OPTIONS}
+              aria-label="Forma de pagamento"
+            />
+          )}
+        />
+        <p className="text-muted-foreground text-xs">Opcional. Escolha “Nenhuma” se não quiser informar.</p>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="anexo">Anexo (recibo ou comprovante)</Label>
         <AnexoDropzone
           id="anexo"
           anexo={anexo}
           errorId={anexoError ? anexoErrorId : undefined}
-          onAnexoChange={setAnexo}
+          onAnexoChange={next => {
+            setAnexoTouched(true);
+            setAnexo(next);
+          }}
           onError={setAnexoError}
         />
         {anexoError && (

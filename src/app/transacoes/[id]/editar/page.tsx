@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { fetchTransacaoById } from '@/app/services/transacoes';
+import { fetchTransacaoById, hydrateTransacaoAnexo } from '@/app/services/transacoes';
 import { ApiUnavailableCard } from '@/components/api-unavailable-card';
 import { TransacaoForm } from '@/components/transacao-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,7 @@ export default async function EditarTransacaoPage({ params }: Readonly<EditarTra
   if (!result.success || !result.data) {
     return <ApiUnavailableCard />;
   }
-  const transacao = result.data;
+  const transacao = await hydrateTransacaoAnexo(result.data);
 
   return (
     <div className="mx-auto max-w-xl">

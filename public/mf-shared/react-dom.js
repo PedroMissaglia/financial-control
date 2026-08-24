@@ -12,4 +12,12 @@ export const {
   version,
 } = RD;
 
+/** React 19 batches automatically; @dnd-kit still named-imports this from react-dom. */
+export const unstable_batchedUpdates =
+  typeof RD.unstable_batchedUpdates === 'function'
+    ? RD.unstable_batchedUpdates
+    : function unstable_batchedUpdates(callback, a) {
+        return callback(a);
+      };
+
 export default RD;

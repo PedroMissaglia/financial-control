@@ -1,6 +1,6 @@
-import type { NovaTransacao, Transacao } from '@/data/transacoes';
+import type { NovaTransacao, Transacao, TransacaoAnexo } from '@/data/transacoes';
 import { normalizarTransacao } from '@/data/transacoes';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, readApiError } from '@/lib/api-client';
 import { notifyTransacoesChanged } from '@/lib/mf-events';
 import type { TransacoesFiltros } from '@/lib/transacao-filters';
 
@@ -59,6 +59,7 @@ function appendFiltros(search: URLSearchParams, filtros?: TransacoesFiltros) {
   if (busca) search.set('busca', busca);
   if (filtros.tipo) search.set('tipo', filtros.tipo);
   if (filtros.categoria) search.set('categoria', filtros.categoria);
+  if (filtros.formaPagamento) search.set('formaPagamento', filtros.formaPagamento);
   if (filtros.dataInicio) search.set('dataInicio', filtros.dataInicio);
   if (filtros.dataFim) search.set('dataFim', filtros.dataFim);
   if (filtros.valorMin != null) search.set('valorMin', String(filtros.valorMin));
@@ -158,6 +159,30 @@ export async function fetchTransacaoById(id: string): Promise<ApiResponse<Transa
     };
   } catch (error) {
     console.error('Erro ao buscar transação:', error);
+    return { success: false, message: 'Não foi possível conectar à API', status: 0 };
+  }
+}
+
+export async function hydrateTransacaoAnexo(transacao: Transacao): Promise<Transacao> {
+  if (transacao.anexo || !transacao.anexoId) return transacao;
+  const result = await fetchAnexo(transacao.anexoId);
+  return result.data ? { ...transacao, anexo: result.data } : transacao;
+}
+
+export async function fetchAnexo(id: string): Promise<ApiResponse<TransacaoAnexo>> {
+  try {
+    const response = await apiFetch(`/anexos/${encodeURIComponent(id)}`);
+    if (!response.ok) {
+      return {
+        success: false,
+        message: response.status === 404 ? 'Anexo não encontrado' : await readApiError(response),
+        status: response.status,
+      };
+    }
+    const data = (await response.json()) as TransacaoAnexo;
+    return { success: true, data, status: response.status };
+  } catch (error) {
+    console.error('Erro ao buscar anexo:', error);
     return { success: false, message: 'Não foi possível conectar à API', status: 0 };
   }
 }

@@ -15,6 +15,7 @@ import {
   type MfTransacoesPageSizeDetail,
 } from '@/lib/mf-events';
 import { type TransacoesFiltros } from '@/lib/transacao-filters';
+import { useCategorias } from '@/lib/use-categorias';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { syncTransacoesFiltros, syncTransacoesPageSize } from '@/store/slices/dashboard-slice';
 
@@ -35,6 +36,8 @@ export function TransacoesMicrofrontend() {
   const [mode, setMode] = useState<'loading' | 'remote' | 'error'>('loading');
   const filtros = useAppSelector(state => state.dashboard.transacoesFiltros);
   const pageSize = useAppSelector(state => state.dashboard.transacoesPageSize);
+  const usuarioId = useAppSelector(state => state.auth.usuario?.id);
+  const { labels: categoriaLabels } = useCategorias(usuarioId);
   const [total, setTotal] = useState(0);
   const [totalUnfiltered, setTotalUnfiltered] = useState(0);
 
@@ -114,6 +117,7 @@ export function TransacoesMicrofrontend() {
             accessToken: readStoredSession()?.accessToken ?? undefined,
             filtros,
             pageSize,
+            categoriaLabels,
           });
           if (cancelled) {
             maybeUnmount?.();
@@ -154,6 +158,11 @@ export function TransacoesMicrofrontend() {
     if (mode !== 'remote' || !mfNodeRef.current) return;
     mfNodeRef.current.pageSize = pageSize;
   }, [pageSize, mode]);
+
+  useEffect(() => {
+    if (mode !== 'remote' || !mfNodeRef.current) return;
+    mfNodeRef.current.categoriaLabels = categoriaLabels;
+  }, [categoriaLabels, mode]);
 
   function handleFiltrosChange(next: TransacoesFiltros) {
     dispatch(syncTransacoesFiltros(next));

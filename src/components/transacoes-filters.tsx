@@ -10,17 +10,21 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SelectMenu } from '@/components/ui/select-menu';
+import { CATEGORIAS_TRANSACAO } from '@/data/transacoes';
 import {
-  CATEGORIAS_FILTRO,
+  categoriasFiltro,
   chipsFiltros,
   contagemResultados,
   FILTROS_VAZIOS,
+  FORMAS_PAGAMENTO_FILTRO,
   removerFiltro,
-  TIPOS_FILTRO,
   temFiltrosAtivos,
+  TIPOS_FILTRO,
   type TransacoesFiltros,
 } from '@/lib/transacao-filters';
+import { useCategorias } from '@/lib/use-categorias';
 import { useMediaQuery } from '@/lib/use-media-query';
+import { useAuth } from '@/store/hooks';
 
 interface TransacoesFiltersProps {
   filtros: TransacoesFiltros;
@@ -38,21 +42,24 @@ function parseValor(value: string): number | null {
 function AdvancedFilterFields({
   filtros,
   onPatch,
+  categoriaOptions,
   idPrefix = '',
 }: Readonly<{
   filtros: TransacoesFiltros;
   onPatch: (partial: Partial<TransacoesFiltros>) => void;
+  categoriaOptions: { value: string; label: string }[];
   idPrefix?: string;
 }>) {
   const tipoId = `${idPrefix}filtro-tipo`;
   const categoriaId = `${idPrefix}filtro-categoria`;
+  const pagamentoId = `${idPrefix}filtro-pagamento`;
   const deId = `${idPrefix}filtro-de`;
   const ateId = `${idPrefix}filtro-ate`;
   const minId = `${idPrefix}filtro-min`;
   const maxId = `${idPrefix}filtro-max`;
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <div className="space-y-2">
         <Label htmlFor={tipoId}>Tipo</Label>
         <SelectMenu
@@ -70,8 +77,19 @@ function AdvancedFilterFields({
           id={categoriaId}
           value={filtros.categoria}
           onChange={categoria => onPatch({ categoria })}
-          options={CATEGORIAS_FILTRO.map(item => ({ value: item.value, label: item.label }))}
+          options={categoriaOptions}
           aria-label="Filtrar por categoria"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={pagamentoId}>Pagamento</Label>
+        <SelectMenu
+          id={pagamentoId}
+          value={filtros.formaPagamento}
+          onChange={formaPagamento => onPatch({ formaPagamento })}
+          options={FORMAS_PAGAMENTO_FILTRO.map(item => ({ value: item.value, label: item.label }))}
+          aria-label="Filtrar por forma de pagamento"
         />
       </div>
 
@@ -185,10 +203,17 @@ function FilterChips({
 
 export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readonly<TransacoesFiltersProps>) {
   const isDesktop = useMediaQuery('(min-width: 640px)');
+  const { usuario } = useAuth();
+  const { categorias, labels } = useCategorias(usuario?.id);
   const [sheetOpen, setSheetOpen] = useState(false);
   const ativos = temFiltrosAtivos(filtros);
   const resumo = contagemResultados(total, visiveis, filtros);
-  const chips = chipsFiltros(filtros);
+  const chips = chipsFiltros(filtros, labels);
+  const categoriaOptions = categoriasFiltro(
+    categorias.length
+      ? categorias.map(item => ({ value: item.id, label: item.nome }))
+      : CATEGORIAS_TRANSACAO.map(item => ({ value: item.value, label: item.label })),
+  );
   const advancedCount = chips.filter(chip => chip.key !== 'busca').length;
 
   function patch(partial: Partial<TransacoesFiltros>) {
@@ -281,7 +306,7 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
             </div>
           </div>
 
-          <AdvancedFilterFields filtros={filtros} onPatch={patch} />
+          <AdvancedFilterFields filtros={filtros} onPatch={patch} categoriaOptions={categoriaOptions} />
 
           {ativos && (
             <div className="border-t pt-4">
@@ -316,7 +341,12 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
           }
         >
           <div className="space-y-3">
-            <AdvancedFilterFields filtros={filtros} onPatch={patch} idPrefix="sheet-" />
+            <AdvancedFilterFields
+              filtros={filtros}
+              onPatch={patch}
+              categoriaOptions={categoriaOptions}
+              idPrefix="sheet-"
+            />
           </div>
         </BottomSheet>
       )}

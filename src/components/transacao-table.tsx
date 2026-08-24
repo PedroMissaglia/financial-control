@@ -10,8 +10,10 @@ import { ConfirmarExclusaoModal } from '@/components/confirmar-exclusao-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CATEGORIA_LABELS, isEntrada, TIPO_LABELS, type Transacao } from '@/data/transacoes';
+import { isEntrada, labelCategoria, labelFormaPagamento, TIPO_LABELS, type Transacao } from '@/data/transacoes';
+import { useCategorias } from '@/lib/use-categorias';
 import { cn, formatCurrency, formatDateShort } from '@/lib/utils';
+import { useAuth } from '@/store/hooks';
 
 interface TransacaoTableProps {
   transacoes: Transacao[];
@@ -20,14 +22,17 @@ interface TransacaoTableProps {
 
 function TransacaoCardRow({
   transacao,
+  categoriaLabel,
   isDeleting,
   onDelete,
 }: Readonly<{
   transacao: Transacao;
+  categoriaLabel: string;
   isDeleting: boolean;
   onDelete: (transacao: Transacao) => void;
 }>) {
   const entrada = isEntrada(transacao.tipo);
+  const pagamento = labelFormaPagamento(transacao.formaPagamento);
 
   return (
     <Card className="shadow-sm">
@@ -36,7 +41,8 @@ function TransacaoCardRow({
           <div className="min-w-0">
             <p className="truncate font-medium">{transacao.descricao}</p>
             <p className="text-muted-foreground text-sm">
-              {formatDateShort(transacao.data)} · {CATEGORIA_LABELS[transacao.categoria]}
+              {formatDateShort(transacao.data)} · {categoriaLabel}
+              {transacao.formaPagamento ? ` · ${pagamento}` : ''}
             </p>
           </div>
           <p className={cn('shrink-0 font-semibold', entrada ? 'text-success' : 'text-destructive')}>
@@ -81,6 +87,8 @@ export function TransacaoTable({
   emptyLabel = 'Nenhuma transação encontrada.',
 }: Readonly<TransacaoTableProps>) {
   const router = useRouter();
+  const { usuario } = useAuth();
+  const { labels } = useCategorias(usuario?.id);
   const [alvo, setAlvo] = useState<Transacao | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -123,7 +131,7 @@ export function TransacaoTable({
   return (
     <div className="space-y-4">
       <div className="hidden overflow-x-auto rounded-xl border bg-card shadow-sm md:block">
-        <table className="w-full min-w-[640px] text-left text-sm">
+        <table className="w-full min-w-[720px] text-left text-sm">
           <caption className="sr-only">Lista de transações financeiras</caption>
           <thead className="bg-muted/50 border-b">
             <tr>
@@ -135,6 +143,9 @@ export function TransacaoTable({
               </th>
               <th scope="col" className="px-4 py-3 font-medium">
                 Categoria
+              </th>
+              <th scope="col" className="px-4 py-3 font-medium">
+                Pagamento
               </th>
               <th scope="col" className="px-4 py-3 font-medium">
                 Data
@@ -156,7 +167,12 @@ export function TransacaoTable({
                   <td className="px-4 py-3">
                     <Badge variant={entrada ? 'success' : 'secondary'}>{TIPO_LABELS[transacao.tipo]}</Badge>
                   </td>
-                  <td className="text-muted-foreground px-4 py-3">{CATEGORIA_LABELS[transacao.categoria]}</td>
+                  <td className="text-muted-foreground px-4 py-3">
+                    {labelCategoria(transacao.categoria, labels)}
+                  </td>
+                  <td className="text-muted-foreground px-4 py-3">
+                    {labelFormaPagamento(transacao.formaPagamento)}
+                  </td>
                   <td className="text-muted-foreground px-4 py-3">{formatDateShort(transacao.data)}</td>
                   <td className={cn('px-4 py-3 font-semibold', entrada ? 'text-success' : 'text-destructive')}>
                     {entrada ? '+' : '-'}
@@ -197,6 +213,7 @@ export function TransacaoTable({
           <TransacaoCardRow
             key={transacao.id}
             transacao={transacao}
+            categoriaLabel={labelCategoria(transacao.categoria, labels)}
             isDeleting={isDeleting && alvo?.id === transacao.id}
             onDelete={setAlvo}
           />

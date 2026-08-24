@@ -9,6 +9,7 @@ export interface TransacoesMfProps {
   accessToken?: string;
   filtros: TransacoesFiltros;
   pageSize: number;
+  categoriaLabels?: Record<string, string>;
 }
 
 export type { TransacoesFiltros };
@@ -32,6 +33,7 @@ export async function mount(element: HTMLElement, props: TransacoesMfProps): Pro
   node.accessToken = props.accessToken ?? '';
   node.filtros = props.filtros ?? FILTROS_VAZIOS;
   node.pageSize = props.pageSize ?? 8;
+  node.categoriaLabels = props.categoriaLabels ?? {};
   element.replaceChildren(node);
 
   return () => {

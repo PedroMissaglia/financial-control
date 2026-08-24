@@ -1,17 +1,6 @@
 export type TipoTransacao = 'deposito' | 'transferencia' | 'saque' | 'pagamento';
 
-export type CategoriaTransacao =
-  | 'salario'
-  | 'freelance'
-  | 'moradia'
-  | 'alimentacao'
-  | 'transporte'
-  | 'saude'
-  | 'educacao'
-  | 'lazer'
-  | 'servicos'
-  | 'transferencias'
-  | 'outros';
+export type FormaPagamento = 'credito' | 'debito' | 'pix' | 'vr_va';
 
 export interface Transacao {
   id: string;
@@ -21,7 +10,9 @@ export interface Transacao {
   data: string;
   hora: string;
   descricao: string;
-  categoria?: CategoriaTransacao;
+  categoria?: string;
+  formaPagamento?: FormaPagamento | null;
+  anexoId?: string | null;
 }
 
 export const TIPOS: { value: TipoTransacao | ''; label: string }[] = [
@@ -32,19 +23,12 @@ export const TIPOS: { value: TipoTransacao | ''; label: string }[] = [
   { value: 'pagamento', label: 'Pagamento' },
 ];
 
-export const CATEGORIAS: { value: CategoriaTransacao | ''; label: string }[] = [
-  { value: '', label: 'Todas as categorias' },
-  { value: 'salario', label: 'Salário' },
-  { value: 'freelance', label: 'Freelance' },
-  { value: 'moradia', label: 'Moradia' },
-  { value: 'alimentacao', label: 'Alimentação' },
-  { value: 'transporte', label: 'Transporte' },
-  { value: 'saude', label: 'Saúde' },
-  { value: 'educacao', label: 'Educação' },
-  { value: 'lazer', label: 'Lazer' },
-  { value: 'servicos', label: 'Serviços' },
-  { value: 'transferencias', label: 'Transferências' },
-  { value: 'outros', label: 'Outros' },
+export const FORMAS_PAGAMENTO: { value: FormaPagamento | ''; label: string }[] = [
+  { value: '', label: 'Todas as formas' },
+  { value: 'credito', label: 'Crédito' },
+  { value: 'debito', label: 'Débito' },
+  { value: 'pix', label: 'Pix' },
+  { value: 'vr_va', label: 'VR/VA' },
 ];
 
 export const TIPO_LABELS: Record<TipoTransacao, string> = {
@@ -54,7 +38,14 @@ export const TIPO_LABELS: Record<TipoTransacao, string> = {
   pagamento: 'Pagamento',
 };
 
-export const CATEGORIA_LABELS: Record<CategoriaTransacao, string> = {
+export const FORMA_PAGAMENTO_LABELS: Record<FormaPagamento, string> = {
+  credito: 'Crédito',
+  debito: 'Débito',
+  pix: 'Pix',
+  vr_va: 'VR/VA',
+};
+
+export const CATEGORIA_LABELS: Record<string, string> = {
   salario: 'Salário',
   freelance: 'Freelance',
   moradia: 'Moradia',
@@ -72,8 +63,15 @@ export function isEntrada(tipo: TipoTransacao): boolean {
   return tipo === 'deposito';
 }
 
-export function sugerirCategoria(tipo: TipoTransacao): CategoriaTransacao {
-  return tipo === 'deposito' ? 'salario' : 'outros';
+export function labelCategoria(id: string | undefined, extras?: Record<string, string>): string {
+  if (!id) return 'Outros';
+  if (extras?.[id]) return extras[id];
+  return CATEGORIA_LABELS[id] ?? id;
+}
+
+export function labelFormaPagamento(value: FormaPagamento | null | undefined): string {
+  if (!value) return '—';
+  return FORMA_PAGAMENTO_LABELS[value] ?? value;
 }
 
 export function formatCurrency(value: number): string {

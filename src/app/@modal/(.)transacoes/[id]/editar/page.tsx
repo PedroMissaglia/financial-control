@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { fetchTransacaoById } from '@/app/services/transacoes';
+import { fetchTransacaoById, hydrateTransacaoAnexo } from '@/app/services/transacoes';
 import { ApiUnavailableCard } from '@/components/api-unavailable-card';
 import { TransacaoModalForm } from '@/components/transacao-modal-form';
 import { Modal } from '@/components/ui/modal';
@@ -21,7 +21,7 @@ export default async function ModalEditarTransacaoPage({ params }: Readonly<Moda
       </Modal>
     );
   }
-  const transacao = result.data;
+  const transacao = await hydrateTransacaoAnexo(result.data);
 
   return (
     <TransacaoModalForm

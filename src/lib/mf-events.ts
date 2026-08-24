@@ -1,4 +1,5 @@
 export const MF_TRANSACOES_CHANGED = 'fincontrol:transacoes-changed';
+export const MF_CATEGORIAS_CHANGED = 'fincontrol:categorias-changed';
 export const MF_NAVIGATE = 'fincontrol:navigate';
 export const MF_TRANSACOES_PAGE_SIZE = 'fincontrol:transacoes-page-size';
 export const MF_TRANSACOES_PAGE_META = 'fincontrol:transacoes-page-meta';
@@ -25,6 +26,11 @@ export type MfDeleteTransacaoDetail = {
 export function notifyTransacoesChanged() {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(MF_TRANSACOES_CHANGED));
+}
+
+export function notifyCategoriasChanged() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(MF_CATEGORIAS_CHANGED));
 }
 
 export function getUsuarioIdFromCookie(): string | undefined {

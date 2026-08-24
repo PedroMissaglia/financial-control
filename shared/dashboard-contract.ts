@@ -39,6 +39,7 @@ export interface DashboardTransacao {
   hora: string;
   descricao: string;
   categoria: string;
+  formaPagamento?: 'credito' | 'debito' | 'pix' | 'vr_va' | null;
 }
 
 export interface DashboardMfBaseProps {
@@ -50,6 +51,7 @@ export interface DashboardMfBaseProps {
   alertaGastos: number;
   extratoLimite: number;
   apiUrl: string;
+  categoriaLabels?: Record<string, string>;
 }
 
 export type DashboardViewProps = DashboardMfBaseProps;

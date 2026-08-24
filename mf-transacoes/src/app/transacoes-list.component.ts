@@ -16,10 +16,11 @@ import { MatPaginator, MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 
 import {
-  CATEGORIA_LABELS,
   formatCurrency,
   formatDateShort,
   isEntrada,
+  labelCategoria,
+  labelFormaPagamento,
   TIPO_LABELS,
   Transacao,
 } from './models';
@@ -30,6 +31,7 @@ export interface TransacoesFiltros {
   busca: string;
   tipo: string;
   categoria: string;
+  formaPagamento: string;
   dataInicio: string;
   dataFim: string;
   valorMin: number | null;
@@ -40,6 +42,7 @@ export const FILTROS_VAZIOS: TransacoesFiltros = {
   busca: '',
   tipo: '',
   categoria: '',
+  formaPagamento: '',
   dataInicio: '',
   dataFim: '',
   valorMin: null,
@@ -77,6 +80,7 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
   @Input() accessToken = '';
   @Input() filtros: TransacoesFiltros = FILTROS_VAZIOS;
   @Input() pageSize = DEFAULT_PAGE_SIZE;
+  @Input() categoriaLabels: Record<string, string> = {};
 
   pageSizeAtivo = DEFAULT_PAGE_SIZE;
   page = 1;
@@ -97,13 +101,14 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
   private filtrosTimer?: ReturnType<typeof setTimeout>;
   private loadSeq = 0;
 
-  readonly displayedColumns = ['descricao', 'tipo', 'categoria', 'data', 'valor', 'acoes'] as const;
+  readonly displayedColumns = ['descricao', 'tipo', 'categoria', 'pagamento', 'data', 'valor', 'acoes'] as const;
   readonly pageSizeOptions = [...PAGE_SIZE_OPTIONS];
 
   dataSource = new MatTableDataSource<Transacao>([]);
   items: Transacao[] = [];
   carregando = false;
   erro: string | null = null;
+  private fetchedLabels: Record<string, string> = {};
 
   constructor(
     private readonly service: TransacoesService,
@@ -113,11 +118,14 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
   ngOnInit(): void {
     this.pageSizeAtivo = normalizarPageSize(this.pageSize);
     window.addEventListener('fincontrol:transacoes-changed', this.onTransacoesChanged);
+    window.addEventListener('fincontrol:categorias-changed', this.onCategoriasChanged);
     void this.carregar();
+    void this.carregarLabels();
   }
 
   ngOnDestroy(): void {
     window.removeEventListener('fincontrol:transacoes-changed', this.onTransacoesChanged);
+    window.removeEventListener('fincontrol:categorias-changed', this.onCategoriasChanged);
     if (this.filtrosTimer) clearTimeout(this.filtrosTimer);
   }
 
@@ -141,6 +149,11 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
       || (changes['accessToken'] && !changes['accessToken'].firstChange)
     ) {
       void this.carregar();
+      void this.carregarLabels();
+    }
+
+    if (changes['categoriaLabels'] && !changes['categoriaLabels'].firstChange) {
+      this.cdr.markForCheck();
     }
   }
 
@@ -215,7 +228,11 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
   }
 
   categoriaLabel(categoria: Transacao['categoria']): string {
-    return categoria ? CATEGORIA_LABELS[categoria] : 'Outros';
+    return labelCategoria(categoria, { ...this.fetchedLabels, ...this.categoriaLabels });
+  }
+
+  formaLabel(value: Transacao['formaPagamento']): string {
+    return labelFormaPagamento(value);
   }
 
   entrada(tipo: Transacao['tipo']): boolean {
@@ -245,6 +262,24 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
     void this.carregar();
   }
 
+  private async carregarLabels(): Promise<void> {
+    if (!this.usuarioId) {
+      this.fetchedLabels = {};
+      return;
+    }
+
+    try {
+      this.fetchedLabels = await this.service.listarCategoriaLabels(
+        this.apiUrl,
+        this.usuarioId,
+        this.accessToken,
+      );
+      this.cdr.markForCheck();
+    } catch {
+      this.fetchedLabels = {};
+    }
+  }
+
   private scheduleCarregar(resetPage: boolean): void {
     if (this.filtrosTimer) clearTimeout(this.filtrosTimer);
     this.filtrosTimer = setTimeout(() => {
@@ -270,5 +305,9 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
 
   private readonly onTransacoesChanged = (): void => {
     void this.carregar();
+  };
+
+  private readonly onCategoriasChanged = (): void => {
+    void this.carregarLabels();
   };
 }

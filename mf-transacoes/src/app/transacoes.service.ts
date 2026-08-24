@@ -8,6 +8,7 @@ export interface TransacoesListFiltros {
   busca?: string;
   tipo?: string;
   categoria?: string;
+  formaPagamento?: string;
   dataInicio?: string;
   dataFim?: string;
   valorMin?: number | null;
@@ -79,6 +80,7 @@ function buildQuery(usuarioId: string, params: ListarTransacoesParams): string {
     if (busca) search.set('busca', busca);
     if (filtros.tipo) search.set('tipo', filtros.tipo);
     if (filtros.categoria) search.set('categoria', filtros.categoria);
+    if (filtros.formaPagamento) search.set('formaPagamento', filtros.formaPagamento);
     if (filtros.dataInicio) search.set('dataInicio', filtros.dataInicio);
     if (filtros.dataFim) search.set('dataFim', filtros.dataFim);
     if (filtros.valorMin != null) search.set('valorMin', String(filtros.valorMin));
@@ -105,6 +107,29 @@ export class TransacoesService {
         throw new Error('Não foi possível carregar as transações.');
       }
       return parseTransacoesPage(await response.json());
+    });
+  }
+
+  listarCategoriaLabels(
+    apiUrl: string,
+    usuarioId: string,
+    accessToken: string | undefined,
+  ): Promise<Record<string, string>> {
+    const url = `${apiUrl}/categorias?usuarioId=${encodeURIComponent(usuarioId)}`;
+    const token = readAccessToken(accessToken);
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+    return fetch(url, { cache: 'no-store', headers }).then(async response => {
+      if (!response.ok) return {};
+      const json: unknown = await response.json();
+      if (!Array.isArray(json)) return {};
+      return Object.fromEntries(
+        json
+          .filter((item): item is { id: string; nome: string } => {
+            return !!item && typeof item === 'object' && 'id' in item && 'nome' in item;
+          })
+          .map(item => [String(item.id), String(item.nome)]),
+      );
     });
   }
 }

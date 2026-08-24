@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 
 import type { Transacao } from '@/data/transacoes';
 import { getApiUrl } from '@/lib/api-url';
+import { useCategorias } from '@/lib/use-categorias';
 import { useAppSelector } from '@/store/hooks';
 
 import type { DashboardMfBaseProps } from '../../shared/dashboard-contract';
@@ -16,6 +17,8 @@ export function useMfDashboardBaseProps(transacoes: Transacao[]): DashboardMfBas
   const metaEconomia = useAppSelector(state => state.dashboard.metaEconomia);
   const alertaGastos = useAppSelector(state => state.dashboard.alertaGastos);
   const extratoLimite = useAppSelector(state => state.dashboard.extratoLimite);
+  const usuarioId = useAppSelector(state => state.auth.usuario?.id);
+  const { labels: categoriaLabels } = useCategorias(usuarioId);
 
   return useMemo(
     () => ({
@@ -27,7 +30,17 @@ export function useMfDashboardBaseProps(transacoes: Transacao[]): DashboardMfBas
       alertaGastos,
       extratoLimite,
       apiUrl: getApiUrl(),
+      categoriaLabels,
     }),
-    [transacoes, widgets, layoutRows, layoutGroups, metaEconomia, alertaGastos, extratoLimite],
+    [
+      transacoes,
+      widgets,
+      layoutRows,
+      layoutGroups,
+      metaEconomia,
+      alertaGastos,
+      extratoLimite,
+      categoriaLabels,
+    ],
   );
 }

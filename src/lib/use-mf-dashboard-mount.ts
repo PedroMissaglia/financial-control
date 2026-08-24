@@ -17,10 +17,15 @@ interface DashboardLayoutSlice {
   extratoLimite: unknown;
   apiUrl?: unknown;
   transacoes?: unknown;
+  categoriaLabels?: unknown;
 }
 
 function propsSignature(props: DashboardLayoutSlice) {
   const transacoes = Array.isArray(props.transacoes) ? props.transacoes : [];
+  const categoriaLabels =
+    props.categoriaLabels && typeof props.categoriaLabels === 'object'
+      ? props.categoriaLabels
+      : {};
   return JSON.stringify({
     widgets: props.widgets,
     layoutRows: props.layoutRows,
@@ -30,6 +35,10 @@ function propsSignature(props: DashboardLayoutSlice) {
     extratoLimite: props.extratoLimite,
     apiUrl: props.apiUrl,
     tx: transacoes.map((item: { id?: string; valor?: number }) => `${item.id}:${item.valor}`).join('|'),
+    cats: Object.entries(categoriaLabels as Record<string, string>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([id, nome]) => `${id}:${nome}`)
+      .join('|'),
   });
 }
 

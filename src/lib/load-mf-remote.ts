@@ -23,6 +23,7 @@ export interface TransacoesMfMountProps {
   accessToken?: string;
   filtros: TransacoesFiltros;
   pageSize: number;
+  categoriaLabels?: Record<string, string>;
 }
 
 export type MfMountFn<TProps> = (

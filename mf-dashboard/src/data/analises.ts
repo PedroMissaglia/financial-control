@@ -1,8 +1,7 @@
 import {
   calcularSaldo,
-  CATEGORIA_LABELS,
-  type CategoriaTransacao,
   isEntrada,
+  labelCategoria,
   TIPO_LABELS,
   type Transacao,
 } from '@/data/transacoes';
@@ -57,18 +56,22 @@ export function totaisPorTipo(transacoes: Transacao[]): TotalPorGrupo[] {
   }));
 }
 
-export function totaisPorCategoria(transacoes: Transacao[]): TotalPorGrupo[] {
+export function totaisPorCategoria(
+  transacoes: Transacao[],
+  labels?: Record<string, string>,
+): TotalPorGrupo[] {
   const saidas = transacoes.filter(transacao => !isEntrada(transacao.tipo));
-  const totais = new Map<CategoriaTransacao, number>();
+  const totais = new Map<string, number>();
 
   for (const transacao of saidas) {
-    totais.set(transacao.categoria, (totais.get(transacao.categoria) ?? 0) + transacao.valor);
+    const chave = transacao.categoria || 'outros';
+    totais.set(chave, (totais.get(chave) ?? 0) + transacao.valor);
   }
 
   return [...totais.entries()]
     .map(([chave, valor]) => ({
       chave,
-      label: CATEGORIA_LABELS[chave],
+      label: labelCategoria(chave, labels),
       valor: Number(valor.toFixed(2)),
     }))
     .sort((a, b) => b.valor - a.valor);

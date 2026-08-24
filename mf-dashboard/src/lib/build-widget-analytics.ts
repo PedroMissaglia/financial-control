@@ -9,13 +9,16 @@ export interface DashboardWidgetAnalytics {
   receitasDespesas: { name: string; valor: number }[];
 }
 
-export function buildWidgetAnalytics(transacoes: Transacao[]): DashboardWidgetAnalytics {
+export function buildWidgetAnalytics(
+  transacoes: Transacao[],
+  categoriaLabels?: Record<string, string>,
+): DashboardWidgetAnalytics {
   const resumo = resumoFinanceiro(transacoes);
   return {
     saldo: calcularSaldo(transacoes),
     resumo,
     evolucao: evolucaoSaldo(transacoes),
-    porCategoria: totaisPorCategoria(transacoes),
+    porCategoria: totaisPorCategoria(transacoes, categoriaLabels),
     receitasDespesas: [
       { name: 'Receitas', valor: resumo.receitas },
       { name: 'Despesas', valor: resumo.despesas },
