@@ -6,17 +6,20 @@
   "scripts": {
     "sync": "./cap.sh sync ios",
     "open:ios": "./cap.sh open ios",
-    "add:ios": "./cap.sh add ios"
+    "add:ios": "./cap.sh add ios",
+    "assets": "node scripts/generate-brand-assets.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^7.6.8",
     "@capacitor/ios": "^7.6.8",
-    "@capacitor/keyboard": "^7.0.6"
+    "@capacitor/keyboard": "^7.0.6",
+    "@capacitor/splash-screen": "^7.0.5"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.6.8",
     "@types/node": "^22.13.10",
     "dotenv": "^16.4.7",
+    "sharp": "^0.33.5",
     "typescript": "^5.7.2"
   }
 }

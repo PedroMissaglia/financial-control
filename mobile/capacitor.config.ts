@@ -33,6 +33,13 @@ const config: CapacitorConfig = {
       resize: 'body',
       resizeOnFullScreen: true,
     },
+    SplashScreen: {
+      launchAutoHide: false,
+      backgroundColor: '#f0fbfc',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
   },
 };
 
