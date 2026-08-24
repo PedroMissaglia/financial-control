@@ -58,6 +58,10 @@ export interface DashboardMfBaseProps {
   categoriaLabels?: Record<string, string>;
   /** Escopo da visão Eu / Cônjuge / Conjunta (host). */
   usuarioIds?: string[];
+  /** Labels Você / nome do cônjuge para badges e breakdown. */
+  donoLabels?: Record<string, string>;
+  /** Loading ao trocar escopo (host). */
+  loading?: boolean;
 }
 
 export type DashboardViewProps = DashboardMfBaseProps;

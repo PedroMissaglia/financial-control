@@ -151,7 +151,7 @@ function AlertaSkeleton() {
   );
 }
 
-function WidgetSkeleton({ id }: Readonly<{ id: WidgetId }>) {
+export function WidgetSkeleton({ id }: Readonly<{ id: WidgetId }>) {
   let body: ReactNode;
   switch (id) {
     case 'saldo':
@@ -223,6 +223,7 @@ interface DashboardWidgetPreviewProps {
   alertaGastos: number;
   extratoLimite: number;
   apiUrl?: string;
+  donoLabels?: Record<string, string>;
 }
 
 export function DashboardWidgetPreview({
@@ -232,41 +233,98 @@ export function DashboardWidgetPreview({
   metaEconomia,
   alertaGastos,
   extratoLimite,
+  donoLabels,
 }: Readonly<DashboardWidgetPreviewProps>) {
-  const { saldo, resumo, evolucao, porCategoria, porTipo, porForma, receitasDespesas, receitasDespesasAno, compromissos } =
-    analytics;
+  const {
+    saldo,
+    resumo,
+    evolucao,
+    porCategoria,
+    porTipo,
+    porForma,
+    receitasDespesas,
+    receitasDespesasAno,
+    compromissos,
+    porPessoa,
+    fragmentado,
+    receitasDespesasFatias,
+    porCategoriaEmpilhado,
+    porTipoEmpilhado,
+    porFormaEmpilhado,
+    evolucaoEmpilhado,
+    receitasDespesasAnoEmpilhado,
+  } = analytics;
   const economiaAtual = resumo.receitas - resumo.despesas;
   const progressoMeta = metaEconomia > 0 ? Math.min(100, Math.max(0, (economiaAtual / metaEconomia) * 100)) : 0;
   const alertaAtivo = resumo.despesas > alertaGastos;
+  const seriesPessoas = fragmentado
+    ? porPessoa.map(pessoa => ({ dataKey: pessoa.dataKey, nome: pessoa.nome }))
+    : [];
 
   let content: ReactNode;
   switch (id) {
     case 'saldo':
-      content = <SaldoCard saldo={saldo} />;
+      content = <SaldoCard saldo={saldo} porPessoa={porPessoa} />;
       break;
     case 'evolucao':
-      content = <EvolucaoSaldoChart evolucao={evolucao} />;
+      content = (
+        <EvolucaoSaldoChart
+          evolucao={evolucao}
+          evolucaoEmpilhado={evolucaoEmpilhado}
+          seriesPessoas={seriesPessoas}
+        />
+      );
       break;
     case 'comparativo':
-      content = <ReceitasDespesasChart receitasDespesas={receitasDespesas} />;
+      content = (
+        <ReceitasDespesasChart
+          receitasDespesas={receitasDespesas}
+          fatias={fragmentado ? receitasDespesasFatias : []}
+        />
+      );
       break;
     case 'categorias':
-      content = <GastosCategoriaChart porCategoria={porCategoria} />;
+      content = (
+        <GastosCategoriaChart
+          porCategoria={porCategoria}
+          porCategoriaEmpilhado={porCategoriaEmpilhado}
+          seriesPessoas={seriesPessoas}
+        />
+      );
       break;
     case 'tipo':
-      content = <VolumePorTipoChart porTipo={porTipo} />;
+      content = (
+        <VolumePorTipoChart
+          porTipo={porTipo}
+          porTipoEmpilhado={porTipoEmpilhado}
+          seriesPessoas={seriesPessoas}
+        />
+      );
       break;
     case 'forma':
-      content = <SaidasPorFormaChart porForma={porForma} />;
+      content = (
+        <SaidasPorFormaChart
+          porForma={porForma}
+          porFormaEmpilhado={porFormaEmpilhado}
+          seriesPessoas={seriesPessoas}
+        />
+      );
       break;
     case 'anual':
-      content = <ReceitasDespesasAnoChart receitasDespesasAno={receitasDespesasAno} />;
+      content = (
+        <ReceitasDespesasAnoChart
+          receitasDespesasAno={receitasDespesasAno}
+          mesesEmpilhado={receitasDespesasAnoEmpilhado.meses}
+          seriesAno={receitasDespesasAnoEmpilhado.series}
+          anoEmpilhado={receitasDespesasAnoEmpilhado.ano}
+        />
+      );
       break;
     case 'compromissos':
-      content = <GastosMensaisPainel compromissos={compromissos} />;
+      content = <GastosMensaisPainel compromissos={compromissos} porPessoa={porPessoa} />;
       break;
     case 'extrato':
-      content = <ExtratoRecente transacoes={transacoes} limit={extratoLimite} />;
+      content = <ExtratoRecente transacoes={transacoes} limit={extratoLimite} donoLabels={donoLabels} />;
       break;
     case 'meta':
       content = (
@@ -292,6 +350,18 @@ export function DashboardWidgetPreview({
               <div className="bg-primary h-full rounded-full" style={{ width: `${progressoMeta}%` }} />
             </div>
             <p className="text-sm">{Math.round(progressoMeta)}% da meta</p>
+            {porPessoa.length > 0 && (
+              <ul className="text-muted-foreground space-y-1 text-sm">
+                {porPessoa.map(pessoa => (
+                  <li key={pessoa.usuarioId} className="flex justify-between gap-2">
+                    <span>Economia de {pessoa.nome}</span>
+                    <span className="text-foreground font-medium">
+                      {formatCurrency(pessoa.receitas - pessoa.despesas)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
       );
@@ -309,14 +379,24 @@ export function DashboardWidgetPreview({
             </div>
             <CardDescription>Limite mensal de despesas: {formatCurrency(alertaGastos)}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <p className="fc-card-metric">{formatCurrency(resumo.despesas)}</p>
             {alertaAtivo ? (
-              <p className="text-destructive mt-2 text-sm" role="alert">
-                Você ultrapassou o limite de gastos configurado.
+              <p className="text-destructive text-sm" role="alert">
+                Vocês ultrapassaram o limite de gastos configurado.
               </p>
             ) : (
-              <p className="text-success mt-2 text-sm">Gastos dentro do limite.</p>
+              <p className="text-success text-sm">Gastos dentro do limite.</p>
+            )}
+            {porPessoa.length > 0 && (
+              <ul className="text-muted-foreground space-y-1 text-sm">
+                {porPessoa.map(pessoa => (
+                  <li key={pessoa.usuarioId} className="flex justify-between gap-2">
+                    <span>Despesas de {pessoa.nome}</span>
+                    <span className="text-foreground font-medium">{formatCurrency(pessoa.despesas)}</span>
+                  </li>
+                ))}
+              </ul>
             )}
           </CardContent>
         </Card>

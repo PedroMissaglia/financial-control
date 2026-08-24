@@ -18,6 +18,9 @@ interface DashboardLayoutSlice {
   apiUrl?: unknown;
   transacoes?: unknown;
   categoriaLabels?: unknown;
+  usuarioIds?: unknown;
+  donoLabels?: unknown;
+  loading?: unknown;
 }
 
 function propsSignature(props: DashboardLayoutSlice) {
@@ -26,6 +29,9 @@ function propsSignature(props: DashboardLayoutSlice) {
     props.categoriaLabels && typeof props.categoriaLabels === 'object'
       ? props.categoriaLabels
       : {};
+  const usuarioIds = Array.isArray(props.usuarioIds) ? props.usuarioIds : [];
+  const donoLabels =
+    props.donoLabels && typeof props.donoLabels === 'object' ? props.donoLabels : {};
   return JSON.stringify({
     widgets: props.widgets,
     layoutRows: props.layoutRows,
@@ -34,6 +40,12 @@ function propsSignature(props: DashboardLayoutSlice) {
     alertaGastos: props.alertaGastos,
     extratoLimite: props.extratoLimite,
     apiUrl: props.apiUrl,
+    loading: Boolean(props.loading),
+    ids: usuarioIds.join(','),
+    donos: Object.entries(donoLabels as Record<string, string>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([id, nome]) => `${id}:${nome}`)
+      .join('|'),
     tx: transacoes.map((item: { id?: string; valor?: number }) => `${item.id}:${item.valor}`).join('|'),
     cats: Object.entries(categoriaLabels as Record<string, string>)
       .sort(([a], [b]) => a.localeCompare(b))

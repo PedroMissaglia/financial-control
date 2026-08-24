@@ -51,7 +51,9 @@ export function useDashboardTransacoes(
   const resolvedApiUrl = resolveDashboardApiUrl(apiUrl);
   const safeInitial = Array.isArray(initial) ? initial : EMPTY_TRANSACOES;
   const [transacoes, setTransacoes] = useState<Transacao[]>(safeInitial);
+  const [loading, setLoading] = useState(false);
   const scopeRef = useRef<string[]>(usuarioIdsProp?.length ? usuarioIdsProp : []);
+  const idsKey = (usuarioIdsProp ?? []).join(',');
 
   useEffect(() => {
     if (usuarioIdsProp?.length) scopeRef.current = usuarioIdsProp;
@@ -59,50 +61,62 @@ export function useDashboardTransacoes(
 
   useEffect(() => {
     const list = Array.isArray(initial) ? initial : EMPTY_TRANSACOES;
-    if (list.length === 0) return;
-    const incomingSignature = transacoesSignature(list);
-    setTransacoes(prev => {
-      const incomingIds = new Set(list.map(item => item.id));
-      const prevHasNewer = prev.some(item => !incomingIds.has(item.id));
-      if (prevHasNewer && prev.length >= list.length) return prev;
-      return transacoesSignature(prev) === incomingSignature ? prev : list;
-    });
+    setTransacoes(prev => (transacoesSignature(prev) === transacoesSignature(list) ? prev : list));
   }, [initial]);
 
   useEffect(() => {
-    async function refresh(event?: Event) {
-      const detailIds = (event as CustomEvent<{ usuarioIds?: string[] }> | undefined)?.detail?.usuarioIds;
+    let cancelled = false;
+    const genIds = idsKey ? idsKey.split(',') : scopeRef.current;
+
+    async function refresh(options?: { fromVisao?: boolean; event?: Event }) {
+      const detailIds = (options?.event as CustomEvent<{ usuarioIds?: string[] }> | undefined)?.detail
+        ?.usuarioIds;
       if (detailIds?.length) scopeRef.current = detailIds;
 
       const ids =
         scopeRef.current.length > 0
           ? scopeRef.current
-          : (() => {
-              const cookieId = getUsuarioIdFromCookie();
-              return cookieId ? [cookieId] : [];
-            })();
+          : genIds.length > 0
+            ? genIds
+            : (() => {
+                const cookieId = getUsuarioIdFromCookie();
+                return cookieId ? [cookieId] : [];
+              })();
       if (ids.length === 0) return;
+
+      if (options?.fromVisao) {
+        setLoading(true);
+        setTransacoes([]);
+      }
 
       try {
         const data = await fetchTransacoes(ids, resolvedApiUrl);
-        if (!data) return;
-        const nextSignature = transacoesSignature(data);
-        setTransacoes(prev => (transacoesSignature(prev) === nextSignature ? prev : data));
+        if (cancelled || !data) return;
+        setTransacoes(prev => (transacoesSignature(prev) === transacoesSignature(data) ? prev : data));
       } catch (error) {
         console.warn('[mf-dashboard] Falha ao atualizar transações.', error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
     void refresh();
 
-    window.addEventListener(MF_TRANSACOES_CHANGED, refresh);
-    window.addEventListener(MF_VISAO_CHANGED, refresh);
-    return () => {
-      window.removeEventListener(MF_TRANSACOES_CHANGED, refresh);
-      window.removeEventListener(MF_VISAO_CHANGED, refresh);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: avoid refetch loops on props identity
-  }, [resolvedApiUrl]);
+    function onChanged() {
+      void refresh();
+    }
+    function onVisao(event: Event) {
+      void refresh({ fromVisao: true, event });
+    }
 
-  return transacoes;
+    window.addEventListener(MF_TRANSACOES_CHANGED, onChanged);
+    window.addEventListener(MF_VISAO_CHANGED, onVisao);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(MF_TRANSACOES_CHANGED, onChanged);
+      window.removeEventListener(MF_VISAO_CHANGED, onVisao);
+    };
+  }, [resolvedApiUrl, idsKey]);
+
+  return { transacoes, loading };
 }

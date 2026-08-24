@@ -60,6 +60,7 @@ const STAT_ICON: Record<StatTone, LucideIcon> = {
 
 interface GastosMensaisPainelProps {
   compromissos: ResumoCompromissos;
+  porPessoa?: { usuarioId: string; nome: string; compromissosTotal: number }[];
 }
 
 function StatResumo({
@@ -100,7 +101,10 @@ function StatResumo({
   );
 }
 
-export function GastosMensaisPainel({ compromissos }: Readonly<GastosMensaisPainelProps>) {
+export function GastosMensaisPainel({
+  compromissos,
+  porPessoa = [],
+}: Readonly<GastosMensaisPainelProps>) {
   const vazio = compromissos.linhas.length === 0;
 
   return (
@@ -141,6 +145,16 @@ export function GastosMensaisPainel({ compromissos }: Readonly<GastosMensaisPain
             tone="atrasado"
           />
         </div>
+        {porPessoa.length > 0 && (
+          <ul className="text-muted-foreground space-y-1 text-sm">
+            {porPessoa.map(pessoa => (
+              <li key={pessoa.usuarioId} className="flex justify-between gap-2">
+                <span>Compromissos de {pessoa.nome}</span>
+                <span className="text-foreground font-medium">{formatCurrency(pessoa.compromissosTotal)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
         {vazio ? (
           <p className="fc-caption">Nenhum gasto mensal nesta competência.</p>
         ) : (

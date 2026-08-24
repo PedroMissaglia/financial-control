@@ -19,12 +19,12 @@ import {
 } from '../../../shared/dashboard-contract';
 
 export function DashboardEditorApp(props: Readonly<DashboardEditorProps>) {
-  const transacoes = useDashboardTransacoes(props.transacoes as Transacao[], props.apiUrl, props.usuarioIds);
+  const { transacoes } = useDashboardTransacoes(props.transacoes as Transacao[], props.apiUrl, props.usuarioIds);
   const categoriaLabels = useDashboardCategoriaLabels(props.categoriaLabels, props.apiUrl);
-  const gastos = useDashboardGastosMensais(props.apiUrl, props.usuarioIds);
+  const { gastos } = useDashboardGastosMensais(props.apiUrl, props.usuarioIds);
   const analytics = useMemo(
-    () => buildWidgetAnalytics(transacoes, categoriaLabels, gastos),
-    [transacoes, categoriaLabels, gastos],
+    () => buildWidgetAnalytics(transacoes, categoriaLabels, gastos, props.donoLabels),
+    [transacoes, categoriaLabels, gastos, props.donoLabels],
   );
 
   return (
@@ -51,6 +51,7 @@ export function DashboardEditorApp(props: Readonly<DashboardEditorProps>) {
             alertaGastos={props.alertaGastos}
             extratoLimite={props.extratoLimite}
             apiUrl={props.apiUrl}
+            donoLabels={props.donoLabels}
           />
         </SortableWidget>
       )}

@@ -6,6 +6,7 @@ export interface GastoMensal {
   diaVencimento: number;
   valor: number;
   pago: boolean;
+  usuarioId?: string;
 }
 
 export interface TotalCompromisso {

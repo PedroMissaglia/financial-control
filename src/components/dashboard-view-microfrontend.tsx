@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { fetchTransacoes } from '@/app/services/transacoes';
 import type { Transacao } from '@/data/transacoes';
 import { MF_DASHBOARD_URL } from '@/lib/load-mf-remote';
-import { MF_TRANSACOES_CHANGED, MF_VISAO_CHANGED } from '@/lib/mf-events';
+import { MF_TRANSACOES_CHANGED } from '@/lib/mf-events';
 import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 import { useMfDashboardBaseProps } from '@/lib/use-mf-dashboard-base-props';
 import { useMfDashboardMount } from '@/lib/use-mf-dashboard-mount';
@@ -20,35 +20,54 @@ export function DashboardViewMicrofrontend({
   const { usuarioIds } = useEscopoFinanceiro();
   const idsKey = usuarioIds.join(',');
   const [transacoes, setTransacoes] = useState<Transacao[]>(transacoesProp);
+  const [scopeLoading, setScopeLoading] = useState(Boolean(idsKey));
+  const fetchGen = useRef(0);
 
   useEffect(() => {
-    if (transacoesProp.length > 0) {
+    if (transacoesProp.length > 0 && !scopeLoading) {
       setTransacoes(transacoesProp);
     }
-  }, [transacoesProp]);
+  }, [transacoesProp, scopeLoading]);
 
   useEffect(() => {
-    if (!idsKey) return;
-    const ids = idsKey.split(',');
-    let cancelled = false;
+    if (!idsKey) {
+      setTransacoes([]);
+      setScopeLoading(false);
+      return;
+    }
 
-    async function reload() {
+    const ids = idsKey.split(',');
+    const gen = ++fetchGen.current;
+    let cancelled = false;
+    setScopeLoading(true);
+    setTransacoes([]);
+
+    async function reload(options?: { silent?: boolean }) {
+      if (!options?.silent) {
+        setScopeLoading(true);
+      }
       const result = await fetchTransacoes(ids);
-      if (cancelled || !result.success || !result.data) return;
-      setTransacoes(result.data);
+      if (cancelled || gen !== fetchGen.current) return;
+      if (result.success && result.data) {
+        setTransacoes(result.data);
+      }
+      setScopeLoading(false);
     }
 
     void reload();
-    window.addEventListener(MF_TRANSACOES_CHANGED, reload);
-    window.addEventListener(MF_VISAO_CHANGED, reload);
+
+    function onTransacoesChanged() {
+      void reload({ silent: true });
+    }
+
+    window.addEventListener(MF_TRANSACOES_CHANGED, onTransacoesChanged);
     return () => {
       cancelled = true;
-      window.removeEventListener(MF_TRANSACOES_CHANGED, reload);
-      window.removeEventListener(MF_VISAO_CHANGED, reload);
+      window.removeEventListener(MF_TRANSACOES_CHANGED, onTransacoesChanged);
     };
   }, [idsKey]);
 
-  const mfProps = useMfDashboardBaseProps(transacoes);
+  const mfProps = useMfDashboardBaseProps(transacoes, { loading: scopeLoading });
   const { hostRef, mode } = useMfDashboardMount('./DashboardView', mfProps);
 
   return (

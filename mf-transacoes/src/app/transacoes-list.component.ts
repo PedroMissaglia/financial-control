@@ -135,7 +135,7 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
   }
 
   get mostraDono(): boolean {
-    return this.resolvedUsuarioIds.length > 1;
+    return Object.keys(this.donoLabels ?? {}).length > 1 || this.resolvedUsuarioIds.length > 1;
   }
 
   get mostraLista(): boolean {

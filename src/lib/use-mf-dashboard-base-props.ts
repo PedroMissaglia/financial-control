@@ -11,13 +11,18 @@ import { useAppSelector } from '@/store/hooks';
 import type { DashboardMfBaseProps } from '../../shared/dashboard-contract';
 
 /** Shared Redux + apiUrl props for dashboard view/editor microfrontends. */
-export function useMfDashboardBaseProps(transacoes: Transacao[]): DashboardMfBaseProps {
+export function useMfDashboardBaseProps(
+  transacoes: Transacao[],
+  options?: { loading?: boolean },
+): DashboardMfBaseProps {
   const widgets = useAppSelector(state => state.dashboard.widgets);
   const layoutRows = useAppSelector(state => state.dashboard.layoutRows);
   const layoutGroups = useAppSelector(state => state.dashboard.layoutGroups);
   const extratoLimite = useAppSelector(state => state.dashboard.extratoLimite);
-  const { usuarioIds, metaEconomiaEfetiva, alertaGastosEfetivo } = useEscopoFinanceiro();
+  const { usuarioIds, metaEconomiaEfetiva, alertaGastosEfetivo, donoLabels, visao } = useEscopoFinanceiro();
   const { labels: categoriaLabels } = useCategorias(usuarioIds);
+  const loading = Boolean(options?.loading);
+  const labelsForBreakdown = visao === 'conjunto' ? donoLabels : undefined;
 
   return useMemo(
     () => ({
@@ -31,6 +36,8 @@ export function useMfDashboardBaseProps(transacoes: Transacao[]): DashboardMfBas
       apiUrl: getApiUrl(),
       categoriaLabels,
       usuarioIds,
+      donoLabels: labelsForBreakdown,
+      loading,
     }),
     [
       transacoes,
@@ -42,6 +49,8 @@ export function useMfDashboardBaseProps(transacoes: Transacao[]): DashboardMfBas
       extratoLimite,
       categoriaLabels,
       usuarioIds,
+      labelsForBreakdown,
+      loading,
     ],
   );
 }

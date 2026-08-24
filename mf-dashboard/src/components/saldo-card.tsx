@@ -1,13 +1,15 @@
 import { TrendingUp, Wallet } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardMetric } from '@/components/ui/card';
+import type { TotaisPorPessoa } from '@/lib/build-widget-analytics';
 import { formatCurrency } from '@/lib/utils';
 
 interface SaldoCardProps {
   saldo: number;
+  porPessoa?: TotaisPorPessoa[];
 }
 
-export function SaldoCard({ saldo }: SaldoCardProps) {
+export function SaldoCard({ saldo, porPessoa = [] }: SaldoCardProps) {
   const isPositive = saldo >= 0;
 
   return (
@@ -21,11 +23,21 @@ export function SaldoCard({ saldo }: SaldoCardProps) {
           <Wallet className="text-primary h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
         <p className={`fc-caption flex items-center gap-1 ${isPositive ? 'text-success' : 'text-destructive'}`}>
           <TrendingUp className="h-4 w-4" aria-hidden="true" />
           {isPositive ? 'Saldo positivo' : 'Saldo negativo'}
         </p>
+        {porPessoa.length > 0 && (
+          <ul className="text-muted-foreground space-y-1 text-sm">
+            {porPessoa.map(pessoa => (
+              <li key={pessoa.usuarioId} className="flex justify-between gap-2">
+                <span>Saldo de {pessoa.nome}</span>
+                <span className="text-foreground font-medium">{formatCurrency(pessoa.saldo)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );

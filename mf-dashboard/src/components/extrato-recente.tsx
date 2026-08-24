@@ -10,10 +10,12 @@ const MF_NAVIGATE = 'fincontrol:navigate';
 interface ExtratoRecenteProps {
   transacoes: Transacao[];
   limit: number;
+  donoLabels?: Record<string, string>;
 }
 
-export function ExtratoRecente({ transacoes, limit }: Readonly<ExtratoRecenteProps>) {
+export function ExtratoRecente({ transacoes, limit, donoLabels }: Readonly<ExtratoRecenteProps>) {
   const recentes = getUltimasTransacoes(transacoes, limit);
+  const showDono = Boolean(donoLabels && Object.keys(donoLabels).length > 1);
 
   return (
     <Card>
@@ -38,6 +40,7 @@ export function ExtratoRecente({ transacoes, limit }: Readonly<ExtratoRecentePro
         ) : (
           recentes.map(transacao => {
             const entrada = isEntrada(transacao.tipo);
+            const dono = showDono ? donoLabels?.[transacao.usuarioId] : undefined;
             return (
               <div
                 key={transacao.id}
@@ -53,7 +56,14 @@ export function ExtratoRecente({ transacoes, limit }: Readonly<ExtratoRecentePro
                   {entrada ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{transacao.descricao}</p>
+                  <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                    <p className="truncate text-sm font-medium">{transacao.descricao}</p>
+                    {dono && (
+                      <span className="border-border text-muted-foreground shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold">
+                        {dono}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-muted-foreground text-xs">
                     {formatDateShort(transacao.data)}
                     {transacao.hora ? ` · ${transacao.hora.slice(0, 5)}` : ''}

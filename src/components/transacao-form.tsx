@@ -84,16 +84,15 @@ export function TransacaoForm({
 }: Readonly<TransacaoFormProps>) {
   const router = useRouter();
   const { usuario } = useAuth();
-  const { visao, usuarioIdEscrita, parceiro } = useEscopoFinanceiro();
+  const { usuarioIdEscrita, parceiro, ativa } = useEscopoFinanceiro();
   const [donoId, setDonoId] = useState(usuarioIdEscrita ?? usuario?.id ?? '');
   const categoriasOwner = mode === 'edit' && transacao ? transacao.usuarioId : donoId || usuarioIdEscrita;
-  const { categorias } = useCategorias(
-    mode === 'edit' && transacao
-      ? transacao.usuarioId
-      : visao === 'conjunto'
-        ? [usuario?.id, parceiro?.id].filter(Boolean) as string[]
-        : categoriasOwner,
-  );
+  const categoriasEscopo = useMemo(() => {
+    if (mode === 'edit' && transacao) return transacao.usuarioId;
+    if (ativa && usuario?.id && parceiro?.id) return [usuario.id, parceiro.id];
+    return categoriasOwner;
+  }, [ativa, categoriasOwner, mode, parceiro?.id, transacao, usuario?.id]);
+  const { categorias } = useCategorias(categoriasEscopo);
 
   useEffect(() => {
     if (usuarioIdEscrita) setDonoId(usuarioIdEscrita);
@@ -246,7 +245,7 @@ export function TransacaoForm({
 
   return (
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-      {mode === 'create' && visao === 'conjunto' && usuario && parceiro && (
+      {mode === 'create' && ativa && usuario && parceiro && (
         <div className="space-y-2">
           <Label htmlFor="dono">Lançar em nome de</Label>
           <SelectMenu

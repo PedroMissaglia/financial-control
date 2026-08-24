@@ -38,6 +38,7 @@ function parseGastos(json: unknown): GastoMensal[] {
       diaVencimento,
       valor,
       pago: Boolean(item.pago),
+      ...(typeof item.usuarioId === 'string' ? { usuarioId: item.usuarioId } : {}),
     });
   }
   return result;
@@ -63,46 +64,67 @@ async function fetchGastos(usuarioIds: string[], apiUrl: string, competencia: st
 export function useDashboardGastosMensais(apiUrl?: string, usuarioIdsProp?: string[]) {
   const resolvedApiUrl = resolveDashboardApiUrl(apiUrl);
   const [gastos, setGastos] = useState<GastoMensal[]>([]);
+  const [loading, setLoading] = useState(false);
   const scopeRef = useRef<string[]>(usuarioIdsProp?.length ? usuarioIdsProp : []);
+  const idsKey = (usuarioIdsProp ?? []).join(',');
 
   useEffect(() => {
     if (usuarioIdsProp?.length) scopeRef.current = usuarioIdsProp;
   }, [usuarioIdsProp]);
 
   useEffect(() => {
-    async function refresh(event?: Event) {
-      const detailIds = (event as CustomEvent<{ usuarioIds?: string[] }> | undefined)?.detail?.usuarioIds;
+    let cancelled = false;
+
+    async function refresh(options?: { fromVisao?: boolean; event?: Event }) {
+      const detailIds = (options?.event as CustomEvent<{ usuarioIds?: string[] }> | undefined)?.detail
+        ?.usuarioIds;
       if (detailIds?.length) scopeRef.current = detailIds;
 
       const ids =
         scopeRef.current.length > 0
           ? scopeRef.current
-          : (() => {
-              const cookieId = getUsuarioIdFromCookie();
-              return cookieId ? [cookieId] : [];
-            })();
+          : idsKey
+            ? idsKey.split(',')
+            : (() => {
+                const cookieId = getUsuarioIdFromCookie();
+                return cookieId ? [cookieId] : [];
+              })();
       if (ids.length === 0) return;
+
+      if (options?.fromVisao) {
+        setLoading(true);
+        setGastos([]);
+      }
 
       try {
         const data = await fetchGastos(ids, resolvedApiUrl, competenciaAtual());
-        if (!data) return;
-        const nextSignature = gastosSignature(data);
-        setGastos(prev => (gastosSignature(prev) === nextSignature ? prev : data));
+        if (cancelled || !data) return;
+        setGastos(prev => (gastosSignature(prev) === gastosSignature(data) ? prev : data));
       } catch (error) {
         console.warn('[mf-dashboard] Falha ao atualizar gastos mensais.', error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
     void refresh();
-    window.addEventListener(MF_TRANSACOES_CHANGED, refresh);
-    window.addEventListener(MF_GASTOS_MENSAIS_CHANGED, refresh);
-    window.addEventListener(MF_VISAO_CHANGED, refresh);
-    return () => {
-      window.removeEventListener(MF_TRANSACOES_CHANGED, refresh);
-      window.removeEventListener(MF_GASTOS_MENSAIS_CHANGED, refresh);
-      window.removeEventListener(MF_VISAO_CHANGED, refresh);
-    };
-  }, [resolvedApiUrl]);
+    function onChanged() {
+      void refresh();
+    }
+    function onVisao(event: Event) {
+      void refresh({ fromVisao: true, event });
+    }
 
-  return gastos;
+    window.addEventListener(MF_TRANSACOES_CHANGED, onChanged);
+    window.addEventListener(MF_GASTOS_MENSAIS_CHANGED, onChanged);
+    window.addEventListener(MF_VISAO_CHANGED, onVisao);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(MF_TRANSACOES_CHANGED, onChanged);
+      window.removeEventListener(MF_GASTOS_MENSAIS_CHANGED, onChanged);
+      window.removeEventListener(MF_VISAO_CHANGED, onVisao);
+    };
+  }, [resolvedApiUrl, idsKey]);
+
+  return { gastos, loading };
 }
