@@ -1,11 +1,12 @@
 'use client';
 
-import { Filter, FilterX, Search, X } from 'lucide-react';
+import { ChevronDown, Filter, FilterX, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +25,7 @@ import {
 } from '@/lib/transacao-filters';
 import { useCategorias } from '@/lib/use-categorias';
 import { useMediaQuery } from '@/lib/use-media-query';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/store/hooks';
 
 interface TransacoesFiltersProps {
@@ -33,10 +35,8 @@ interface TransacoesFiltersProps {
   onChange: (filtros: TransacoesFiltros) => void;
 }
 
-function parseValor(value: string): number | null {
-  if (!value.trim()) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+function patchValor(value: number): number | null {
+  return value > 0 ? value : null;
 }
 
 function AdvancedFilterFields({
@@ -118,61 +118,53 @@ function AdvancedFilterFields({
 
       <div className="space-y-2">
         <Label htmlFor={minId}>Valor mín.</Label>
-        <div className="relative">
-          <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm">
-            R$
-          </span>
-          <Input
-            id={minId}
-            type="number"
-            min={0}
-            step="0.01"
-            placeholder="0,00"
-            className="ps-9"
-            value={filtros.valorMin ?? ''}
-            onChange={event => onPatch({ valorMin: parseValor(event.target.value) })}
-          />
-        </div>
+        <CurrencyInput
+          id={minId}
+          value={filtros.valorMin ?? 0}
+          onChange={valor => onPatch({ valorMin: patchValor(valor) })}
+          aria-label="Valor mínimo"
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor={maxId}>Valor máx.</Label>
-        <div className="relative">
-          <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm">
-            R$
-          </span>
-          <Input
-            id={maxId}
-            type="number"
-            min={0}
-            step="0.01"
-            placeholder="0,00"
-            className="ps-9"
-            value={filtros.valorMax ?? ''}
-            onChange={event => onPatch({ valorMax: parseValor(event.target.value) })}
-          />
-        </div>
+        <CurrencyInput
+          id={maxId}
+          value={filtros.valorMax ?? 0}
+          onChange={valor => onPatch({ valorMax: patchValor(valor) })}
+          aria-label="Valor máximo"
+        />
       </div>
     </div>
   );
 }
+
+const COLLAPSED_CHIP_LIMIT = 3;
+const FILTROS_PAINEL_ID = 'transacoes-filtros-painel';
 
 function FilterChips({
   chips,
   filtros,
   onChange,
   showClear,
+  limit,
+  onOverflowClick,
 }: Readonly<{
   chips: ReturnType<typeof chipsFiltros>;
   filtros: TransacoesFiltros;
   onChange: (filtros: TransacoesFiltros) => void;
   showClear?: boolean;
+  limit?: number;
+  onOverflowClick?: () => void;
 }>) {
   if (chips.length === 0) return null;
 
+  const visible = limit == null ? chips : chips.slice(0, limit);
+  const overflow = limit == null ? 0 : Math.max(0, chips.length - limit);
+
   return (
     <div className="flex flex-wrap items-center gap-2" aria-label="Filtros ativos">
-      {chips.map(chip => (
+      {visible.map(chip => (
         <Badge key={chip.key} variant="secondary" className="gap-1 pr-1">
           {chip.label}
           <button
@@ -185,6 +177,18 @@ function FilterChips({
           </button>
         </Badge>
       ))}
+      {overflow > 0 && (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="h-6 rounded-full px-2 text-xs"
+          onClick={onOverflowClick}
+          aria-label={`Mostrar mais ${overflow} filtros`}
+        >
+          +{overflow}
+        </Button>
+      )}
       {showClear && (
         <Button
           type="button"
@@ -206,6 +210,7 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
   const { usuario } = useAuth();
   const { categorias, labels } = useCategorias(usuario?.id);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const ativos = temFiltrosAtivos(filtros);
   const resumo = contagemResultados(total, visiveis, filtros);
   const chips = chipsFiltros(filtros, labels);
@@ -226,6 +231,48 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
     }
   }, [isDesktop, sheetOpen]);
 
+  const collapsedSummary = ativos ? (
+    <FilterChips
+      chips={chips}
+      filtros={filtros}
+      onChange={onChange}
+      limit={COLLAPSED_CHIP_LIMIT}
+      onOverflowClick={() => setExpanded(true)}
+    />
+  ) : (
+    <p className="text-muted-foreground text-sm">Nenhum filtro ativo</p>
+  );
+
+  const expandedForm = (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="filtro-busca">Buscar</Label>
+        <div className="relative">
+          <Search
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+            aria-hidden="true"
+          />
+          <Input
+            id="filtro-busca"
+            type="search"
+            placeholder="Descrição ou palavra-chave"
+            className="ps-9"
+            value={filtros.busca}
+            onChange={event => patch({ busca: event.target.value })}
+          />
+        </div>
+      </div>
+
+      <AdvancedFilterFields filtros={filtros} onPatch={patch} categoriaOptions={categoriaOptions} />
+
+      {ativos && (
+        <div className="border-t pt-4">
+          <FilterChips chips={chips} filtros={filtros} onChange={onChange} />
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <section className="bg-card mb-4 rounded-xl border p-3 shadow-sm sm:p-4" aria-label="Filtros de transações">
       <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
@@ -234,17 +281,34 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
           <p className="fc-caption">{resumo}</p>
         </div>
         {isDesktop && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full shrink-0 gap-2 self-stretch sm:w-auto sm:self-start"
-            disabled={!ativos}
-            onClick={() => onChange(FILTROS_VAZIOS)}
-          >
-            <FilterX className="h-4 w-4" aria-hidden="true" />
-            Limpar filtros
-          </Button>
+          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:self-start">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full gap-2 sm:w-auto"
+              aria-expanded={expanded}
+              aria-controls={FILTROS_PAINEL_ID}
+              onClick={() => setExpanded(current => !current)}
+            >
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              />
+              {expanded ? 'Ocultar filtros' : 'Mostrar filtros'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full gap-2 sm:w-auto"
+              disabled={!ativos}
+              onClick={() => onChange(FILTROS_VAZIOS)}
+            >
+              <FilterX className="h-4 w-4" aria-hidden="true" />
+              Limpar filtros
+            </Button>
+          </div>
         )}
       </div>
 
@@ -284,35 +348,35 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
             </Button>
           </div>
 
-          <FilterChips chips={chips} filtros={filtros} onChange={onChange} showClear />
+          <FilterChips
+            chips={chips}
+            filtros={filtros}
+            onChange={onChange}
+            showClear
+            limit={COLLAPSED_CHIP_LIMIT}
+            onOverflowClick={() => setSheetOpen(true)}
+          />
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="filtro-busca">Buscar</Label>
-            <div className="relative">
-              <Search
-                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
-                aria-hidden="true"
-              />
-              <Input
-                id="filtro-busca"
-                type="search"
-                placeholder="Descrição ou palavra-chave"
-                className="ps-9"
-                value={filtros.busca}
-                onChange={event => patch({ busca: event.target.value })}
-              />
-            </div>
+        <div id={FILTROS_PAINEL_ID}>
+          <div
+            className={cn(
+              'grid overflow-hidden transition-[grid-template-rows,opacity] duration-200',
+              expanded ? 'pointer-events-none grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100',
+            )}
+            aria-hidden={expanded}
+          >
+            <div className="min-h-0 overflow-hidden">{collapsedSummary}</div>
           </div>
-
-          <AdvancedFilterFields filtros={filtros} onPatch={patch} categoriaOptions={categoriaOptions} />
-
-          {ativos && (
-            <div className="border-t pt-4">
-              <FilterChips chips={chips} filtros={filtros} onChange={onChange} />
-            </div>
-          )}
+          <div
+            className={cn(
+              'grid overflow-hidden transition-[grid-template-rows,opacity] duration-200',
+              expanded ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0',
+            )}
+            aria-hidden={!expanded}
+          >
+            <div className="min-h-0 overflow-hidden">{expandedForm}</div>
+          </div>
         </div>
       )}
 

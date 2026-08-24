@@ -88,7 +88,7 @@ financial-control/
 └── STORYBOOK.md            # inventário do DS (repo apartado)
 ```
 
-Comunicação: cookie `fincontrol_uid` para o usuário; `CustomEvent` (`fincontrol:navigate`, `fincontrol:transacoes-changed`) entre host e remotes. Se o remote Angular não subir, a listagem React entra como fallback.
+Comunicação: cookie `fincontrol_uid` para o usuário; `CustomEvent` (`fincontrol:navigate`, `fincontrol:transacoes-changed`) entre host e remotes. Se o remote Angular não subir, o host mostra um alerta — a listagem não tem fallback React.
 
 Estado global do host: Redux Toolkit (`auth`, `dashboard`).
 

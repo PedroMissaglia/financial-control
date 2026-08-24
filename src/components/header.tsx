@@ -15,6 +15,7 @@ const navItems = [
   { href: '/', label: 'Início' },
   { href: '/transacoes', label: 'Transações' },
   { href: '/categorias', label: 'Categorias' },
+  { href: '/gastos-mensais', label: 'Gastos mensais' },
 ];
 
 const mobileNavItems = [...navItems, { href: '/transacoes/nova', label: 'Nova transação' }];

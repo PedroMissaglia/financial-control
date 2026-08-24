@@ -67,10 +67,7 @@ export function useDashboardTransacoes(initial: Transacao[] = [], apiUrl?: strin
       }
     }
 
-    const hasHostData = safeInitial.length > 0;
-    if (!hasHostData) {
-      void refresh();
-    }
+    void refresh();
 
     window.addEventListener(MF_TRANSACOES_CHANGED, refresh);
     return () => window.removeEventListener(MF_TRANSACOES_CHANGED, refresh);

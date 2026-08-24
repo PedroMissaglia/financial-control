@@ -18,9 +18,7 @@
         <ng-container matColumnDef="tipo">
           <th mat-header-cell *matHeaderCellDef scope="col">Tipo</th>
           <td mat-cell *matCellDef="let item" data-label="Tipo">
-            <mat-chip-set>
-              <mat-chip>{{ tipoLabel(item.tipo) }}</mat-chip>
-            </mat-chip-set>
+            <span [class]="tipoBadgeClass(item.tipo)">{{ tipoLabel(item.tipo) }}</span>
           </td>
         </ng-container>
 
@@ -31,7 +29,12 @@
 
         <ng-container matColumnDef="pagamento">
           <th mat-header-cell *matHeaderCellDef scope="col">Pagamento</th>
-          <td mat-cell *matCellDef="let item" data-label="Pagamento">{{ formaLabel(item.formaPagamento) }}</td>
+          <td mat-cell *matCellDef="let item" data-label="Pagamento">
+            <span *ngIf="item.formaPagamento" [class]="pagBadgeClass(item.formaPagamento)">
+              {{ formaLabel(item.formaPagamento) }}
+            </span>
+            <ng-container *ngIf="!item.formaPagamento">—</ng-container>
+          </td>
         </ng-container>
 
         <ng-container matColumnDef="data">
@@ -66,19 +69,19 @@
           <div class="card-top">
             <div class="card-main">
               <p class="card-title">{{ item.descricao }}</p>
-              <p class="card-meta">
-                {{ dataCurta(item.data) }} · {{ categoriaLabel(item.categoria) }}
-                <ng-container *ngIf="item.formaPagamento"> · {{ formaLabel(item.formaPagamento) }}</ng-container>
-              </p>
+              <p class="card-meta">{{ dataCurta(item.data) }} · {{ categoriaLabel(item.categoria) }}</p>
             </div>
             <p class="card-value" [class.ok]="entrada(item.tipo)" [class.bad]="!entrada(item.tipo)">
               {{ entrada(item.tipo) ? '+' : '-' }}{{ moeda(item.valor) }}
             </p>
           </div>
 
-          <mat-chip-set class="card-chip">
-            <mat-chip>{{ tipoLabel(item.tipo) }}</mat-chip>
-          </mat-chip-set>
+          <div class="card-chip">
+            <span [class]="tipoBadgeClass(item.tipo)">{{ tipoLabel(item.tipo) }}</span>
+            <span *ngIf="item.formaPagamento" [class]="pagBadgeClass(item.formaPagamento)">
+              {{ formaLabel(item.formaPagamento) }}
+            </span>
+          </div>
 
           <div class="card-actions">
             <button type="button" class="action-link" (click)="navegar('/transacoes/' + item.id)">Ver</button>

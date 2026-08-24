@@ -1,9 +1,10 @@
 'use client';
 
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import { createCategoria, deleteCategoria, updateCategoria } from '@/app/services/categorias';
+import { EntityListRow } from '@/components/entity-list-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -127,35 +128,18 @@ export function CategoriasBoard() {
                 </div>
               </>
             ) : (
-              <>
-                <span className="min-w-0 flex-1 truncate font-medium">{item.nome}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  aria-label={`Renomear ${item.nome}`}
-                  disabled={busy}
-                  onClick={() => {
-                    setEditingId(item.id);
-                    setEditNome(item.nome);
-                    setError(null);
-                  }}
-                >
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive shrink-0"
-                  aria-label={`Excluir ${item.nome}`}
-                  disabled={busy}
-                  onClick={() => void handleDelete(item)}
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </>
+              <EntityListRow
+                title={item.nome}
+                editLabel={`Renomear ${item.nome}`}
+                deleteLabel={`Excluir ${item.nome}`}
+                disabled={busy}
+                onEdit={() => {
+                  setEditingId(item.id);
+                  setEditNome(item.nome);
+                  setError(null);
+                }}
+                onDelete={() => void handleDelete(item)}
+              />
             )}
           </li>
         ))}

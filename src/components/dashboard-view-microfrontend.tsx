@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { fetchTransacoes } from '@/app/services/transacoes';
 import type { Transacao } from '@/data/transacoes';
 import { MF_DASHBOARD_URL } from '@/lib/load-mf-remote';
+import { MF_TRANSACOES_CHANGED } from '@/lib/mf-events';
 import { useMfDashboardBaseProps } from '@/lib/use-mf-dashboard-base-props';
 import { useMfDashboardMount } from '@/lib/use-mf-dashboard-mount';
 import { useAppSelector } from '@/store/hooks';
@@ -27,15 +28,20 @@ export function DashboardViewMicrofrontend({
 
   useEffect(() => {
     if (!usuarioId) return;
+    const uid = usuarioId;
     let cancelled = false;
 
-    void fetchTransacoes(usuarioId).then(result => {
+    async function reload() {
+      const result = await fetchTransacoes(uid);
       if (cancelled || !result.success || !result.data) return;
       setTransacoes(result.data);
-    });
+    }
 
+    void reload();
+    window.addEventListener(MF_TRANSACOES_CHANGED, reload);
     return () => {
       cancelled = true;
+      window.removeEventListener(MF_TRANSACOES_CHANGED, reload);
     };
   }, [usuarioId]);
 

@@ -95,7 +95,6 @@ Mock do Modal: stub de `next/navigation` com `back: fn()`, ou extrair o `<dialog
 | `UserMenu` | [`user-menu.tsx`](src/components/user-menu.tsx) | `nome?`, `onLogout`; `next/link` + `usePathname` |
 | `ThemeModeToggle` | [`theme-mode-toggle.tsx`](src/components/theme-mode-toggle.tsx) | Redux `setThemeMode` |
 | `ApiUnavailableCard` | [`api-unavailable-card.tsx`](src/components/api-unavailable-card.tsx) | `onRetry?`; fallback `router.refresh()` |
-| `TransacaoTable` | [`transacao-table.tsx`](src/components/transacao-table.tsx) | `transacoes[]`; `deleteTransacao`, `useRouter`, `next/link` |
 | `TransacaoForm` | [`transacao-form.tsx`](src/components/transacao-form.tsx) | `transacao?`, `mode?: 'create' \| 'edit'`, `onSuccess?`; RHF + Zod, API, Redux auth, router |
 | `TransacaoModalForm` | [`transacao-modal-form.tsx`](src/components/transacao-modal-form.tsx) | igual ao form + `router.back` / `refresh` |
 | `CriarUsuarioModal` | [`criar-usuario-modal.tsx`](src/components/criar-usuario-modal.tsx) | `open`, `onClose`; API cadastro + login |

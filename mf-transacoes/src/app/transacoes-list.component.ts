@@ -10,8 +10,6 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon';
 import { MatPaginator, MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 
@@ -23,6 +21,8 @@ import {
   labelFormaPagamento,
   TIPO_LABELS,
   Transacao,
+  type FormaPagamento,
+  type TipoTransacao,
 } from './models';
 import { createPtBrPaginatorIntl } from './paginator-intl.pt-br';
 import { TransacoesService } from './transacoes.service';
@@ -65,8 +65,6 @@ function normalizarPageSize(value: unknown): number {
   imports: [
     CommonModule,
     MatCardModule,
-    MatChipsModule,
-    MatIconModule,
     MatPaginatorModule,
     MatTableModule,
   ],
@@ -225,6 +223,14 @@ export class TransacoesListComponent implements OnChanges, OnDestroy, OnInit {
 
   tipoLabel(tipo: Transacao['tipo']): string {
     return TIPO_LABELS[tipo];
+  }
+
+  tipoBadgeClass(tipo: TipoTransacao): string {
+    return `fc-badge fc-badge-tipo-${tipo}`;
+  }
+
+  pagBadgeClass(forma: FormaPagamento): string {
+    return `fc-badge fc-badge-pag-${forma}`;
   }
 
   categoriaLabel(categoria: Transacao['categoria']): string {
