@@ -93,27 +93,29 @@ function AdvancedFilterFields({
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor={deId}>De</Label>
-        <DatePicker
-          id={deId}
-          value={filtros.dataInicio}
-          max={filtros.dataFim || undefined}
-          onChange={dataInicio => onPatch({ dataInicio })}
-          aria-label="Data inicial"
-        />
-      </div>
+      <div className="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor={deId}>De</Label>
+          <DatePicker
+            id={deId}
+            value={filtros.dataInicio}
+            max={filtros.dataFim || undefined}
+            onChange={dataInicio => onPatch({ dataInicio })}
+            aria-label="Data inicial"
+          />
+        </div>
 
-      <div className="space-y-2">
-        <Label htmlFor={ateId}>Até</Label>
-        <DatePicker
-          id={ateId}
-          value={filtros.dataFim}
-          min={filtros.dataInicio || undefined}
-          align="end"
-          onChange={dataFim => onPatch({ dataFim })}
-          aria-label="Data final"
-        />
+        <div className="space-y-2">
+          <Label htmlFor={ateId}>Até</Label>
+          <DatePicker
+            id={ateId}
+            value={filtros.dataFim}
+            min={filtros.dataInicio || undefined}
+            align="end"
+            onChange={dataFim => onPatch({ dataFim })}
+            aria-label="Data final"
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -370,12 +372,14 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
           </div>
           <div
             className={cn(
-              'grid overflow-hidden transition-[grid-template-rows,opacity] duration-200',
-              expanded ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0',
+              'grid transition-[grid-template-rows,opacity] duration-200',
+              expanded
+                ? 'grid-rows-[1fr] overflow-visible opacity-100'
+                : 'pointer-events-none grid-rows-[0fr] overflow-hidden opacity-0',
             )}
             aria-hidden={!expanded}
           >
-            <div className="min-h-0 overflow-hidden">{expandedForm}</div>
+            <div className={cn('min-h-0', expanded ? 'overflow-visible' : 'overflow-hidden')}>{expandedForm}</div>
           </div>
         </div>
       )}

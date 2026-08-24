@@ -1,6 +1,6 @@
 import type { GastoMensal, GastoMensalInput } from '@/data/gastos-mensais';
 import { apiFetch, readApiError } from '@/lib/api-client';
-import { notifyTransacoesChanged } from '@/lib/mf-events';
+import { notifyGastosMensaisChanged, notifyTransacoesChanged } from '@/lib/mf-events';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -41,6 +41,7 @@ export async function createGastoMensal(
       return { success: false, message: await readApiError(response), status: response.status };
     }
     const data = (await response.json()) as GastoMensal;
+    notifyGastosMensaisChanged();
     return { success: true, data };
   } catch (error) {
     console.error('Erro ao criar gasto mensal:', error);
@@ -62,6 +63,7 @@ export async function updateGastoMensal(
       return { success: false, message: await readApiError(response), status: response.status };
     }
     const data = (await response.json()) as GastoMensal;
+    notifyGastosMensaisChanged();
     return { success: true, data };
   } catch (error) {
     console.error('Erro ao atualizar gasto mensal:', error);
@@ -75,6 +77,7 @@ export async function deleteGastoMensal(id: string): Promise<ApiResponse<void>> 
     if (!response.ok) {
       return { success: false, message: await readApiError(response), status: response.status };
     }
+    notifyGastosMensaisChanged();
     return { success: true };
   } catch (error) {
     console.error('Erro ao excluir gasto mensal:', error);
@@ -97,6 +100,7 @@ export async function pagarGastoMensal(
     }
     const data = (await response.json()) as GastoMensal;
     notifyTransacoesChanged();
+    notifyGastosMensaisChanged();
     return { success: true, data };
   } catch (error) {
     console.error('Erro ao marcar gasto mensal como pago:', error);
@@ -115,6 +119,7 @@ export async function desmarcarGastoMensal(id: string, competencia: string): Pro
       return { success: false, message: await readApiError(response), status: response.status };
     }
     notifyTransacoesChanged();
+    notifyGastosMensaisChanged();
     return { success: true };
   } catch (error) {
     console.error('Erro ao desmarcar gasto mensal:', error);

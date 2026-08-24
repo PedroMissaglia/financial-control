@@ -2,12 +2,19 @@ import { useEffect, useState } from 'react';
 
 const FIN_THEME_CHANGED = 'fincontrol:theme-changed';
 
+export interface ListSwatch {
+  fill: string;
+  stroke: string;
+}
+
 export interface ChartThemeColors {
   line: string;
   success: string;
   danger: string;
   series: string[];
   axis: string;
+  tipo: Record<string, ListSwatch>;
+  forma: Record<string, ListSwatch>;
 }
 
 interface HslColor {
@@ -100,7 +107,66 @@ function buildSemanticPair(base: HslColor, isDark: boolean): { success: string; 
   return { success, danger };
 }
 
-function buildFromPrimary(primaryRaw: string, mutedRaw: string, isDark: boolean): ChartThemeColors {
+const FORMA_LIGHT: Record<string, ListSwatch> = {
+  pix: { fill: 'hsl(214 90% 93%)', stroke: 'hsl(217 80% 38%)' },
+  debito: { fill: 'hsl(45 96% 88%)', stroke: 'hsl(38 90% 32%)' },
+  credito: { fill: 'hsl(24 95% 90%)', stroke: 'hsl(20 90% 38%)' },
+  vr_va: { fill: 'hsl(270 70% 93%)', stroke: 'hsl(270 55% 40%)' },
+};
+
+const FORMA_DARK: Record<string, ListSwatch> = {
+  pix: { fill: 'hsl(217 80% 50% / 0.22)', stroke: 'hsl(214 90% 78%)' },
+  debito: { fill: 'hsl(45 90% 50% / 0.22)', stroke: 'hsl(45 90% 72%)' },
+  credito: { fill: 'hsl(24 90% 50% / 0.22)', stroke: 'hsl(24 90% 72%)' },
+  vr_va: { fill: 'hsl(270 60% 50% / 0.24)', stroke: 'hsl(270 70% 80%)' },
+};
+
+function tokenHsl(style: CSSStyleDeclaration, name: string, fallback: string): string {
+  const raw = style.getPropertyValue(name).trim();
+  return raw ? `hsl(${raw})` : fallback;
+}
+
+function tokenHslAlpha(style: CSSStyleDeclaration, name: string, alpha: number, fallback: string): string {
+  const raw = style.getPropertyValue(name).trim();
+  return raw ? `hsl(${raw} / ${alpha})` : fallback;
+}
+
+type ChartThemeCore = Omit<ChartThemeColors, 'tipo' | 'forma'>;
+
+function listColors(
+  style: CSSStyleDeclaration | null,
+  isDark: boolean,
+  base: ChartThemeCore,
+): Pick<ChartThemeColors, 'tipo' | 'forma'> {
+  const success = style ? tokenHsl(style, '--success', base.success) : 'hsl(152 69% 40%)';
+  const destructive = style ? tokenHsl(style, '--destructive', base.danger) : 'hsl(0 72% 51%)';
+  const primary = style ? tokenHsl(style, '--primary', base.line) : 'hsl(160 84% 30%)';
+  const accentFg = style ? tokenHsl(style, '--accent-foreground', base.line) : 'hsl(160 84% 24%)';
+
+  return {
+    tipo: {
+      deposito: {
+        fill: style ? tokenHslAlpha(style, '--success', 0.14, 'hsl(152 69% 40% / 0.14)') : 'hsl(152 69% 40% / 0.14)',
+        stroke: success,
+      },
+      pagamento: {
+        fill: style ? tokenHslAlpha(style, '--destructive', 0.14, 'hsl(0 72% 51% / 0.14)') : 'hsl(0 72% 51% / 0.14)',
+        stroke: destructive,
+      },
+      saque: {
+        fill: style ? tokenHslAlpha(style, '--accent', 0.55, 'hsl(152 76% 90% / 0.55)') : 'hsl(152 76% 90% / 0.55)',
+        stroke: accentFg,
+      },
+      transferencia: {
+        fill: style ? tokenHslAlpha(style, '--primary', 0.14, 'hsl(160 84% 30% / 0.14)') : 'hsl(160 84% 30% / 0.14)',
+        stroke: primary,
+      },
+    },
+    forma: isDark ? FORMA_DARK : FORMA_LIGHT,
+  };
+}
+
+function buildFromPrimary(primaryRaw: string, mutedRaw: string, isDark: boolean): ChartThemeCore {
   const base = parseHsl(primaryRaw) ?? { h: 160, s: 84, l: isDark ? 42 : 30 };
   const line = formatHsl(tuneForMode(base, isDark));
   const { success, danger } = buildSemanticPair(base, isDark);
@@ -113,7 +179,11 @@ function buildFromPrimary(primaryRaw: string, mutedRaw: string, isDark: boolean)
   return { line, success, danger, series, axis };
 }
 
-const FALLBACK = buildFromPrimary('160 84% 30%', '160 10% 40%', false);
+const FALLBACK_CORE = buildFromPrimary('160 84% 30%', '160 10% 40%', false);
+const FALLBACK: ChartThemeColors = {
+  ...FALLBACK_CORE,
+  ...listColors(null, false, FALLBACK_CORE),
+};
 
 export function readChartThemeColors(): ChartThemeColors {
   if (typeof document === 'undefined') return FALLBACK;
@@ -122,8 +192,10 @@ export function readChartThemeColors(): ChartThemeColors {
   const primary =
     style.getPropertyValue('--chart-primary').trim() || style.getPropertyValue('--primary').trim();
   const muted = style.getPropertyValue('--muted-foreground').trim();
+  const isDark = isDarkMode();
+  const core = buildFromPrimary(primary, muted, isDark);
 
-  return buildFromPrimary(primary, muted, isDarkMode());
+  return { ...core, ...listColors(style, isDark, core) };
 }
 
 export function useChartThemeColors(): ChartThemeColors {

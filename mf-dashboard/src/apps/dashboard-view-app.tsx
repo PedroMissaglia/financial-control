@@ -5,6 +5,7 @@ import { DashboardWidgetPreview, WIDGET_LABELS } from '@/components/dashboard-wi
 import type { Transacao } from '@/data/transacoes';
 import { buildWidgetAnalytics } from '@/lib/build-widget-analytics';
 import { useDashboardCategoriaLabels } from '@/lib/use-dashboard-categoria-labels';
+import { useDashboardGastosMensais } from '@/lib/use-dashboard-gastos-mensais';
 import { useDashboardTransacoes } from '@/lib/use-dashboard-transacoes';
 
 import type { DashboardViewProps, WidgetId } from '../../../shared/dashboard-contract';
@@ -12,9 +13,10 @@ import type { DashboardViewProps, WidgetId } from '../../../shared/dashboard-con
 export function DashboardViewApp(props: Readonly<DashboardViewProps>) {
   const transacoes = useDashboardTransacoes(props.transacoes as Transacao[], props.apiUrl);
   const categoriaLabels = useDashboardCategoriaLabels(props.categoriaLabels, props.apiUrl);
+  const gastos = useDashboardGastosMensais(props.apiUrl);
   const analytics = useMemo(
-    () => buildWidgetAnalytics(transacoes, categoriaLabels),
-    [transacoes, categoriaLabels],
+    () => buildWidgetAnalytics(transacoes, categoriaLabels, gastos),
+    [transacoes, categoriaLabels, gastos],
   );
 
   return (

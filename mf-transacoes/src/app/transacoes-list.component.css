@@ -148,23 +148,43 @@
 }
 
 .fc-badge-pag-pix {
-  background: hsl(var(--primary) / 0.14);
-  color: hsl(var(--primary));
-}
-
-.fc-badge-pag-credito {
-  background: hsl(var(--accent) / 0.55);
-  color: hsl(var(--accent-foreground));
+  background: hsl(214 90% 93%);
+  color: hsl(217 80% 38%);
 }
 
 .fc-badge-pag-debito {
-  background: hsl(var(--secondary));
-  color: hsl(var(--secondary-foreground));
+  background: hsl(45 96% 88%);
+  color: hsl(38 90% 32%);
+}
+
+.fc-badge-pag-credito {
+  background: hsl(24 95% 90%);
+  color: hsl(20 90% 38%);
 }
 
 .fc-badge-pag-vr_va {
-  background: hsl(var(--muted));
-  color: hsl(var(--muted-foreground));
+  background: hsl(270 70% 93%);
+  color: hsl(270 55% 40%);
+}
+
+:host-context([data-fin-theme-mode='dark']) .fc-badge-pag-pix {
+  background: hsl(217 80% 50% / 0.22);
+  color: hsl(214 90% 78%);
+}
+
+:host-context([data-fin-theme-mode='dark']) .fc-badge-pag-debito {
+  background: hsl(45 90% 50% / 0.22);
+  color: hsl(45 90% 72%);
+}
+
+:host-context([data-fin-theme-mode='dark']) .fc-badge-pag-credito {
+  background: hsl(24 90% 50% / 0.22);
+  color: hsl(24 90% 72%);
+}
+
+:host-context([data-fin-theme-mode='dark']) .fc-badge-pag-vr_va {
+  background: hsl(270 60% 50% / 0.24);
+  color: hsl(270 70% 80%);
 }
 
 .card-actions {

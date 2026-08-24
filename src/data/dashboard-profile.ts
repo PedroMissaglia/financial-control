@@ -9,19 +9,13 @@ import {
 import { migrateLayoutFromWidgets, persistedLayoutPlacesWidgets } from '@/lib/dashboard-layout';
 import { FILTROS_VAZIOS, mergeTransacoesFiltros, type TransacoesFiltros } from '@/lib/transacao-filters';
 
+import type { WidgetId } from '../../shared/dashboard-contract';
 import {
   createDefaultDashboardLayout,
   DEFAULT_WIDGETS,
 } from '../../shared/dashboard-default-layout';
 
-export type WidgetId =
-  | 'saldo'
-  | 'evolucao'
-  | 'comparativo'
-  | 'categorias'
-  | 'extrato'
-  | 'meta'
-  | 'alerta';
+export type { WidgetId };
 
 export type WidgetCols = 4 | 6 | 12;
 
@@ -175,6 +169,58 @@ function normalizeLayoutGroup(group: LayoutGroupDefinition): LayoutGroupDefiniti
   };
 }
 
+function widgetIsPlaced(
+  widgetId: WidgetId,
+  layoutRows: LayoutRow[],
+  layoutGroups: LayoutGroupDefinition[],
+): boolean {
+  if (layoutRows.some(row => row.type === 'full' && row.widgetId === widgetId)) return true;
+  return layoutGroups.some(group =>
+    [...group.left, ...group.center, ...group.right].includes(widgetId),
+  );
+}
+
+function placeUnplacedWidgets(
+  widgets: DashboardWidget[],
+  layoutRows: LayoutRow[],
+  layoutGroups: LayoutGroupDefinition[],
+): { layoutRows: LayoutRow[]; layoutGroups: LayoutGroupDefinition[] } {
+  let rows = layoutRows;
+  const groups = layoutGroups.map(group => ({
+    ...group,
+    left: [...group.left],
+    center: [...group.center],
+    right: [...group.right],
+  }));
+
+  for (const widget of widgets) {
+    if (widgetIsPlaced(widget.id, rows, groups)) continue;
+
+    if (widget.cols === 12) {
+      const cluster = new Set<WidgetId>(['categorias', 'tipo', 'forma', 'anual', 'compromissos']);
+      let insertAt = rows.length;
+      for (let index = 0; index < rows.length; index += 1) {
+        const row = rows[index];
+        if (row.type === 'full' && cluster.has(row.widgetId)) insertAt = index + 1;
+      }
+      const afterCategorias = rows.findIndex(row => row.type === 'full' && row.widgetId === 'categorias');
+      if (insertAt === rows.length && afterCategorias >= 0) insertAt = afterCategorias + 1;
+      rows = [...rows.slice(0, insertAt), { type: 'full', widgetId: widget.id }, ...rows.slice(insertAt)];
+      continue;
+    }
+
+    const graficos = groups.find(group => group.id === 'default-graficos') ?? groups[0];
+    if (graficos) {
+      const bucket = widget.colStart === 7 || widget.colStart === 9 ? 'right' : 'left';
+      graficos[bucket].push(widget.id);
+    } else {
+      rows = [...rows, { type: 'full', widgetId: widget.id }];
+    }
+  }
+
+  return { layoutRows: rows, layoutGroups: groups };
+}
+
 export function mergeProfile(stored: Partial<DashboardProfile> | null | undefined, usuarioId: string): DashboardProfile {
   const base = defaultProfile(usuarioId);
   if (!stored) return base;
@@ -191,10 +237,11 @@ export function mergeProfile(stored: Partial<DashboardProfile> | null | undefine
     ? stored.layoutGroups.map(normalizeLayoutGroup)
     : undefined;
   const storedRows = Array.isArray(stored.layoutRows) ? stored.layoutRows : undefined;
-  const { layoutRows, layoutGroups } =
+  const resolved =
     storedRows && storedGroups && persistedLayoutPlacesWidgets(storedRows, storedGroups, restored)
       ? { layoutRows: storedRows, layoutGroups: storedGroups }
       : migrateLayoutFromWidgets(restored);
+  const { layoutRows, layoutGroups } = placeUnplacedWidgets(restored, resolved.layoutRows, resolved.layoutGroups);
 
   return {
     id: usuarioId,

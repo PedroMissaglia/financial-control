@@ -2,6 +2,7 @@ import { AlertTriangle, PiggyBank } from 'lucide-react';
 import { lazy, type ReactNode, Suspense, useEffect, useRef, useState } from 'react';
 
 import { ExtratoRecente } from '@/components/extrato-recente';
+import { GastosMensaisPainel } from '@/components/gastos-mensais-painel';
 import { SaldoCard } from '@/components/saldo-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Transacao } from '@/data/transacoes';
@@ -18,17 +19,30 @@ const EvolucaoSaldoChart = lazy(() =>
 const ReceitasDespesasChart = lazy(() =>
   import('@/components/financeiro-charts').then(mod => ({ default: mod.ReceitasDespesasChart })),
 );
+const ReceitasDespesasAnoChart = lazy(() =>
+  import('@/components/financeiro-charts').then(mod => ({ default: mod.ReceitasDespesasAnoChart })),
+);
 const GastosCategoriaChart = lazy(() =>
   import('@/components/financeiro-charts').then(mod => ({ default: mod.GastosCategoriaChart })),
 );
+const VolumePorTipoChart = lazy(() =>
+  import('@/components/financeiro-charts').then(mod => ({ default: mod.VolumePorTipoChart })),
+);
+const SaidasPorFormaChart = lazy(() =>
+  import('@/components/financeiro-charts').then(mod => ({ default: mod.SaidasPorFormaChart })),
+);
 
-const CHART_WIDGET_IDS = new Set<WidgetId>(['evolucao', 'comparativo', 'categorias']);
+const CHART_WIDGET_IDS = new Set<WidgetId>(['evolucao', 'comparativo', 'categorias', 'tipo', 'forma', 'anual']);
 
 export const WIDGET_LABELS: Record<WidgetId, string> = {
   saldo: 'Saldo',
   evolucao: 'Evolução do saldo',
   comparativo: 'Receitas vs despesas',
   categorias: 'Gastos por categoria',
+  tipo: 'Por tipo',
+  forma: 'Por forma de pagamento',
+  anual: 'Receitas e despesas do ano',
+  compromissos: 'Gastos mensais',
   extrato: 'Extrato recente',
   meta: 'Meta de economia',
   alerta: 'Alerta de gastos',
@@ -146,8 +160,12 @@ function WidgetSkeleton({ id }: Readonly<{ id: WidgetId }>) {
     case 'evolucao':
     case 'comparativo':
     case 'categorias':
+    case 'tipo':
+    case 'forma':
+    case 'anual':
       body = <ChartSkeleton />;
       break;
+    case 'compromissos':
     case 'extrato':
       body = <ExtratoSkeleton />;
       break;
@@ -215,7 +233,8 @@ export function DashboardWidgetPreview({
   alertaGastos,
   extratoLimite,
 }: Readonly<DashboardWidgetPreviewProps>) {
-  const { saldo, resumo, evolucao, porCategoria, receitasDespesas } = analytics;
+  const { saldo, resumo, evolucao, porCategoria, porTipo, porForma, receitasDespesas, receitasDespesasAno, compromissos } =
+    analytics;
   const economiaAtual = resumo.receitas - resumo.despesas;
   const progressoMeta = metaEconomia > 0 ? Math.min(100, Math.max(0, (economiaAtual / metaEconomia) * 100)) : 0;
   const alertaAtivo = resumo.despesas > alertaGastos;
@@ -233,6 +252,18 @@ export function DashboardWidgetPreview({
       break;
     case 'categorias':
       content = <GastosCategoriaChart porCategoria={porCategoria} />;
+      break;
+    case 'tipo':
+      content = <VolumePorTipoChart porTipo={porTipo} />;
+      break;
+    case 'forma':
+      content = <SaidasPorFormaChart porForma={porForma} />;
+      break;
+    case 'anual':
+      content = <ReceitasDespesasAnoChart receitasDespesasAno={receitasDespesasAno} />;
+      break;
+    case 'compromissos':
+      content = <GastosMensaisPainel compromissos={compromissos} />;
       break;
     case 'extrato':
       content = <ExtratoRecente transacoes={transacoes} limit={extratoLimite} />;

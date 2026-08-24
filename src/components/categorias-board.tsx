@@ -93,7 +93,7 @@ export function CategoriasBoard() {
             className={
               editingId === item.id
                 ? 'flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center'
-                : 'flex flex-nowrap items-center gap-1 px-3 py-2'
+                : 'px-3 py-2'
             }
           >
             {editingId === item.id ? (

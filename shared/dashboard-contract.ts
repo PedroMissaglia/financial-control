@@ -5,6 +5,10 @@ export type WidgetId =
   | 'evolucao'
   | 'comparativo'
   | 'categorias'
+  | 'tipo'
+  | 'forma'
+  | 'anual'
+  | 'compromissos'
   | 'extrato'
   | 'meta'
   | 'alerta';

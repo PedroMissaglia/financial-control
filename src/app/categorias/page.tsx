@@ -6,7 +6,7 @@ export default function CategoriasPage() {
       <div className="space-y-1">
         <h1 className="fc-page-title">Categorias</h1>
         <p className="fc-card-subtitle">
-          Crie categorias próprias para classificar transações. As padrão não podem ser alteradas.
+          Crie categorias próprias para classificar transações. As padrões não podem ser alteradas.
         </p>
       </div>
 

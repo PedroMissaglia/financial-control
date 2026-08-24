@@ -297,7 +297,10 @@ export function GastosMensaisBoard() {
                   titleClassName={item.pago ? 'text-muted-foreground line-through' : undefined}
                   badge={
                     atrasado ? (
-                      <Badge variant="destructive" className="shrink-0 px-1.5 py-0 text-[10px]">
+                      <Badge
+                        variant="destructive"
+                        className="shrink-0 border-transparent bg-destructive/14 text-destructive"
+                      >
                         Atrasado
                       </Badge>
                     ) : null
@@ -345,7 +348,7 @@ export function GastosMensaisBoard() {
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </Button>
-        <p className="text-center text-sm font-medium sm:text-base">{labelCompetencia(competencia)}</p>
+        <p className="text-center text-base font-medium sm:text-lg">{labelCompetencia(competencia)}</p>
         <Button
           type="button"
           variant="outline"

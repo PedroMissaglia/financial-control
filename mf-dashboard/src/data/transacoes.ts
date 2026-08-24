@@ -75,6 +75,20 @@ export const TIPO_LABELS: Record<TipoTransacao, string> = {
   pagamento: 'Pagamento',
 };
 
+export const FORMAS_PAGAMENTO: { value: FormaPagamento; label: string }[] = [
+  { value: 'pix', label: 'Pix' },
+  { value: 'credito', label: 'Crédito' },
+  { value: 'debito', label: 'Débito' },
+  { value: 'vr_va', label: 'VR/VA' },
+];
+
+export const FORMA_PAGAMENTO_LABELS: Record<FormaPagamento, string> = {
+  pix: 'Pix',
+  credito: 'Crédito',
+  debito: 'Débito',
+  vr_va: 'VR/VA',
+};
+
 export const CATEGORIAS_TRANSACAO: { value: CategoriaTransacao; label: string }[] = [
   { value: 'salario', label: 'Salário' },
   { value: 'freelance', label: 'Freelance' },
