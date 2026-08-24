@@ -1,9 +1,10 @@
 'use client';
 
 import { Filter, FilterX, Search, X } from 'lucide-react';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
@@ -20,7 +21,6 @@ import {
   type TransacoesFiltros,
 } from '@/lib/transacao-filters';
 import { useMediaQuery } from '@/lib/use-media-query';
-import { cn } from '@/lib/utils';
 
 interface TransacoesFiltersProps {
   filtros: TransacoesFiltros;
@@ -28,8 +28,6 @@ interface TransacoesFiltersProps {
   visiveis: number;
   onChange: (filtros: TransacoesFiltros) => void;
 }
-
-const SHEET_ANIMATION_MS = 300;
 
 function parseValor(value: string): number | null {
   if (!value.trim()) return null;
@@ -187,9 +185,7 @@ function FilterChips({
 
 export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readonly<TransacoesFiltersProps>) {
   const isDesktop = useMediaQuery('(min-width: 640px)');
-  const [sheetMounted, setSheetMounted] = useState(false);
-  const [sheetVisible, setSheetVisible] = useState(false);
-  const titleId = useId();
+  const [sheetOpen, setSheetOpen] = useState(false);
   const ativos = temFiltrosAtivos(filtros);
   const resumo = contagemResultados(total, visiveis, filtros);
   const chips = chipsFiltros(filtros);
@@ -199,41 +195,11 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
     onChange({ ...filtros, ...partial });
   }
 
-  function openSheet() {
-    setSheetMounted(true);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setSheetVisible(true));
-    });
-  }
-
-  function closeSheet() {
-    setSheetVisible(false);
-    window.setTimeout(() => setSheetMounted(false), SHEET_ANIMATION_MS);
-  }
-
   useEffect(() => {
-    if (isDesktop && sheetMounted) {
-      setSheetVisible(false);
-      setSheetMounted(false);
+    if (isDesktop && sheetOpen) {
+      setSheetOpen(false);
     }
-  }, [isDesktop, sheetMounted]);
-
-  useEffect(() => {
-    if (!sheetMounted) return;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') closeSheet();
-    }
-
-    document.addEventListener('keydown', onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [sheetMounted]);
+  }, [isDesktop, sheetOpen]);
 
   return (
     <section className="bg-card mb-4 rounded-xl border p-3 shadow-sm sm:p-4" aria-label="Filtros de transações">
@@ -279,8 +245,8 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
               type="button"
               variant="outline"
               className="relative shrink-0 gap-1.5 px-3"
-              onClick={openSheet}
-              aria-expanded={sheetMounted}
+              onClick={() => setSheetOpen(true)}
+              aria-expanded={sheetOpen}
               aria-haspopup="dialog"
             >
               <Filter className="h-4 w-4" aria-hidden="true" />
@@ -325,47 +291,14 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
         </div>
       )}
 
-      {sheetMounted && !isDesktop && (
-        <div role="presentation">
-          <button
-            type="button"
-            className={cn(
-              'fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-out',
-              sheetVisible ? 'opacity-100' : 'opacity-0',
-            )}
-            aria-label="Fechar filtros"
-            onClick={closeSheet}
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={titleId}
-            className={cn(
-              'bg-card border-border fixed inset-x-0 bottom-0 z-[80] flex max-h-[min(88dvh,calc(100dvh-env(safe-area-inset-top,0px)))] flex-col rounded-t-2xl border shadow-2xl',
-              'pb-[env(safe-area-inset-bottom,0px)] transition-transform duration-300 ease-out',
-              sheetVisible ? 'translate-y-0' : 'translate-y-full',
-            )}
-          >
-            <div className="border-border shrink-0 border-b px-4 pt-2 pb-3">
-              <div className="mb-2 flex justify-center" aria-hidden="true">
-                <div className="bg-muted h-1 w-10 rounded-full" />
-              </div>
-              <div className="flex items-center gap-3">
-                <h3 id={titleId} className="text-foreground min-w-0 flex-1 text-lg font-semibold">
-                  Filtros
-                </h3>
-                <Button type="button" variant="ghost" size="icon" aria-label="Fechar" onClick={closeSheet}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="fc-caption mt-0.5">{resumo}</p>
-            </div>
-
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3">
-              <AdvancedFilterFields filtros={filtros} onPatch={patch} idPrefix="sheet-" />
-            </div>
-
-            <div className="border-border flex shrink-0 gap-2 border-t px-4 py-3">
+      {!isDesktop && (
+        <BottomSheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          title="Filtros"
+          description={resumo}
+          footer={
+            <div className="flex gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -376,12 +309,16 @@ export function TransacoesFilters({ filtros, total, visiveis, onChange }: Readon
                 <FilterX className="h-4 w-4" aria-hidden="true" />
                 Limpar
               </Button>
-              <Button type="button" className="flex-1" onClick={closeSheet}>
+              <Button type="button" className="flex-1" onClick={() => setSheetOpen(false)}>
                 Aplicar
               </Button>
             </div>
+          }
+        >
+          <div className="space-y-3">
+            <AdvancedFilterFields filtros={filtros} onPatch={patch} idPrefix="sheet-" />
           </div>
-        </div>
+        </BottomSheet>
       )}
     </section>
   );
