@@ -196,7 +196,7 @@ const dashboardSlice = createSlice({
       state.transacoesFiltros = action.payload;
     },
     resetDashboard(state) {
-      if (!state.usuarioId) return initialState;
+      if (!state.usuarioId) return { ...initialState };
       const defaultDashboard = createDefaultDashboardLayout();
       const next = {
         ...initialState,

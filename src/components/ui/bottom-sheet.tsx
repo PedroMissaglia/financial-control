@@ -3,14 +3,12 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { lockBodyScroll } from '@/lib/lock-body-scroll';
+import { OVERLAY_ENTER_MS, OVERLAY_EXIT_MS } from '@/lib/overlay-animation';
 import { cn } from '@/lib/utils';
 
-export const BOTTOM_SHEET_ENTER_MS = 500;
-export const BOTTOM_SHEET_EXIT_MS = 250;
+export const BOTTOM_SHEET_ENTER_MS = OVERLAY_ENTER_MS;
+export const BOTTOM_SHEET_EXIT_MS = OVERLAY_EXIT_MS;
 export const BOTTOM_SHEET_SNAP_MS = 300;
-
-/** @deprecated Use BOTTOM_SHEET_ENTER_MS / BOTTOM_SHEET_EXIT_MS */
-export const BOTTOM_SHEET_ANIMATION_MS = BOTTOM_SHEET_ENTER_MS;
 
 const HALF_VH = 50;
 const TALL_VH = 80;

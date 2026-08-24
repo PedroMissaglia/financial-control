@@ -9,6 +9,14 @@ const libEntry = Object.fromEntries(
   DASHBOARD_EXPOSES.map(expose => [expose.name, resolve(__dirname, expose.input)]),
 );
 
+const reactExternals = [
+  'react',
+  'react-dom',
+  'react-dom/client',
+  'react/jsx-runtime',
+  'react/jsx-dev-runtime',
+];
+
 export default defineConfig({
   plugins: [react({ fastRefresh: false }), tailwindcss()],
   define: {
@@ -36,6 +44,7 @@ export default defineConfig({
       fileName: (_format, entryName) => `${entryName}.js`,
     },
     rollupOptions: {
+      external: reactExternals,
       output: {
         chunkFileNames: chunkInfo => {
           const name = chunkInfo.name === 'styles' ? 'shared' : chunkInfo.name;

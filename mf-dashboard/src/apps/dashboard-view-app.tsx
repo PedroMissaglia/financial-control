@@ -1,11 +1,15 @@
+import { useMemo } from 'react';
+
 import { DashboardWidgetGrid } from '@/components/dashboard-widget-grid';
 import { DashboardWidgetPreview, WIDGET_LABELS } from '@/components/dashboard-widget-preview';
 import type { Transacao } from '@/data/transacoes';
+import { buildWidgetAnalytics } from '@/lib/build-widget-analytics';
 import { useDashboardTransacoes } from '@/lib/use-dashboard-transacoes';
 import type { DashboardViewProps, WidgetId } from '../../../shared/dashboard-contract';
 
 export function DashboardViewApp(props: Readonly<DashboardViewProps>) {
   const transacoes = useDashboardTransacoes(props.transacoes as Transacao[], props.apiUrl);
+  const analytics = useMemo(() => buildWidgetAnalytics(transacoes), [transacoes]);
 
   return (
     <DashboardWidgetGrid
@@ -16,6 +20,7 @@ export function DashboardViewApp(props: Readonly<DashboardViewProps>) {
         <DashboardWidgetPreview
           id={widget.id as WidgetId}
           transacoes={transacoes}
+          analytics={analytics}
           metaEconomia={props.metaEconomia}
           alertaGastos={props.alertaGastos}
           extratoLimite={props.extratoLimite}

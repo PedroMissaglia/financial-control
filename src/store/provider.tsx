@@ -20,7 +20,9 @@ function StoreHydration({ children }: Readonly<{ children: React.ReactNode }>) {
       clearPersistedUsuario();
     }
     dispatch(hydrateFromStorage());
-    if (usuario?.id) void dispatch(loadDashboardProfile(usuario.id));
+    if (usuario?.id) {
+      void dispatch(loadDashboardProfile(usuario.id));
+    }
   }, [dispatch]);
 
   return <>{children}</>;

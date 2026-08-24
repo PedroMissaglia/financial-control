@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node scripts/dev-server.mjs",
     "build": "tsc -b && node scripts/build-all.mjs",
-    "build:exposes": "node scripts/build-exposes.mjs && node scripts/generate-remote-entry.mjs",
+    "build:exposes": "node scripts/build-exposes.mjs",
     "preview": "vite preview --port 4300 --config vite.config.standalone.ts"
   },
   "dependencies": {

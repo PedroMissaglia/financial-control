@@ -59,8 +59,32 @@ function getImportShim(): ImportShim | undefined {
   return (window as Window & { importShim?: ImportShim }).importShim;
 }
 
-let importMapApplied = false;
 const remoteCache = new Map<string, Promise<RemoteModule<unknown> | null>>();
+let hostReactImportMapApplied = false;
+
+/** Host React singleton shim paths (see public/mf-shared + MfReactBridge). */
+const HOST_REACT_IMPORT_PATHS: Record<string, string> = {
+  react: '/mf-shared/react.js',
+  'react-dom': '/mf-shared/react-dom.js',
+  'react-dom/client': '/mf-shared/react-dom-client.js',
+  'react/jsx-runtime': '/mf-shared/jsx-runtime.js',
+  'react/jsx-dev-runtime': '/mf-shared/jsx-dev-runtime.js',
+};
+
+/** Absolute URLs so es-module-shims does not reject relative vs absolute overrides. */
+function getHostReactImports(): Record<string, string> {
+  const origin = window.location.origin;
+  const imports: Record<string, string> = {};
+  for (const [name, path] of Object.entries(HOST_REACT_IMPORT_PATHS)) {
+    imports[name] = new URL(path, origin).href;
+  }
+  return imports;
+}
+
+interface LoadRemoteOptions {
+  /** Wait for MfReactBridge and register host React import map (mf-dashboard only). */
+  requireReactBridge?: boolean;
+}
 
 const MF_FETCH_RETRY_DELAY_MS = 500;
 
@@ -181,10 +205,46 @@ async function ensureMfStyles(baseUrl: string): Promise<void> {
   });
 }
 
-async function loadRemoteInternal(baseUrl: string, exposeKey: string): Promise<RemoteModule<unknown> | null> {
-  await ensureMfStyles(baseUrl);
+async function ensureReactBridge(timeoutMs = 8000): Promise<void> {
+  if (typeof window === 'undefined') return;
+  const win = window as Window & {
+    __FINCONTROL_REACT__?: unknown;
+    __FINCONTROL_REACT_BRIDGE_READY__?: boolean;
+  };
+  if (win.__FINCONTROL_REACT_BRIDGE_READY__ && win.__FINCONTROL_REACT__) return;
 
-  const response = await fetch(`${baseUrl}/remoteEntry.json`, { cache: 'no-store' });
+  const started = Date.now();
+  await new Promise<void>((resolve, reject) => {
+    const tick = () => {
+      if (win.__FINCONTROL_REACT_BRIDGE_READY__ && win.__FINCONTROL_REACT__) {
+        resolve();
+        return;
+      }
+      if (Date.now() - started > timeoutMs) {
+        reject(new Error('React bridge not ready for mf-dashboard'));
+        return;
+      }
+      window.setTimeout(tick, 16);
+    };
+    tick();
+  });
+}
+
+async function loadRemoteInternal(
+  baseUrl: string,
+  exposeKey: string,
+  options: LoadRemoteOptions = {},
+): Promise<RemoteModule<unknown> | null> {
+  const { requireReactBridge = false } = options;
+  if (requireReactBridge) {
+    await ensureReactBridge();
+  }
+
+  // Styles + remoteEntry in parallel (previously serial and blocked mount).
+  const [, response] = await Promise.all([
+    ensureMfStyles(baseUrl),
+    fetch(`${baseUrl}/remoteEntry.json`, { cache: 'no-store' }),
+  ]);
   if (!response.ok) {
     throw new Error(`remoteEntry.json HTTP ${response.status}`);
   }
@@ -196,14 +256,20 @@ async function loadRemoteInternal(baseUrl: string, exposeKey: string): Promise<R
   }
 
   const imports: Record<string, string> = {};
-  for (const shared of info.shared) {
+  if (requireReactBridge && !hostReactImportMapApplied) {
+    Object.assign(imports, getHostReactImports());
+  }
+  for (const shared of info.shared ?? []) {
+    if (shared.packageName in HOST_REACT_IMPORT_PATHS) continue;
     imports[shared.packageName] = new URL(shared.outFileName, `${baseUrl}/`).href;
   }
 
   const importShim = await loadImportShimScript();
-  if (!importMapApplied && Object.keys(imports).length > 0) {
+  if (Object.keys(imports).length > 0) {
     importShim.addImportMap?.({ imports });
-    importMapApplied = true;
+  }
+  if (requireReactBridge) {
+    hostReactImportMapApplied = true;
   }
 
   const moduleUrl = new URL(expose.outFileName, `${baseUrl}/`);
@@ -227,12 +293,13 @@ async function loadRemoteInternal(baseUrl: string, exposeKey: string): Promise<R
 async function loadRemoteInternalWithRetry(
   baseUrl: string,
   exposeKey: string,
+  options: LoadRemoteOptions = {},
 ): Promise<RemoteModule<unknown> | null> {
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= getFetchRetries(); attempt += 1) {
     try {
-      return await loadRemoteInternal(baseUrl, exposeKey);
+      return await loadRemoteInternal(baseUrl, exposeKey, options);
     } catch (error) {
       lastError = error;
       if (attempt < getFetchRetries() && isRetryableRemoteError(error)) {
@@ -249,18 +316,17 @@ async function loadRemoteInternalWithRetry(
 export function loadRemote<TProps = unknown>(
   baseUrl: string,
   exposeKey: string,
+  options: LoadRemoteOptions = {},
 ): Promise<RemoteModule<TProps> | null> {
   const cacheKey = `${baseUrl}::${exposeKey}`;
   const cached = remoteCache.get(cacheKey);
   if (cached) return cached as Promise<RemoteModule<TProps> | null>;
 
-  const promise = loadRemoteInternalWithRetry(baseUrl, exposeKey)
+  const promise = loadRemoteInternalWithRetry(baseUrl, exposeKey, options)
     .then(result => {
-      if (process.env.NODE_ENV !== 'development') {
-        remoteCache.set(cacheKey, Promise.resolve(result));
-      } else {
-        remoteCache.delete(cacheKey);
-      }
+      // Keep in-memory cache for the session (dev + prod) so revisiting Home
+      // does not redo styles/entry/importShim work.
+      remoteCache.set(cacheKey, Promise.resolve(result));
       return result;
     })
     .catch(error => {
@@ -277,5 +343,13 @@ export function loadMfExpose<TProps = unknown>(exposeKey: string): Promise<Remot
 }
 
 export function loadDashboardExpose<TProps = unknown>(exposeKey: string): Promise<RemoteModule<TProps> | null> {
-  return loadRemote(getMfDashboardUrl(), exposeKey);
+  return loadRemote(getMfDashboardUrl(), exposeKey, { requireReactBridge: true });
+}
+
+/** Warm the in-memory remote cache without mounting (Home / authenticated shell). */
+export function prefetchDashboardExpose(exposeKey = './DashboardView'): void {
+  if (typeof window === 'undefined') return;
+  void loadDashboardExpose(exposeKey).catch(() => {
+    /* prefetch is best-effort */
+  });
 }

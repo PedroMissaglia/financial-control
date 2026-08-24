@@ -8,6 +8,7 @@ import { AuthGuard } from '@/components/auth-guard';
 import { AuthTokenRefresher } from '@/components/auth-token-refresher';
 import { CapacitorSplashHide } from '@/components/capacitor-splash-hide';
 import { MfEventBridge } from '@/components/mf-event-bridge';
+import { MfReactBridge } from '@/components/mf-react-bridge';
 import { getBrowserApiUrl } from '@/lib/api-url';
 import { StoreProvider } from '@/store/provider';
 
@@ -48,6 +49,7 @@ export default function RootLayout({
         </Script>
         <Script src="/es-module-shims.js" strategy="beforeInteractive" />
         <StoreProvider>
+          <MfReactBridge />
           <CapacitorSplashHide />
           <MfEventBridge />
           <AuthTokenRefresher />

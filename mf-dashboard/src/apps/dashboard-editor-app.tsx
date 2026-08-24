@@ -1,9 +1,12 @@
+import { useMemo } from 'react';
+
 import {
   DashboardLayoutEditor,
   SortableWidget,
 } from '@/components/dashboard-layout-editor';
 import { DashboardWidgetPreview, WIDGET_LABELS } from '@/components/dashboard-widget-preview';
 import type { Transacao } from '@/data/transacoes';
+import { buildWidgetAnalytics } from '@/lib/build-widget-analytics';
 import { useDashboardTransacoes } from '@/lib/use-dashboard-transacoes';
 import type { DashboardEditorProps } from '../../../shared/dashboard-contract';
 import {
@@ -14,6 +17,7 @@ import {
 
 export function DashboardEditorApp(props: Readonly<DashboardEditorProps>) {
   const transacoes = useDashboardTransacoes(props.transacoes as Transacao[], props.apiUrl);
+  const analytics = useMemo(() => buildWidgetAnalytics(transacoes), [transacoes]);
 
   return (
     <DashboardLayoutEditor
@@ -34,6 +38,7 @@ export function DashboardEditorApp(props: Readonly<DashboardEditorProps>) {
           <DashboardWidgetPreview
             id={widget.id}
             transacoes={transacoes}
+            analytics={analytics}
             metaEconomia={props.metaEconomia}
             alertaGastos={props.alertaGastos}
             extratoLimite={props.extratoLimite}

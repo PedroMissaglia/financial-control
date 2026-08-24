@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { lockBodyScroll } from '@/lib/lock-body-scroll';
+import { OVERLAY_ENTER_MS, OVERLAY_EXIT_MS } from '@/lib/overlay-animation';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { cn } from '@/lib/utils';
 
@@ -14,9 +15,6 @@ interface ModalProps {
   title?: string;
   footer?: React.ReactNode;
 }
-
-const DESKTOP_ENTER_MS = 500;
-const DESKTOP_EXIT_MS = 250;
 
 export function Modal({ children, title = 'Dialog', footer }: ModalProps) {
   const router = useRouter();
@@ -80,10 +78,10 @@ function DesktopModal({
     if (closing) return;
     setClosing(true);
     setVisible(false);
-    window.setTimeout(onClosed, DESKTOP_EXIT_MS);
+    window.setTimeout(onClosed, OVERLAY_EXIT_MS);
   }, [closing, onClosed]);
 
-  const motionMs = visible && !closing ? DESKTOP_ENTER_MS : DESKTOP_EXIT_MS;
+  const motionMs = visible && !closing ? OVERLAY_ENTER_MS : OVERLAY_EXIT_MS;
 
   return (
     <dialog

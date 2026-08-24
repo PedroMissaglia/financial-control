@@ -67,9 +67,15 @@ export function useDashboardTransacoes(initial: Transacao[] = [], apiUrl?: strin
       }
     }
 
-    void refresh();
+    const hasHostData = safeInitial.length > 0;
+    if (!hasHostData) {
+      void refresh();
+    }
+
     window.addEventListener(MF_TRANSACOES_CHANGED, refresh);
     return () => window.removeEventListener(MF_TRANSACOES_CHANGED, refresh);
+    // Only re-bind when API URL changes; host data sync is handled above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: avoid refetch loops on props identity
   }, [resolvedApiUrl]);
 
   return transacoes;

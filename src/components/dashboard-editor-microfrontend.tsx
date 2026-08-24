@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 
 import type { Transacao } from '@/data/transacoes';
-import { getApiUrl } from '@/lib/api-url';
 import { MF_DASHBOARD_URL } from '@/lib/load-mf-remote';
+import { useMfDashboardBaseProps } from '@/lib/use-mf-dashboard-base-props';
 import { useMfDashboardMount } from '@/lib/use-mf-dashboard-mount';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { useAppDispatch } from '@/store/hooks';
 import { setDashboardLayout, setWidgetCols, toggleWidget } from '@/store/slices/dashboard-slice';
 
 import type {
-  DashboardEditorProps,
   DashboardLayoutChangedDetail,
   DashboardWidgetColsDetail,
   DashboardWidgetToggleDetail,
@@ -27,28 +26,7 @@ interface DashboardEditorMicrofrontendProps {
 
 export function DashboardEditorMicrofrontend({ transacoes }: Readonly<DashboardEditorMicrofrontendProps>) {
   const dispatch = useAppDispatch();
-
-  const widgets = useAppSelector(state => state.dashboard.widgets);
-  const layoutRows = useAppSelector(state => state.dashboard.layoutRows);
-  const layoutGroups = useAppSelector(state => state.dashboard.layoutGroups);
-  const metaEconomia = useAppSelector(state => state.dashboard.metaEconomia);
-  const alertaGastos = useAppSelector(state => state.dashboard.alertaGastos);
-  const extratoLimite = useAppSelector(state => state.dashboard.extratoLimite);
-
-  const mfProps = useMemo<DashboardEditorProps>(
-    () => ({
-      transacoes: transacoes ?? [],
-      widgets: widgets ?? [],
-      layoutRows: layoutRows ?? [],
-      layoutGroups: layoutGroups ?? [],
-      metaEconomia,
-      alertaGastos,
-      extratoLimite,
-      apiUrl: getApiUrl(),
-    }),
-    [transacoes, widgets, layoutRows, layoutGroups, metaEconomia, alertaGastos, extratoLimite],
-  );
-
+  const mfProps = useMfDashboardBaseProps(transacoes);
   const { hostRef, mode } = useMfDashboardMount('./DashboardEditor', mfProps);
 
   useEffect(() => {

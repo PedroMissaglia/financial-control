@@ -16,9 +16,11 @@ interface DashboardLayoutSlice {
   alertaGastos: unknown;
   extratoLimite: unknown;
   apiUrl?: unknown;
+  transacoes?: unknown;
 }
 
-function layoutSignature(props: DashboardLayoutSlice) {
+function propsSignature(props: DashboardLayoutSlice) {
+  const transacoes = Array.isArray(props.transacoes) ? props.transacoes : [];
   return JSON.stringify({
     widgets: props.widgets,
     layoutRows: props.layoutRows,
@@ -27,6 +29,7 @@ function layoutSignature(props: DashboardLayoutSlice) {
     alertaGastos: props.alertaGastos,
     extratoLimite: props.extratoLimite,
     apiUrl: props.apiUrl,
+    tx: transacoes.map((item: { id?: string; valor?: number }) => `${item.id}:${item.valor}`).join('|'),
   });
 }
 
@@ -36,7 +39,7 @@ export function useMfDashboardMount<TProps extends DashboardLayoutSlice>(exposeK
   const unmountRef = useRef<(() => void) | undefined>(undefined);
   const propsRef = useRef(mfProps);
   const [mode, setMode] = useState<'loading' | 'remote' | 'error'>('loading');
-  const layoutKey = layoutSignature(mfProps);
+  const propsKey = propsSignature(mfProps);
 
   propsRef.current = mfProps;
 
@@ -63,7 +66,8 @@ export function useMfDashboardMount<TProps extends DashboardLayoutSlice>(exposeK
           mountFnRef.current = remote.mount;
           const maybeUnmount = await remote.mount(host, propsRef.current);
           if (cancelled) {
-            maybeUnmount?.();
+            // Defer — same React singleton as host; sync unmount during cleanup races.
+            queueMicrotask(() => maybeUnmount?.());
             return;
           }
           unmountRef.current = maybeUnmount;
@@ -85,20 +89,22 @@ export function useMfDashboardMount<TProps extends DashboardLayoutSlice>(exposeK
 
     return () => {
       cancelled = true;
-      unmountRef.current?.();
+      const dispose = unmountRef.current;
       unmountRef.current = undefined;
+      mountFnRef.current = undefined;
+      // Defer so we don't unmount a shared-React root mid host commit.
+      queueMicrotask(() => dispose?.());
     };
   }, [exposeKey]);
 
+  // Prop updates: re-render into the same root. Do not replace/call unmount disposer.
   useEffect(() => {
     if (mode !== 'remote') return;
     const host = hostRef.current;
     const mount = mountFnRef.current;
     if (!host || !mount) return;
-    void Promise.resolve(mount(host, propsRef.current)).then(unmount => {
-      unmountRef.current = unmount;
-    });
-  }, [layoutKey, mode]);
+    void Promise.resolve(mount(host, propsRef.current));
+  }, [propsKey, mode]);
 
   return { hostRef, mode };
 }

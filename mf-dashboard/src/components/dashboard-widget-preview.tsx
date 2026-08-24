@@ -1,13 +1,15 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AlertTriangle, PiggyBank } from 'lucide-react';
 
 import { ExtratoRecente } from '@/components/extrato-recente';
 import { SaldoCard } from '@/components/saldo-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { evolucaoSaldo, resumoFinanceiro, totaisPorCategoria } from '@/data/analises';
 import type { WidgetId } from '../../../shared/dashboard-contract';
-import { calcularSaldo, type Transacao } from '@/data/transacoes';
+import type { Transacao } from '@/data/transacoes';
+import type { DashboardWidgetAnalytics } from '@/lib/build-widget-analytics';
 import { formatCurrency } from '@/lib/utils';
+
+export type { DashboardWidgetAnalytics };
 
 const EvolucaoSaldoChart = lazy(() =>
   import('@/components/financeiro-charts').then(mod => ({ default: mod.EvolucaoSaldoChart })),
@@ -27,6 +29,35 @@ function ChartFallback() {
   );
 }
 
+/** Defer recharts chunk until the widget is near the viewport. */
+function ChartWhenVisible({ children }: Readonly<{ children: ReactNode }>) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || visible) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries.some(entry => entry.isIntersecting)) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '120px 0px' },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  return (
+    <div ref={ref}>
+      {visible ? <Suspense fallback={<ChartFallback />}>{children}</Suspense> : <ChartFallback />}
+    </div>
+  );
+}
+
 export const WIDGET_LABELS: Record<WidgetId, string> = {
   saldo: 'Saldo',
   evolucao: 'Evolução do saldo',
@@ -40,6 +71,7 @@ export const WIDGET_LABELS: Record<WidgetId, string> = {
 interface DashboardWidgetPreviewProps {
   id: WidgetId;
   transacoes: Transacao[];
+  analytics: DashboardWidgetAnalytics;
   metaEconomia: number;
   alertaGastos: number;
   extratoLimite: number;
@@ -49,18 +81,12 @@ interface DashboardWidgetPreviewProps {
 export function DashboardWidgetPreview({
   id,
   transacoes,
+  analytics,
   metaEconomia,
   alertaGastos,
   extratoLimite,
 }: Readonly<DashboardWidgetPreviewProps>) {
-  const saldo = calcularSaldo(transacoes);
-  const resumo = resumoFinanceiro(transacoes);
-  const evolucao = evolucaoSaldo(transacoes);
-  const porCategoria = totaisPorCategoria(transacoes);
-  const receitasDespesas = [
-    { name: 'Receitas', valor: resumo.receitas },
-    { name: 'Despesas', valor: resumo.despesas },
-  ];
+  const { saldo, resumo, evolucao, porCategoria, receitasDespesas } = analytics;
   const economiaAtual = resumo.receitas - resumo.despesas;
   const progressoMeta = metaEconomia > 0 ? Math.min(100, Math.max(0, (economiaAtual / metaEconomia) * 100)) : 0;
   const alertaAtivo = resumo.despesas > alertaGastos;
@@ -70,21 +96,21 @@ export function DashboardWidgetPreview({
       return <SaldoCard saldo={saldo} />;
     case 'evolucao':
       return (
-        <Suspense fallback={<ChartFallback />}>
+        <ChartWhenVisible>
           <EvolucaoSaldoChart evolucao={evolucao} />
-        </Suspense>
+        </ChartWhenVisible>
       );
     case 'comparativo':
       return (
-        <Suspense fallback={<ChartFallback />}>
+        <ChartWhenVisible>
           <ReceitasDespesasChart receitasDespesas={receitasDespesas} />
-        </Suspense>
+        </ChartWhenVisible>
       );
     case 'categorias':
       return (
-        <Suspense fallback={<ChartFallback />}>
+        <ChartWhenVisible>
           <GastosCategoriaChart porCategoria={porCategoria} />
-        </Suspense>
+        </ChartWhenVisible>
       );
     case 'extrato':
       return <ExtratoRecente transacoes={transacoes} limit={extratoLimite} />;

@@ -1,41 +1,45 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 
+import { fetchTransacoes } from '@/app/services/transacoes';
 import type { Transacao } from '@/data/transacoes';
-import { getApiUrl } from '@/lib/api-url';
 import { MF_DASHBOARD_URL } from '@/lib/load-mf-remote';
+import { useMfDashboardBaseProps } from '@/lib/use-mf-dashboard-base-props';
 import { useMfDashboardMount } from '@/lib/use-mf-dashboard-mount';
 import { useAppSelector } from '@/store/hooks';
 
-import type { DashboardViewProps } from '../../shared/dashboard-contract';
-
 interface DashboardViewMicrofrontendProps {
-  transacoes: Transacao[];
+  transacoes?: Transacao[];
 }
 
-export function DashboardViewMicrofrontend({ transacoes }: Readonly<DashboardViewMicrofrontendProps>) {
-  const widgets = useAppSelector(state => state.dashboard.widgets);
-  const layoutRows = useAppSelector(state => state.dashboard.layoutRows);
-  const layoutGroups = useAppSelector(state => state.dashboard.layoutGroups);
-  const metaEconomia = useAppSelector(state => state.dashboard.metaEconomia);
-  const alertaGastos = useAppSelector(state => state.dashboard.alertaGastos);
-  const extratoLimite = useAppSelector(state => state.dashboard.extratoLimite);
+export function DashboardViewMicrofrontend({
+  transacoes: transacoesProp = [],
+}: Readonly<DashboardViewMicrofrontendProps>) {
+  const usuarioId = useAppSelector(state => state.auth.usuario?.id);
+  const [transacoes, setTransacoes] = useState<Transacao[]>(transacoesProp);
 
-  const mfProps = useMemo<DashboardViewProps>(
-    () => ({
-      transacoes: transacoes ?? [],
-      widgets: widgets ?? [],
-      layoutRows: layoutRows ?? [],
-      layoutGroups: layoutGroups ?? [],
-      metaEconomia,
-      alertaGastos,
-      extratoLimite,
-      apiUrl: getApiUrl(),
-    }),
-    [transacoes, widgets, layoutRows, layoutGroups, metaEconomia, alertaGastos, extratoLimite],
-  );
+  useEffect(() => {
+    if (transacoesProp.length > 0) {
+      setTransacoes(transacoesProp);
+    }
+  }, [transacoesProp]);
 
+  useEffect(() => {
+    if (!usuarioId) return;
+    let cancelled = false;
+
+    void fetchTransacoes(usuarioId).then(result => {
+      if (cancelled || !result.success || !result.data) return;
+      setTransacoes(result.data);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [usuarioId]);
+
+  const mfProps = useMfDashboardBaseProps(transacoes);
   const { hostRef, mode } = useMfDashboardMount('./DashboardView', mfProps);
 
   return (
