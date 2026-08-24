@@ -11,7 +11,8 @@ export type WidgetId =
   | 'compromissos'
   | 'extrato'
   | 'meta'
-  | 'alerta';
+  | 'alerta'
+  | 'notas';
 
 export type WidgetCols = 4 | 6 | 12;
 
@@ -46,6 +47,14 @@ export interface DashboardTransacao {
   formaPagamento?: 'credito' | 'debito' | 'pix' | 'vr_va' | null;
 }
 
+export interface DashboardNotaUsuario {
+  usuarioId: string;
+  nome: string;
+  html: string;
+  /** Se false, só consulta (ex.: notas do cônjuge). */
+  editavel: boolean;
+}
+
 export interface DashboardMfBaseProps {
   transacoes: DashboardTransacao[];
   widgets: DashboardWidget[];
@@ -54,6 +63,10 @@ export interface DashboardMfBaseProps {
   metaEconomia: number;
   alertaGastos: number;
   extratoLimite: number;
+  /** HTML do bloco de notas (rascunho do usuário logado; compat). */
+  blocoNotas: string;
+  /** Notas por usuário conforme visão Eu / Cônjuge / Conjunta. */
+  notasPorUsuario: DashboardNotaUsuario[];
   apiUrl: string;
   categoriaLabels?: Record<string, string>;
   /** Escopo da visão Eu / Cônjuge / Conjunta (host). */
@@ -86,6 +99,12 @@ export interface DashboardWidgetColsDetail {
 export const MF_DASHBOARD_LAYOUT_CHANGED = 'fincontrol:dashboard-layout-changed';
 export const MF_DASHBOARD_WIDGET_TOGGLE = 'fincontrol:dashboard-widget-toggle';
 export const MF_DASHBOARD_WIDGET_COLS = 'fincontrol:dashboard-widget-cols';
+export const MF_BLOCO_NOTAS_CHANGED = 'fincontrol:bloco-notas-changed';
+
+export interface BlocoNotasChangedDetail {
+  html: string;
+  usuarioId: string;
+}
 
 export function notifyDashboardLayoutChanged(detail: DashboardLayoutChangedDetail) {
   if (typeof window === 'undefined') return;
@@ -100,4 +119,9 @@ export function notifyDashboardWidgetToggle(detail: DashboardWidgetToggleDetail)
 export function notifyDashboardWidgetCols(detail: DashboardWidgetColsDetail) {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent<DashboardWidgetColsDetail>(MF_DASHBOARD_WIDGET_COLS, { detail }));
+}
+
+export function notifyBlocoNotasChanged(detail: BlocoNotasChangedDetail) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent<BlocoNotasChangedDetail>(MF_BLOCO_NOTAS_CHANGED, { detail }));
 }

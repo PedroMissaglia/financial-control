@@ -2,14 +2,17 @@ import { AlertTriangle, PiggyBank } from 'lucide-react';
 import { lazy, type ReactNode, Suspense, useEffect, useRef, useState } from 'react';
 
 import { ExtratoRecente } from '@/components/extrato-recente';
+import { BlocoNotasPainel } from '@/components/bloco-notas-painel';
 import { GastosMensaisPainel } from '@/components/gastos-mensais-painel';
 import { SaldoCard } from '@/components/saldo-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { labelMesDeAno } from '@/data/analises';
 import type { Transacao } from '@/data/transacoes';
 import type { DashboardWidgetAnalytics } from '@/lib/build-widget-analytics';
 import { cn, formatCurrency } from '@/lib/utils';
 
 import type { WidgetId } from '../../../shared/dashboard-contract';
+import type { DashboardNotaUsuario } from '../../../shared/dashboard-contract';
 
 export type { DashboardWidgetAnalytics };
 
@@ -46,6 +49,7 @@ export const WIDGET_LABELS: Record<WidgetId, string> = {
   extrato: 'Extrato recente',
   meta: 'Meta de economia',
   alerta: 'Alerta de gastos',
+  notas: 'Bloco de notas',
 };
 
 function Pulse({ className }: Readonly<{ className?: string }>) {
@@ -175,6 +179,9 @@ export function WidgetSkeleton({ id }: Readonly<{ id: WidgetId }>) {
     case 'alerta':
       body = <AlertaSkeleton />;
       break;
+    case 'notas':
+      body = <ExtratoSkeleton />;
+      break;
   }
 
   return <SkeletonStatus id={id}>{body}</SkeletonStatus>;
@@ -222,6 +229,8 @@ interface DashboardWidgetPreviewProps {
   metaEconomia: number;
   alertaGastos: number;
   extratoLimite: number;
+  blocoNotas?: string;
+  notasPorUsuario?: DashboardNotaUsuario[];
   apiUrl?: string;
   donoLabels?: Record<string, string>;
 }
@@ -233,11 +242,15 @@ export function DashboardWidgetPreview({
   metaEconomia,
   alertaGastos,
   extratoLimite,
+  blocoNotas = '',
+  notasPorUsuario,
   donoLabels,
 }: Readonly<DashboardWidgetPreviewProps>) {
   const {
+    competencia,
     saldo,
     resumo,
+    resumoMes,
     evolucao,
     porCategoria,
     porTipo,
@@ -254,9 +267,11 @@ export function DashboardWidgetPreview({
     evolucaoEmpilhado,
     receitasDespesasAnoEmpilhado,
   } = analytics;
+  const periodo = labelMesDeAno(competencia);
   const economiaAtual = resumo.receitas - resumo.despesas;
   const progressoMeta = metaEconomia > 0 ? Math.min(100, Math.max(0, (economiaAtual / metaEconomia) * 100)) : 0;
-  const alertaAtivo = resumo.despesas > alertaGastos;
+  const alertaAtivo = resumoMes.despesas > alertaGastos;
+  const transacoesDoMes = transacoes.filter(item => item.data.startsWith(competencia));
   const seriesPessoas = fragmentado
     ? porPessoa.map(pessoa => ({ dataKey: pessoa.dataKey, nome: pessoa.nome }))
     : [];
@@ -272,6 +287,7 @@ export function DashboardWidgetPreview({
           evolucao={evolucao}
           evolucaoEmpilhado={evolucaoEmpilhado}
           seriesPessoas={seriesPessoas}
+          ano={fragmentado ? receitasDespesasAnoEmpilhado.ano : receitasDespesasAno.ano}
         />
       );
       break;
@@ -280,6 +296,7 @@ export function DashboardWidgetPreview({
         <ReceitasDespesasChart
           receitasDespesas={receitasDespesas}
           fatias={fragmentado ? receitasDespesasFatias : []}
+          periodo={periodo}
         />
       );
       break;
@@ -289,6 +306,7 @@ export function DashboardWidgetPreview({
           porCategoria={porCategoria}
           porCategoriaEmpilhado={porCategoriaEmpilhado}
           seriesPessoas={seriesPessoas}
+          periodo={periodo}
         />
       );
       break;
@@ -298,6 +316,7 @@ export function DashboardWidgetPreview({
           porTipo={porTipo}
           porTipoEmpilhado={porTipoEmpilhado}
           seriesPessoas={seriesPessoas}
+          periodo={periodo}
         />
       );
       break;
@@ -307,6 +326,7 @@ export function DashboardWidgetPreview({
           porForma={porForma}
           porFormaEmpilhado={porFormaEmpilhado}
           seriesPessoas={seriesPessoas}
+          periodo={periodo}
         />
       );
       break;
@@ -324,7 +344,14 @@ export function DashboardWidgetPreview({
       content = <GastosMensaisPainel compromissos={compromissos} porPessoa={porPessoa} />;
       break;
     case 'extrato':
-      content = <ExtratoRecente transacoes={transacoes} limit={extratoLimite} donoLabels={donoLabels} />;
+      content = (
+        <ExtratoRecente
+          transacoes={transacoesDoMes}
+          limit={extratoLimite}
+          donoLabels={donoLabels}
+          periodo={periodo}
+        />
+      );
       break;
     case 'meta':
       content = (
@@ -375,12 +402,12 @@ export function DashboardWidgetPreview({
                 className={alertaAtivo ? 'text-destructive h-5 w-5' : 'text-primary h-5 w-5'}
                 aria-hidden="true"
               />
-              <CardTitle>Alerta de gastos</CardTitle>
+              <CardTitle>Alerta de gastos · {periodo}</CardTitle>
             </div>
             <CardDescription>Limite mensal de despesas: {formatCurrency(alertaGastos)}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="fc-card-metric">{formatCurrency(resumo.despesas)}</p>
+            <p className="fc-card-metric">{formatCurrency(resumoMes.despesas)}</p>
             {alertaAtivo ? (
               <p className="text-destructive text-sm" role="alert">
                 Vocês ultrapassaram o limite de gastos configurado.
@@ -393,7 +420,7 @@ export function DashboardWidgetPreview({
                 {porPessoa.map(pessoa => (
                   <li key={pessoa.usuarioId} className="flex justify-between gap-2">
                     <span>Despesas de {pessoa.nome}</span>
-                    <span className="text-foreground font-medium">{formatCurrency(pessoa.despesas)}</span>
+                    <span className="text-foreground font-medium">{formatCurrency(pessoa.despesasMes)}</span>
                   </li>
                 ))}
               </ul>
@@ -402,6 +429,14 @@ export function DashboardWidgetPreview({
         </Card>
       );
       break;
+    case 'notas': {
+      const notas =
+        notasPorUsuario && notasPorUsuario.length > 0
+          ? notasPorUsuario
+          : [{ usuarioId: 'self', nome: 'Você', html: blocoNotas, editavel: true }];
+      content = <BlocoNotasPainel notas={notas} />;
+      break;
+    }
   }
 
   return (

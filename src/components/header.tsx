@@ -1,10 +1,11 @@
 'use client';
 
-import { Menu, Wallet } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { BrandMark } from '@/components/brand-mark';
 import { ThemeModeToggle } from '@/components/theme-mode-toggle';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/user-menu';
@@ -53,7 +54,7 @@ function NavMenu({ pathname }: Readonly<{ pathname: string }>) {
   }, [open]);
 
   return (
-    <div ref={rootRef} className="relative md:hidden">
+    <div ref={rootRef} className="relative">
       <Button
         type="button"
         variant="ghost"
@@ -144,37 +145,38 @@ export function Header() {
           <Link
             href="/"
             className="focus:ring-primary flex min-w-0 items-center gap-2 rounded-md focus:ring-2 focus:ring-offset-2 focus:outline-none"
-            aria-label="Fin Control - Página inicial"
+            aria-label="Pennywise - Página inicial"
           >
-            <div className="bg-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9" aria-hidden="true">
-              <Wallet className="h-4 w-4 text-white sm:h-5 sm:w-5" />
-            </div>
-            <span className="text-foreground truncate text-base font-bold sm:text-xl">Fin Control</span>
+            <BrandMark />
+            <span className="text-foreground truncate text-base font-bold sm:text-xl">Pennywise</span>
           </Link>
 
           {isAuthenticated && (
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
-              <nav className="hidden items-center gap-6 md:flex" aria-label="Navegação principal">
-                {navItems.map(item => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      'focus:ring-primary shrink-0 rounded-md px-2 py-1 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none sm:text-base',
-                      pathname === item.href ? 'text-primary' : 'text-foreground hover:text-primary',
-                    )}
-                    aria-current={pathname === item.href ? 'page' : undefined}
-                  >
-                    {item.label}
+              {isDesktop ? (
+                <nav className="flex items-center gap-6" aria-label="Navegação principal">
+                  {navItems.map(item => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        'focus:ring-primary shrink-0 rounded-md px-2 py-1 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none sm:text-base',
+                        pathname === item.href ? 'text-primary' : 'text-foreground hover:text-primary',
+                      )}
+                      aria-current={pathname === item.href ? 'page' : undefined}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <Link href="/transacoes/nova" className="shrink-0">
+                    <Button size="sm">Nova transação</Button>
                   </Link>
-                ))}
-                <Link href="/transacoes/nova" className="shrink-0">
-                  <Button size="sm">Nova transação</Button>
-                </Link>
-              </nav>
+                </nav>
+              ) : (
+                <NavMenu pathname={pathname} />
+              )}
 
               {isDesktop && <VisaoSwitcher />}
-              <NavMenu pathname={pathname} />
               <UserMenu nome={usuario?.nome} onLogout={handleLogout} />
               <ThemeModeToggle />
             </div>

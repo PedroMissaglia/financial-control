@@ -1,13 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Bar, BarChart, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-import {
-  dataHojeSaoPaulo,
-  labelMesDeAno,
-  type PontoSaldo,
-  type ReceitasDespesasAno,
-  type TotalPorGrupo,
-} from '@/data/analises';
+import { type PontoSaldo, type ReceitasDespesasAno, type TotalPorGrupo } from '@/data/analises';
 import type {
   FatiaReceitasDespesas,
   GrupoEmpilhado,
@@ -42,9 +36,7 @@ function formatAxisValue(value: number) {
 }
 
 function pastelFromHsl(color: string): { fill: string; stroke: string } {
-  const inner = /^hsl\((.+)\)$/.exec(color);
-  if (!inner?.[1] || color.includes('/')) return { fill: color, stroke: color };
-  return { fill: `hsl(${inner[1].trim()} / 0.18)`, stroke: color };
+  return { fill: color, stroke: color };
 }
 
 function heightForCategoryBars(count: number, isMobile: boolean, seriesCount = 1): number {
@@ -66,10 +58,6 @@ function useIsMobile() {
   }, []);
 
   return isMobile;
-}
-
-function labelPeriodoMesAtual(hoje = dataHojeSaoPaulo()): string {
-  return labelMesDeAno(hoje.slice(0, 7));
 }
 
 function ChartFrame({
@@ -109,21 +97,24 @@ function pessoaSeriesSwatch(series: string[], index: number, fallback: string): 
   return pastelFromHsl(series[index % series.length] ?? fallback);
 }
 
+function shadeSwatch(swatch: ListSwatch, lightnessShift: number): ListSwatch {
+  const inner = /^hsl\((.+)\)$/.exec(swatch.stroke);
+  if (!inner?.[1]) return swatch;
+  const parts = /^([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/.exec(inner[1].trim());
+  if (!parts) return swatch;
+  const lightness = Math.min(78, Math.max(22, Number(parts[3]) + lightnessShift));
+  const color = `hsl(${parts[1]} ${parts[2]}% ${lightness}%)`;
+  return { fill: color, stroke: color };
+}
+
 function receitaDespesaSwatch(
   colors: ReturnType<typeof useChartThemeColors>,
   kind: 'receita' | 'despesa',
   pessoaIndex: number,
 ): ListSwatch {
-  const base =
-    kind === 'receita'
-      ? (colors.tipo.deposito ?? pastelFromHsl(colors.success))
-      : (colors.tipo.pagamento ?? pastelFromHsl(colors.danger));
+  const base = kind === 'receita' ? colors.receita : colors.despesa;
   if (pessoaIndex === 0) return base;
-  const alt = pastelFromHsl(colors.series[(pessoaIndex + (kind === 'receita' ? 0 : 2)) % colors.series.length] ?? base.stroke);
-  return {
-    fill: alt.fill,
-    stroke: kind === 'receita' ? colors.success : colors.danger,
-  };
+  return shadeSwatch(base, kind === 'receita' ? 16 : -10);
 }
 
 interface SeriePessoa {
@@ -135,35 +126,39 @@ interface EvolucaoSaldoChartProps {
   evolucao: PontoSaldo[];
   evolucaoEmpilhado?: PontoEvolucaoEmpilhado[];
   seriesPessoas?: SeriePessoa[];
+  ano: number;
 }
 
 export function EvolucaoSaldoChart({
   evolucao,
   evolucaoEmpilhado = [],
   seriesPessoas = [],
+  ano,
 }: Readonly<EvolucaoSaldoChartProps>) {
   const isMobile = useIsMobile();
   const colors = useChartThemeColors();
   const chartHeight = isMobile ? 220 : 280;
-  const fragmentado = seriesPessoas.length > 1 && evolucaoEmpilhado.length > 0;
-  const swatch = pastelFromHsl(colors.line);
+  const prefix = `${ano}-`;
+  const evolucaoAno = evolucao.filter(item => item.data.startsWith(prefix));
+  const evolucaoEmpilhadoAno = evolucaoEmpilhado.filter(item => String(item.data).startsWith(prefix));
+  const fragmentado = seriesPessoas.length > 1 && evolucaoEmpilhadoAno.length > 0;
 
   return (
     <ChartFrame
-      title="Evolução do saldo"
-      label="Gráfico de barras com a evolução do saldo ao longo do tempo"
+      title={`Evolução do saldo · ${ano}`}
+      label={`Gráfico de barras com a evolução do saldo em ${ano}`}
       height={chartHeight}
     >
       {fragmentado ? (
-        evolucaoEmpilhado.length === 0 ? (
+        evolucaoEmpilhadoAno.length === 0 ? (
           <p className="fc-caption">Sem dados para o gráfico.</p>
         ) : (
           <ResponsiveContainer
-            key={evolucaoEmpilhado.map(item => `${item.data}:${seriesPessoas.map(s => item[s.dataKey]).join(',')}`).join('|')}
+            key={evolucaoEmpilhadoAno.map(item => `${item.data}:${seriesPessoas.map(s => item[s.dataKey]).join(',')}`).join('|')}
             width="100%"
             height={chartHeight}
           >
-            <BarChart data={evolucaoEmpilhado} margin={{ top: 8, right: 12, left: 4, bottom: isMobile ? 40 : 8 }}>
+            <BarChart data={evolucaoEmpilhadoAno} margin={{ top: 8, right: 12, left: 4, bottom: isMobile ? 40 : 8 }}>
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: isMobile ? 10 : 12, fill: colors.axis }}
@@ -203,15 +198,15 @@ export function EvolucaoSaldoChart({
             </BarChart>
           </ResponsiveContainer>
         )
-      ) : evolucao.length === 0 ? (
+      ) : evolucaoAno.length === 0 ? (
         <p className="fc-caption">Sem dados para o gráfico.</p>
       ) : (
         <ResponsiveContainer
-          key={evolucao.map(item => `${item.data}:${item.saldo}`).join('|')}
+          key={evolucaoAno.map(item => `${item.data}:${item.saldo}`).join('|')}
           width="100%"
           height={chartHeight}
         >
-          <BarChart data={evolucao} margin={{ top: 8, right: 12, left: 4, bottom: isMobile ? 40 : 8 }}>
+          <BarChart data={evolucaoAno} margin={{ top: 8, right: 12, left: 4, bottom: isMobile ? 40 : 8 }}>
             <XAxis
               dataKey="label"
               tick={{ fontSize: isMobile ? 10 : 12, fill: colors.axis }}
@@ -223,15 +218,12 @@ export function EvolucaoSaldoChart({
             />
             <YAxis width={44} tick={{ fontSize: 10, fill: colors.axis }} tickFormatter={formatAxisValue} />
             <ChartTooltip />
-            <Bar
-              dataKey="saldo"
-              fill={swatch.fill}
-              stroke={swatch.stroke}
-              strokeWidth={1}
-              name="Saldo"
-              isAnimationActive={false}
-              maxBarSize={48}
-            />
+            <Bar dataKey="saldo" name="Saldo" isAnimationActive={false} maxBarSize={48} strokeWidth={1}>
+              {evolucaoAno.map(item => {
+                const tone = item.saldo >= 0 ? colors.saldoPos : colors.saldoNeg;
+                return <Cell key={item.data} fill={tone.fill} stroke={tone.stroke} />;
+              })}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -243,12 +235,14 @@ interface VolumePorTipoChartProps {
   porTipo: TotalPorGrupo[];
   porTipoEmpilhado?: GrupoEmpilhado[];
   seriesPessoas?: SeriePessoa[];
+  periodo: string;
 }
 
 export function VolumePorTipoChart({
   porTipo,
   porTipoEmpilhado = [],
   seriesPessoas = [],
+  periodo,
 }: Readonly<VolumePorTipoChartProps>) {
   const isMobile = useIsMobile();
   const colors = useChartThemeColors();
@@ -261,8 +255,8 @@ export function VolumePorTipoChart({
   return (
     <>
       <ChartFrame
-        title="Por tipo"
-        label="Gráfico de barras com o volume em reais por tipo de transação"
+        title={`Por tipo · ${periodo}`}
+        label={`Gráfico de barras com o volume em reais por tipo de transação de ${periodo}`}
         height={chartHeight}
       >
         {vazio ? (
@@ -371,12 +365,14 @@ interface SaidasPorFormaChartProps {
   porForma: TotalPorGrupo[];
   porFormaEmpilhado?: GrupoEmpilhado[];
   seriesPessoas?: SeriePessoa[];
+  periodo: string;
 }
 
 export function SaidasPorFormaChart({
   porForma,
   porFormaEmpilhado = [],
   seriesPessoas = [],
+  periodo,
 }: Readonly<SaidasPorFormaChartProps>) {
   const isMobile = useIsMobile();
   const colors = useChartThemeColors();
@@ -389,8 +385,8 @@ export function SaidasPorFormaChart({
   return (
     <>
       <ChartFrame
-        title="Por forma de pagamento"
-        label="Gráfico de barras com saídas agrupadas por forma de pagamento"
+        title={`Por forma de pagamento · ${periodo}`}
+        label={`Gráfico de barras com saídas agrupadas por forma de pagamento de ${periodo}`}
         height={chartHeight}
       >
         {vazio ? (
@@ -498,18 +494,19 @@ export function SaidasPorFormaChart({
 interface ReceitasDespesasChartProps {
   receitasDespesas: { name: string; valor: number }[];
   fatias?: FatiaReceitasDespesas[];
+  periodo: string;
 }
 
 export function ReceitasDespesasChart({
   receitasDespesas,
   fatias = [],
+  periodo,
 }: Readonly<ReceitasDespesasChartProps>) {
   const isMobile = useIsMobile();
   const colors = useChartThemeColors();
   const chartHeight = isMobile ? 240 : 300;
-  const periodo = labelPeriodoMesAtual();
-  const receitas = colors.tipo.deposito ?? pastelFromHsl(colors.success);
-  const despesas = colors.tipo.pagamento ?? pastelFromHsl(colors.danger);
+  const receitas = colors.receita;
+  const despesas = colors.despesa;
   const fragmentado = fatias.length > 0;
   const pieData = fragmentado ? fatias.filter(item => item.valor > 0) : receitasDespesas;
   const vazio = pieData.every(item => item.valor === 0);
@@ -591,8 +588,8 @@ export function ReceitasDespesasAnoChart({
   const vazio = fragmentado
     ? mesesEmpilhado.every(mes => seriesAno.every(s => Number(mes[s.dataKey] ?? 0) === 0))
     : meses.every(item => item.receitas === 0 && item.despesas === 0);
-  const receitas = colors.tipo.deposito ?? pastelFromHsl(colors.success);
-  const despesas = colors.tipo.pagamento ?? pastelFromHsl(colors.danger);
+  const receitas = colors.receita;
+  const despesas = colors.despesa;
 
   return (
     <ChartFrame
@@ -703,19 +700,20 @@ interface GastosCategoriaChartProps {
   porCategoria: TotalPorGrupo[];
   porCategoriaEmpilhado?: GrupoEmpilhado[];
   seriesPessoas?: SeriePessoa[];
+  periodo: string;
 }
 
 export function GastosCategoriaChart({
   porCategoria,
   porCategoriaEmpilhado = [],
   seriesPessoas = [],
+  periodo,
 }: Readonly<GastosCategoriaChartProps>) {
   const isMobile = useIsMobile();
   const colors = useChartThemeColors();
   const fragmentado = seriesPessoas.length > 1 && porCategoriaEmpilhado.length > 0;
   const rows = fragmentado ? porCategoriaEmpilhado : porCategoria;
   const categoryHeight = heightForCategoryBars(rows.length, isMobile, fragmentado ? seriesPessoas.length : 1);
-  const periodo = labelPeriodoMesAtual();
 
   return (
     <>

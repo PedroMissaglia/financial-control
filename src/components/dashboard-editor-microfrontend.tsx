@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 import type { Transacao } from '@/data/transacoes';
 import { MF_DASHBOARD_URL } from '@/lib/load-mf-remote';
+import { useBlocoNotasPersistence } from '@/lib/use-bloco-notas-persistence';
 import { useMfDashboardBaseProps } from '@/lib/use-mf-dashboard-base-props';
 import { useMfDashboardMount } from '@/lib/use-mf-dashboard-mount';
 import { useAppDispatch } from '@/store/hooks';
@@ -28,6 +29,7 @@ export function DashboardEditorMicrofrontend({ transacoes }: Readonly<DashboardE
   const dispatch = useAppDispatch();
   const mfProps = useMfDashboardBaseProps(transacoes);
   const { hostRef, mode } = useMfDashboardMount('./DashboardEditor', mfProps);
+  useBlocoNotasPersistence();
 
   useEffect(() => {
     const onLayoutChanged = (event: Event) => {

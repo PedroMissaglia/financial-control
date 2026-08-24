@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import '../../shared/fincontrol-themes.css';
 
+@custom-variant dark (&:where([data-fin-theme-mode='dark'], [data-fin-theme-mode='dark'] *));
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -23,10 +25,58 @@
   --color-ring: hsl(var(--ring));
   --color-success: hsl(var(--success));
   --color-success-foreground: hsl(var(--success-foreground));
+  --color-status-aberto: hsl(var(--status-aberto));
+  --color-status-pago: hsl(var(--status-pago));
+  --color-status-atrasado: hsl(var(--status-atrasado));
 }
 
 html,
 body {
   margin: 0;
   font-family: var(--fc-font-sans);
+}
+
+.fc-bloco-notas-editor p {
+  margin: 0.35em 0;
+}
+
+.fc-bloco-notas-editor h2 {
+  margin: 0.6em 0 0.35em;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.fc-bloco-notas-editor h3 {
+  margin: 0.5em 0 0.3em;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.fc-bloco-notas-editor ul {
+  list-style: disc;
+  margin: 0.35em 0;
+  padding-left: 1.25rem;
+}
+
+.fc-bloco-notas-editor ol {
+  list-style: decimal;
+  margin: 0.35em 0;
+  padding-left: 1.25rem;
+}
+
+.fc-bloco-notas-editor blockquote {
+  border-left: 3px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  margin: 0.5em 0;
+  padding-left: 0.75rem;
+}
+
+.fc-bloco-notas-editor p.is-editor-empty:first-child::before {
+  color: hsl(var(--muted-foreground));
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }

@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Fin Control',
+  title: 'Pennywise',
   description: 'Gerencie suas transações financeiras de forma simples e organizada',
 };
 
@@ -39,7 +39,7 @@ export default function RootLayout({
   const runtimeApiUrl = getBrowserApiUrl();
 
   return (
-    <html lang="pt-BR" data-fin-theme="cyan">
+    <html lang="pt-BR" data-fin-theme="emerald">
       <body className={`${inter.variable} flex min-h-dvh flex-col font-sans antialiased`}>
         <Script id="fincontrol-api-url" strategy="beforeInteractive">
           {`window.__FINCONTROL_API_URL__=${JSON.stringify(runtimeApiUrl)};`}

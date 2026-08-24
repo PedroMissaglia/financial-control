@@ -50,6 +50,8 @@ export function DashboardEditorApp(props: Readonly<DashboardEditorProps>) {
             metaEconomia={props.metaEconomia}
             alertaGastos={props.alertaGastos}
             extratoLimite={props.extratoLimite}
+            blocoNotas={props.blocoNotas}
+            notasPorUsuario={props.notasPorUsuario}
             apiUrl={props.apiUrl}
             donoLabels={props.donoLabels}
           />

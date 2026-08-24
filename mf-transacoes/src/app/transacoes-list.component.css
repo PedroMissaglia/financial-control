@@ -37,12 +37,13 @@
 .dono-badge {
   display: inline-flex;
   align-items: center;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid transparent;
   border-radius: 999px;
   padding: 0.05rem 0.45rem;
   font-size: 0.7rem;
   font-weight: 600;
-  color: hsl(var(--muted-foreground));
+  background: hsl(var(--primary));
+  color: #fff;
   white-space: nowrap;
 }
 
@@ -59,11 +60,14 @@
 }
 
 .ok {
-  color: hsl(var(--success));
+  color: hsl(var(--status-aberto));
   font-weight: 600;
 }
 
-.bad,
+.bad {
+  color: hsl(var(--status-atrasado));
+}
+
 .error {
   color: hsl(var(--destructive));
 }
@@ -239,66 +243,96 @@
   font-weight: var(--fc-weight-semibold);
   line-height: 1.25rem;
   white-space: nowrap;
+  color: #fff;
 }
 
 .fc-badge-tipo-deposito {
-  background: hsl(var(--success) / 0.14);
-  color: hsl(var(--success));
+  background: hsl(var(--tipo-deposito));
+  color: hsl(var(--tipo-deposito-fg));
 }
 
 .fc-badge-tipo-pagamento {
-  background: hsl(var(--destructive) / 0.14);
-  color: hsl(var(--destructive));
+  background: hsl(var(--tipo-pagamento));
+  color: hsl(var(--tipo-pagamento-fg));
 }
 
 .fc-badge-tipo-saque {
-  background: hsl(var(--accent) / 0.55);
-  color: hsl(var(--accent-foreground));
+  background: hsl(var(--tipo-saque));
+  color: hsl(var(--tipo-saque-fg));
 }
 
 .fc-badge-tipo-transferencia {
-  background: hsl(var(--primary) / 0.14);
-  color: hsl(var(--primary));
+  background: hsl(var(--tipo-transferencia));
+  color: hsl(var(--tipo-transferencia-fg));
 }
 
 .fc-badge-pag-pix {
-  background: hsl(214 90% 93%);
-  color: hsl(217 80% 38%);
+  background: hsl(var(--forma-pix));
+  color: hsl(var(--forma-pix-fg));
 }
 
 .fc-badge-pag-debito {
-  background: hsl(45 96% 88%);
-  color: hsl(38 90% 32%);
+  background: hsl(var(--forma-debito));
+  color: hsl(var(--forma-debito-fg));
 }
 
 .fc-badge-pag-credito {
-  background: hsl(24 95% 90%);
-  color: hsl(20 90% 38%);
+  background: hsl(var(--forma-credito));
+  color: hsl(var(--forma-credito-fg));
 }
 
 .fc-badge-pag-vr_va {
-  background: hsl(270 70% 93%);
-  color: hsl(270 55% 40%);
+  background: hsl(var(--forma-vr-va));
+  color: hsl(var(--forma-vr-va-fg));
+}
+
+:host-context([data-fin-theme-mode='dark']) {
+  color-scheme: dark;
+}
+
+:host-context([data-fin-theme-mode='dark']) .dono-badge {
+  background: hsl(var(--primary) / 0.18);
+  color: hsl(var(--primary));
+}
+
+:host-context([data-fin-theme-mode='dark']) .fc-badge-tipo-deposito {
+  background: hsl(var(--tipo-deposito) / 0.18);
+  color: hsl(var(--tipo-deposito));
+}
+
+:host-context([data-fin-theme-mode='dark']) .fc-badge-tipo-pagamento {
+  background: hsl(var(--tipo-pagamento) / 0.18);
+  color: hsl(var(--tipo-pagamento));
+}
+
+:host-context([data-fin-theme-mode='dark']) .fc-badge-tipo-saque {
+  background: hsl(var(--tipo-saque) / 0.18);
+  color: hsl(var(--tipo-saque));
+}
+
+:host-context([data-fin-theme-mode='dark']) .fc-badge-tipo-transferencia {
+  background: hsl(var(--tipo-transferencia) / 0.18);
+  color: hsl(var(--tipo-transferencia));
 }
 
 :host-context([data-fin-theme-mode='dark']) .fc-badge-pag-pix {
-  background: hsl(217 80% 50% / 0.22);
-  color: hsl(214 90% 78%);
+  background: hsl(var(--forma-pix) / 0.18);
+  color: hsl(var(--forma-pix));
 }
 
 :host-context([data-fin-theme-mode='dark']) .fc-badge-pag-debito {
-  background: hsl(45 90% 50% / 0.22);
-  color: hsl(45 90% 72%);
+  background: hsl(var(--forma-debito) / 0.18);
+  color: hsl(var(--forma-debito));
 }
 
 :host-context([data-fin-theme-mode='dark']) .fc-badge-pag-credito {
-  background: hsl(24 90% 50% / 0.22);
-  color: hsl(24 90% 72%);
+  background: hsl(var(--forma-credito) / 0.18);
+  color: hsl(var(--forma-credito));
 }
 
 :host-context([data-fin-theme-mode='dark']) .fc-badge-pag-vr_va {
-  background: hsl(270 60% 50% / 0.24);
-  color: hsl(270 70% 80%);
+  background: hsl(var(--forma-vr-va) / 0.18);
+  color: hsl(var(--forma-vr-va));
 }
 
 .card-actions {

@@ -13,189 +13,112 @@ export interface ChartThemeColors {
   danger: string;
   series: string[];
   axis: string;
+  receita: ListSwatch;
+  despesa: ListSwatch;
+  saldoPos: ListSwatch;
+  saldoNeg: ListSwatch;
   tipo: Record<string, ListSwatch>;
   forma: Record<string, ListSwatch>;
 }
 
-interface HslColor {
-  h: number;
-  s: number;
-  l: number;
+const FALLBACK_RAW = {
+  receita: '205 55% 40%',
+  despesa: '8 72% 58%',
+  saldoPos: '205 55% 40%',
+  saldoNeg: '8 72% 58%',
+  axis: '80 10% 38%',
+  deposito: '205 55% 40%',
+  saque: '19 70% 46%',
+  transferencia: '46 68% 50%',
+  pagamento: '8 72% 58%',
+  pix: '38 70% 48%',
+  credito: '350 68% 52%',
+  debito: '325 58% 42%',
+  vrVa: '54 68% 50%',
+};
+
+function hsl(raw: string): string {
+  return `hsl(${raw})`;
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
+function swatch(raw: string): ListSwatch {
+  const color = hsl(raw);
+  return { fill: color, stroke: color };
 }
 
-function wrapHue(hue: number): number {
-  return ((hue % 360) + 360) % 360;
-}
-
-function parseHsl(raw: string): HslColor | null {
-  const match = raw.trim().match(/^([\d.]+)\s+([\d.]+)%\s+([\d.]+)%$/);
-  if (!match) return null;
-  return { h: Number(match[1]), s: Number(match[2]), l: Number(match[3]) };
-}
-
-function formatHsl(color: HslColor): string {
-  return `hsl(${Math.round(color.h)} ${Math.round(color.s)}% ${Math.round(color.l)}%)`;
+function token(style: CSSStyleDeclaration | null, name: string, fallback: string): string {
+  const raw = style?.getPropertyValue(name).trim();
+  return raw || fallback;
 }
 
 function isDarkMode(): boolean {
   return typeof document !== 'undefined' && document.documentElement.dataset['finThemeMode'] === 'dark';
 }
 
-function tuneForMode(base: HslColor, isDark: boolean, lightnessOffset = 0, saturationScale = 1): HslColor {
-  const saturation = clamp(base.s * saturationScale, isDark ? 48 : 55, 92);
-  const lightness = isDark
-    ? clamp(base.l + 10 + lightnessOffset, 38, 72)
-    : clamp(base.l + lightnessOffset, 24, 48);
-
-  return { h: base.h, s: saturation, l: lightness };
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
-function buildHarmoniousSeries(base: HslColor, isDark: boolean): string[] {
-  const tuned = tuneForMode(base, isDark);
-
-  const steps: Array<{ hueOffset: number; satScale: number; lightOffset: number }> = [
-    { hueOffset: 0, satScale: 1, lightOffset: 0 },
-    { hueOffset: -18, satScale: 0.92, lightOffset: isDark ? 10 : -6 },
-    { hueOffset: 18, satScale: 0.9, lightOffset: isDark ? 14 : -10 },
-    { hueOffset: -32, satScale: 0.82, lightOffset: isDark ? 6 : 4 },
-    { hueOffset: 32, satScale: 0.84, lightOffset: isDark ? 18 : -14 },
-    { hueOffset: 0, satScale: 0.72, lightOffset: isDark ? 22 : 8 },
-    { hueOffset: -48, satScale: 0.78, lightOffset: isDark ? 2 : -2 },
-    { hueOffset: 48, satScale: 0.76, lightOffset: isDark ? 20 : 6 },
-  ];
-
-  return steps.map(step => {
-    const color = tuneForMode(
-      {
-        h: wrapHue(tuned.h + step.hueOffset),
-        s: tuned.s,
-        l: tuned.l,
-      },
-      isDark,
-      step.lightOffset,
-      step.satScale,
-    );
-    return formatHsl(color);
-  });
+/** Mesma matiz, menos saturação e brilho — evita neon no fundo quase preto. */
+function softenForDark(raw: string): string {
+  const parts = /^([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/.exec(raw.trim());
+  if (!parts) return raw;
+  const saturation = Math.round(clamp(Number(parts[2]) * 0.72, 42, 56));
+  const lightness = Math.round(clamp(Number(parts[3]) * 0.9, 40, 52));
+  return `${parts[1]} ${saturation}% ${lightness}%`;
 }
 
-function buildSemanticPair(base: HslColor, isDark: boolean): { success: string; danger: string } {
-  const tuned = tuneForMode(base, isDark);
+function readChartThemeColorsFrom(style: CSSStyleDeclaration | null): ChartThemeColors {
+  const dark = isDarkMode();
+  const take = (name: string, fallback: string) => {
+    const raw = token(style, name, fallback);
+    return dark ? softenForDark(raw) : raw;
+  };
 
-  const success = formatHsl(
-    tuneForMode(
-      { h: wrapHue(tuned.h - 26), s: tuned.s * 0.9, l: tuned.l },
-      isDark,
-      isDark ? 4 : -2,
-      0.95,
-    ),
-  );
-
-  const danger = formatHsl(
-    tuneForMode(
-      { h: wrapHue(tuned.h + 148), s: tuned.s * 0.88, l: tuned.l },
-      isDark,
-      isDark ? 2 : -4,
-      0.92,
-    ),
-  );
-
-  return { success, danger };
-}
-
-const FORMA_LIGHT: Record<string, ListSwatch> = {
-  pix: { fill: 'hsl(214 90% 93%)', stroke: 'hsl(217 80% 38%)' },
-  debito: { fill: 'hsl(45 96% 88%)', stroke: 'hsl(38 90% 32%)' },
-  credito: { fill: 'hsl(24 95% 90%)', stroke: 'hsl(20 90% 38%)' },
-  vr_va: { fill: 'hsl(270 70% 93%)', stroke: 'hsl(270 55% 40%)' },
-};
-
-const FORMA_DARK: Record<string, ListSwatch> = {
-  pix: { fill: 'hsl(217 80% 50% / 0.22)', stroke: 'hsl(214 90% 78%)' },
-  debito: { fill: 'hsl(45 90% 50% / 0.22)', stroke: 'hsl(45 90% 72%)' },
-  credito: { fill: 'hsl(24 90% 50% / 0.22)', stroke: 'hsl(24 90% 72%)' },
-  vr_va: { fill: 'hsl(270 60% 50% / 0.24)', stroke: 'hsl(270 70% 80%)' },
-};
-
-function tokenHsl(style: CSSStyleDeclaration, name: string, fallback: string): string {
-  const raw = style.getPropertyValue(name).trim();
-  return raw ? `hsl(${raw})` : fallback;
-}
-
-function tokenHslAlpha(style: CSSStyleDeclaration, name: string, alpha: number, fallback: string): string {
-  const raw = style.getPropertyValue(name).trim();
-  return raw ? `hsl(${raw} / ${alpha})` : fallback;
-}
-
-type ChartThemeCore = Omit<ChartThemeColors, 'tipo' | 'forma'>;
-
-function listColors(
-  style: CSSStyleDeclaration | null,
-  isDark: boolean,
-  base: ChartThemeCore,
-): Pick<ChartThemeColors, 'tipo' | 'forma'> {
-  const success = style ? tokenHsl(style, '--success', base.success) : 'hsl(152 69% 40%)';
-  const destructive = style ? tokenHsl(style, '--destructive', base.danger) : 'hsl(0 72% 51%)';
-  const primary = style ? tokenHsl(style, '--primary', base.line) : 'hsl(160 84% 30%)';
-  const accentFg = style ? tokenHsl(style, '--accent-foreground', base.line) : 'hsl(160 84% 24%)';
+  const receita = take('--chart-receita', FALLBACK_RAW.receita);
+  const despesa = take('--chart-despesa', FALLBACK_RAW.despesa);
+  const saldoPos = take('--chart-saldo-positivo', FALLBACK_RAW.saldoPos);
+  const saldoNeg = take('--chart-saldo-negativo', FALLBACK_RAW.saldoNeg);
+  const muted = token(style, '--muted-foreground', FALLBACK_RAW.axis);
+  const deposito = take('--tipo-deposito', FALLBACK_RAW.deposito);
+  const saque = take('--tipo-saque', FALLBACK_RAW.saque);
+  const transferencia = take('--tipo-transferencia', FALLBACK_RAW.transferencia);
+  const pagamento = take('--tipo-pagamento', FALLBACK_RAW.pagamento);
+  const pix = take('--forma-pix', FALLBACK_RAW.pix);
+  const credito = take('--forma-credito', FALLBACK_RAW.credito);
+  const debito = take('--forma-debito', FALLBACK_RAW.debito);
+  const vrVa = take('--forma-vr-va', FALLBACK_RAW.vrVa);
 
   return {
+    line: hsl(saldoPos),
+    success: hsl(saldoPos),
+    danger: hsl(saldoNeg),
+    series: [receita, despesa, pix, transferencia, credito, debito, vrVa, saque].map(hsl),
+    axis: hsl(dark ? '42 8% 62%' : muted),
+    receita: swatch(receita),
+    despesa: swatch(despesa),
+    saldoPos: swatch(saldoPos),
+    saldoNeg: swatch(saldoNeg),
     tipo: {
-      deposito: {
-        fill: style ? tokenHslAlpha(style, '--success', 0.14, 'hsl(152 69% 40% / 0.14)') : 'hsl(152 69% 40% / 0.14)',
-        stroke: success,
-      },
-      pagamento: {
-        fill: style ? tokenHslAlpha(style, '--destructive', 0.14, 'hsl(0 72% 51% / 0.14)') : 'hsl(0 72% 51% / 0.14)',
-        stroke: destructive,
-      },
-      saque: {
-        fill: style ? tokenHslAlpha(style, '--accent', 0.55, 'hsl(152 76% 90% / 0.55)') : 'hsl(152 76% 90% / 0.55)',
-        stroke: accentFg,
-      },
-      transferencia: {
-        fill: style ? tokenHslAlpha(style, '--primary', 0.14, 'hsl(160 84% 30% / 0.14)') : 'hsl(160 84% 30% / 0.14)',
-        stroke: primary,
-      },
+      deposito: swatch(deposito),
+      saque: swatch(saque),
+      transferencia: swatch(transferencia),
+      pagamento: swatch(pagamento),
     },
-    forma: isDark ? FORMA_DARK : FORMA_LIGHT,
+    forma: {
+      pix: swatch(pix),
+      credito: swatch(credito),
+      debito: swatch(debito),
+      vr_va: swatch(vrVa),
+    },
   };
 }
 
-function buildFromPrimary(primaryRaw: string, mutedRaw: string, isDark: boolean): ChartThemeCore {
-  const base = parseHsl(primaryRaw) ?? { h: 160, s: 84, l: isDark ? 42 : 30 };
-  const line = formatHsl(tuneForMode(base, isDark));
-  const { success, danger } = buildSemanticPair(base, isDark);
-  const series = buildHarmoniousSeries(base, isDark);
-  const muted = parseHsl(mutedRaw);
-  const axis = muted
-    ? formatHsl(tuneForMode(muted, isDark, 0, 0.85))
-    : formatHsl({ h: base.h, s: clamp(base.s * 0.25, 12, 35), l: isDark ? 62 : 42 });
-
-  return { line, success, danger, series, axis };
-}
-
-const FALLBACK_CORE = buildFromPrimary('160 84% 30%', '160 10% 40%', false);
-const FALLBACK: ChartThemeColors = {
-  ...FALLBACK_CORE,
-  ...listColors(null, false, FALLBACK_CORE),
-};
+const FALLBACK = readChartThemeColorsFrom(null);
 
 export function readChartThemeColors(): ChartThemeColors {
   if (typeof document === 'undefined') return FALLBACK;
-
-  const style = getComputedStyle(document.documentElement);
-  const primary =
-    style.getPropertyValue('--chart-primary').trim() || style.getPropertyValue('--primary').trim();
-  const muted = style.getPropertyValue('--muted-foreground').trim();
-  const isDark = isDarkMode();
-  const core = buildFromPrimary(primary, muted, isDark);
-
-  return { ...core, ...listColors(style, isDark, core) };
+  return readChartThemeColorsFrom(getComputedStyle(document.documentElement));
 }
 
 export function useChartThemeColors(): ChartThemeColors {

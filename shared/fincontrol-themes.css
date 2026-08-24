@@ -1,32 +1,59 @@
-/* Fin Control — temas compartilhados (host Next + microfrontends Angular)
-   Padrão visual: tint claro no fundo, primária saturada, bordas suaves (base Esmeralda). */
+/* Pennywise — temas compartilhados (host Next + microfrontends)
+   Paleta sage/forest: primária #839958 no claro, fundo #0A3323 no escuro.
+   Tokens semânticos (status, tipos, formas, gráficos) seguem a paleta da marca. */
+
+:root {
+  --status-aberto: 205 55% 40%;
+  --status-pago: 50 72% 38%;
+  --status-atrasado: 8 72% 58%;
+  --tipo-deposito: 205 55% 40%;
+  --tipo-deposito-fg: 0 0% 100%;
+  --tipo-saque: 19 70% 46%;
+  --tipo-saque-fg: 0 0% 100%;
+  --tipo-transferencia: 46 68% 50%;
+  --tipo-transferencia-fg: 0 0% 100%;
+  --tipo-pagamento: 8 72% 58%;
+  --tipo-pagamento-fg: 0 0% 100%;
+  --forma-pix: 38 70% 48%;
+  --forma-pix-fg: 0 0% 100%;
+  --forma-credito: 350 68% 52%;
+  --forma-credito-fg: 0 0% 100%;
+  --forma-debito: 325 58% 42%;
+  --forma-debito-fg: 0 0% 100%;
+  --forma-vr-va: 54 68% 50%;
+  --forma-vr-va-fg: 0 0% 100%;
+  --chart-receita: 205 55% 40%;
+  --chart-despesa: 8 72% 58%;
+  --chart-saldo-positivo: 205 55% 40%;
+  --chart-saldo-negativo: 8 72% 58%;
+}
 
 :root,
 [data-fin-theme='emerald'] {
   color-scheme: light;
-  --background: 138 76% 97%;
-  --foreground: 166 91% 9%;
+  --background: 80 35% 96%;
+  --foreground: 157 45% 12%;
   --card: 0 0% 100%;
-  --card-foreground: 166 91% 9%;
+  --card-foreground: 157 45% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 166 91% 9%;
-  --primary: 160 84% 30%;
+  --popover-foreground: 157 45% 12%;
+  --primary: 80 27% 47%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 138 76% 94%;
-  --secondary-foreground: 166 72% 18%;
-  --muted: 138 40% 94%;
-  --muted-foreground: 160 10% 40%;
-  --accent: 152 76% 90%;
-  --accent-foreground: 160 84% 24%;
-  --destructive: 0 72% 51%;
+  --secondary: 80 30% 92%;
+  --secondary-foreground: 157 35% 18%;
+  --muted: 80 18% 93%;
+  --muted-foreground: 80 10% 38%;
+  --accent: 80 28% 88%;
+  --accent-foreground: 80 35% 28%;
+  --destructive: 355 78% 32%;
   --destructive-foreground: 0 0% 100%;
-  --success: 152 69% 40%;
+  --success: 191 78% 32%;
   --success-foreground: 0 0% 100%;
-  --border: 152 38% 86%;
-  --input: 152 38% 86%;
-  --ring: 160 84% 30%;
-  --chart-primary: 160 84% 30%;
-  --chart-danger: 0 72% 51%;
+  --border: 80 20% 84%;
+  --input: 80 20% 84%;
+  --ring: 80 27% 47%;
+  --chart-primary: 205 55% 40%;
+  --chart-danger: 355 64% 20%;
 }
 
 [data-fin-theme='teal'] {
@@ -272,32 +299,44 @@
   --chart-danger: 0 72% 51%;
 }
 
-/* Modo escuro — mesma paleta de matizes, fundos profundos e primária mais clara */
+/* Modo escuro — chrome quase preto (oliva residual), primária sage clara para nav/botões */
+:root[data-fin-theme-mode='dark'],
 [data-fin-theme='emerald'][data-fin-theme-mode='dark'] {
   color-scheme: dark;
-  --background: 166 32% 8%;
-  --foreground: 138 25% 92%;
-  --card: 166 28% 12%;
-  --card-foreground: 138 25% 92%;
-  --popover: 166 28% 12%;
-  --popover-foreground: 138 25% 92%;
-  --primary: 160 70% 42%;
-  --primary-foreground: 166 32% 8%;
-  --secondary: 166 25% 16%;
-  --secondary-foreground: 138 20% 88%;
-  --muted: 166 22% 14%;
-  --muted-foreground: 160 12% 62%;
-  --accent: 152 30% 18%;
-  --accent-foreground: 152 60% 75%;
-  --destructive: 0 72% 55%;
+  --background: 40 8% 5%;
+  --foreground: 42 10% 93%;
+  --card: 40 7% 8%;
+  --card-foreground: 42 10% 93%;
+  --popover: 40 7% 8%;
+  --popover-foreground: 42 10% 93%;
+  --primary: 80 20% 48%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 40 8% 12%;
+  --secondary-foreground: 42 10% 88%;
+  --muted: 40 6% 11%;
+  --muted-foreground: 40 8% 62%;
+  --accent: 40 10% 14%;
+  --accent-foreground: 80 16% 72%;
+  --destructive: 355 55% 52%;
   --destructive-foreground: 0 0% 100%;
-  --success: 152 55% 45%;
-  --success-foreground: 0 0% 100%;
-  --border: 166 20% 20%;
-  --input: 166 20% 20%;
-  --ring: 160 70% 42%;
-  --chart-primary: 160 70% 42%;
-  --chart-danger: 0 72% 55%;
+  --success: 191 48% 50%;
+  --success-foreground: 40 8% 5%;
+  --border: 40 8% 16%;
+  --input: 40 8% 16%;
+  --ring: 80 20% 48%;
+  --chart-primary: 205 42% 44%;
+  --chart-danger: 8 50% 50%;
+  --status-aberto: 205 44% 50%;
+  --status-pago: 50 50% 48%;
+  --status-atrasado: 8 52% 50%;
+  --tipo-deposito: 205 44% 50%;
+  --tipo-saque: 19 50% 48%;
+  --tipo-transferencia: 46 50% 48%;
+  --tipo-pagamento: 8 52% 50%;
+  --forma-pix: 38 50% 48%;
+  --forma-credito: 350 48% 52%;
+  --forma-debito: 325 42% 52%;
+  --forma-vr-va: 54 50% 48%;
 }
 
 [data-fin-theme='teal'][data-fin-theme-mode='dark'] {

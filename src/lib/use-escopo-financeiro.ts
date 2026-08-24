@@ -70,5 +70,6 @@ export function useEscopoFinanceiro() {
     donoLabels,
     metaEconomiaEfetiva,
     alertaGastosEfetivo,
+    parceiroMeta,
   };
 }

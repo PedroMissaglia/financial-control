@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   createGastoMensal,
@@ -10,6 +10,7 @@ import {
   pagarGastoMensal,
   updateGastoMensal,
 } from '@/app/services/gastos-mensais';
+import { DonoBadge } from '@/components/dono-badge';
 import { EntityListRow } from '@/components/entity-list-row';
 import { Badge } from '@/components/ui/badge';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
@@ -28,12 +29,12 @@ import {
   shiftCompetencia,
 } from '@/data/gastos-mensais';
 import { type FormaPagamento, FORMAS_PAGAMENTO } from '@/data/transacoes';
-import { DonoBadge } from '@/components/dono-badge';
 import { useCategorias } from '@/lib/use-categorias';
 import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 import { useGastosMensais } from '@/lib/use-gastos-mensais';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { formatCurrency } from '@/lib/utils';
+import { useAuth } from '@/store/hooks';
 
 const DIA_OPTIONS = Array.from({ length: 31 }, (_, index) => {
   const dia = String(index + 1);
@@ -79,11 +80,17 @@ function fromGasto(gasto: GastoMensal): FormState {
 }
 
 export function GastosMensaisBoard() {
-  const { usuarioIds, usuarioIdEscrita, visao, parceiro } = useEscopoFinanceiro();
+  const { usuario } = useAuth();
+  const { usuarioIds, usuarioIdEscrita, visao, parceiro, ativa } = useEscopoFinanceiro();
   const isDesktop = useMediaQuery('(min-width: 640px)');
   const [competencia, setCompetencia] = useState(competenciaAtual);
   const { gastos, loading, reload } = useGastosMensais(usuarioIds, competencia);
-  const { categorias } = useCategorias(usuarioIds);
+  const categoriasEscopo = useMemo(() => {
+    if (ativa && usuario?.id && parceiro?.id) return [usuario.id, parceiro.id];
+    return usuarioIds;
+  }, [ativa, parceiro?.id, usuario?.id, usuarioIds]);
+  const { categorias } = useCategorias(categoriasEscopo);
+  const [donoId, setDonoId] = useState(usuarioIdEscrita ?? usuario?.id ?? '');
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<FormState>(EMPTY_FORM);
@@ -91,6 +98,11 @@ export function GastosMensaisBoard() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const podeEscolherDono = Boolean(ativa && usuario && parceiro);
+
+  useEffect(() => {
+    if (usuarioIdEscrita) setDonoId(usuarioIdEscrita);
+  }, [usuarioIdEscrita]);
 
   const categoriaOptions = useMemo(
     () =>
@@ -126,7 +138,7 @@ export function GastosMensaisBoard() {
 
   async function handleCreate() {
     const input = toInput(form);
-    const ownerId = usuarioIdEscrita;
+    const ownerId = donoId || usuarioIdEscrita;
     if (!input.titulo || input.titulo.length < 2 || !ownerId) return;
 
     setBusy(true);
@@ -197,9 +209,29 @@ export function GastosMensaisBoard() {
     await reload();
   }
 
-  function renderFormFields(state: FormState, setState: (next: FormState) => void, idPrefix: string) {
+  function renderFormFields(
+    state: FormState,
+    setState: (next: FormState) => void,
+    idPrefix: string,
+    showDono = false,
+  ) {
     return (
       <div className="grid gap-3 sm:grid-cols-2">
+        {showDono && podeEscolherDono && usuario && parceiro && (
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor={`${idPrefix}-dono`}>Lançar em nome de</Label>
+            <SelectMenu
+              id={`${idPrefix}-dono`}
+              value={donoId || usuario.id}
+              onChange={setDonoId}
+              options={[
+                { value: usuario.id, label: `Você (${usuario.nome})` },
+                { value: parceiro.id, label: parceiro.nome },
+              ]}
+              aria-label="Lançar em nome de"
+            />
+          </div>
+        )}
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor={`${idPrefix}-titulo`}>Título</Label>
           <Input
@@ -301,14 +333,28 @@ export function GastosMensaisBoard() {
                   badge={
                     <>
                       <DonoBadge usuarioId={item.usuarioId} />
-                      {atrasado ? (
+                      {item.pago ? (
+                        <Badge
+                          variant="outline"
+                          className="shrink-0 border-transparent bg-status-pago/25 text-status-pago dark:bg-status-pago/14"
+                        >
+                          Pago
+                        </Badge>
+                      ) : atrasado ? (
                         <Badge
                           variant="destructive"
-                          className="shrink-0 border-transparent bg-destructive/14 text-destructive"
+                          className="shrink-0 border-transparent bg-status-atrasado/25 text-status-atrasado dark:bg-status-atrasado/14"
                         >
                           Atrasado
                         </Badge>
-                      ) : null}
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="shrink-0 border-transparent bg-status-aberto/25 text-status-aberto dark:bg-status-aberto/14"
+                        >
+                          Em aberto
+                        </Badge>
+                      )}
                     </>
                   }
                   leading={
@@ -367,17 +413,17 @@ export function GastosMensaisBoard() {
 
       {isDesktop ? (
         <section className="bg-card space-y-4 rounded-xl border p-4 shadow-sm sm:p-6" aria-label="Novo gasto mensal">
-          {renderFormFields(form, setForm, 'novo-gasto')}
+          {renderFormFields(form, setForm, 'novo-gasto', true)}
           <Button
             type="button"
             className="gap-1.5"
-            disabled={busy || loading || form.titulo.trim().length < 2 || !usuarioIdEscrita}
+            disabled={busy || loading || form.titulo.trim().length < 2 || !(donoId || usuarioIdEscrita)}
             onClick={() => void handleCreate()}
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Criar
           </Button>
-          {visao === 'parceiro' && parceiro && (
+          {visao === 'parceiro' && parceiro && !podeEscolherDono && (
             <p className="text-muted-foreground text-xs">O gasto será criado na conta de {parceiro.nome}.</p>
           )}
         </section>
@@ -425,7 +471,7 @@ export function GastosMensaisBoard() {
             </div>
           }
         >
-          {renderFormFields(sheetForm, setSheetForm, sheetEditing ? 'sheet-edit' : 'sheet-novo')}
+          {renderFormFields(sheetForm, setSheetForm, sheetEditing ? 'sheet-edit' : 'sheet-novo', !sheetEditing)}
           {error && sheetOpen ? (
             <p className="text-destructive mt-3 text-sm" role="alert">
               {error}

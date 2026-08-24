@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import '../../shared/fincontrol-themes.css';
 
+@custom-variant dark (&:where([data-fin-theme-mode='dark'], [data-fin-theme-mode='dark'] *));
+
 :root {
   --radius: 0.75rem;
   /* h-14 / sm:h-16 do header (sem safe-area); Header sincroniza via ResizeObserver */
@@ -36,6 +38,9 @@
   --color-destructive-foreground: hsl(var(--destructive-foreground));
   --color-success: hsl(var(--success));
   --color-success-foreground: hsl(var(--success-foreground));
+  --color-status-aberto: hsl(var(--status-aberto));
+  --color-status-pago: hsl(var(--status-pago));
+  --color-status-atrasado: hsl(var(--status-atrasado));
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));

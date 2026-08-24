@@ -18,37 +18,37 @@ const SITUACAO_LABEL: Record<LinhaCompromisso['situacao'], string> = {
 };
 
 const DOT_TONE: Record<LinhaCompromisso['situacao'], string> = {
-  pago: 'bg-success',
-  aberto: 'bg-primary',
-  atrasado: 'bg-destructive',
+  pago: 'bg-status-pago',
+  aberto: 'bg-status-aberto',
+  atrasado: 'bg-status-atrasado',
 };
 
 const VALUE_TONE: Record<LinhaCompromisso['situacao'], string> = {
-  pago: 'text-success',
-  aberto: 'text-primary',
-  atrasado: 'text-destructive',
+  pago: 'text-status-pago',
+  aberto: 'text-status-aberto',
+  atrasado: 'text-status-atrasado',
 };
 
 type StatTone = 'pago' | 'aberto' | 'atrasado';
 
 const STAT_TONE: Record<StatTone, { box: string; iconWrap: string; value: string; badge: string }> = {
   pago: {
-    box: 'border-success/20 bg-success/10',
-    iconWrap: 'bg-success/20 text-success',
-    value: 'text-success',
-    badge: 'bg-success/20 text-success',
+    box: 'border-status-pago/40 bg-status-pago/20 dark:border-status-pago/25 dark:bg-status-pago/12',
+    iconWrap: 'bg-status-pago/30 text-status-pago dark:bg-status-pago/16',
+    value: 'text-status-pago',
+    badge: 'bg-status-pago/30 text-status-pago dark:bg-status-pago/16',
   },
   aberto: {
-    box: 'border-primary/20 bg-primary/10',
-    iconWrap: 'bg-primary/20 text-primary',
-    value: 'text-primary',
-    badge: 'bg-primary/20 text-primary',
+    box: 'border-status-aberto/40 bg-status-aberto/20 dark:border-status-aberto/25 dark:bg-status-aberto/12',
+    iconWrap: 'bg-status-aberto/30 text-status-aberto dark:bg-status-aberto/16',
+    value: 'text-status-aberto',
+    badge: 'bg-status-aberto/30 text-status-aberto dark:bg-status-aberto/16',
   },
   atrasado: {
-    box: 'border-destructive/20 bg-destructive/10',
-    iconWrap: 'bg-destructive/20 text-destructive',
-    value: 'text-destructive',
-    badge: 'bg-destructive/20 text-destructive',
+    box: 'border-status-atrasado/45 bg-status-atrasado/20 dark:border-status-atrasado/28 dark:bg-status-atrasado/12',
+    iconWrap: 'bg-status-atrasado/30 text-status-atrasado dark:bg-status-atrasado/16',
+    value: 'text-status-atrasado',
+    badge: 'bg-status-atrasado/30 text-status-atrasado dark:bg-status-atrasado/16',
   },
 };
 
@@ -72,30 +72,50 @@ function StatResumo({
   const Icon = STAT_ICON[tone];
   const classes = STAT_TONE[tone];
   const vazio = quantidade === 0 && valor === 0;
+  const formatted = formatCurrency(valor);
 
   return (
-    <div className={cn('flex min-w-0 items-start gap-3 rounded-xl border px-3 py-3', classes.box, vazio && 'opacity-70')}>
-      <div
-        className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full', classes.iconWrap)}
-        aria-hidden="true"
-      >
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
+    <div
+      className={cn(
+        'flex min-w-0 flex-col gap-2 rounded-xl border px-3 py-3',
+        classes.box,
+        vazio && 'opacity-70',
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full', classes.iconWrap)}
+          aria-hidden="true"
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
           <p className="text-muted-foreground text-[11px] font-normal tracking-wide">{label}</p>
           <span
             className={cn(
-              'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-medium tabular-nums',
+              'inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-medium tabular-nums',
               classes.badge,
             )}
           >
             {quantidade}
           </span>
         </div>
-        <p className={cn('mt-0.5 truncate text-lg font-bold tracking-tight tabular-nums sm:text-xl', classes.value)}>
-          {formatCurrency(valor)}
+      </div>
+      <div className="group/stat relative min-w-0">
+        <p
+          className={cn(
+            'w-full truncate text-lg font-bold tracking-tight tabular-nums sm:text-xl',
+            classes.value,
+          )}
+        >
+          {formatted}
         </p>
+        <div
+          role="tooltip"
+          className="border-border bg-popover text-popover-foreground pointer-events-none absolute top-full left-0 z-20 mt-1.5 hidden max-w-[min(18rem,calc(100vw-2rem))] rounded-lg border px-3 py-1.5 text-sm whitespace-nowrap shadow-sm group-hover/stat:block"
+        >
+          {label} : {formatted}
+        </div>
       </div>
     </div>
   );

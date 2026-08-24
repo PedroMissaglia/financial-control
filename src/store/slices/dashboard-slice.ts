@@ -37,6 +37,7 @@ interface DashboardState {
   transacoesPageSize: number;
   transacoesFiltros: TransacoesFiltros;
   extratoLimite: number;
+  blocoNotas: string;
 }
 
 const defaultLayout = createDefaultDashboardLayout();
@@ -53,6 +54,7 @@ const initialState: DashboardState = {
   transacoesPageSize: DEFAULT_TRANSACOES_PAGE_SIZE,
   transacoesFiltros: { ...FILTROS_VAZIOS },
   extratoLimite: DEFAULT_EXTRATO_LIMITE,
+  blocoNotas: '',
 };
 
 function persist(state: DashboardState) {
@@ -70,6 +72,7 @@ function persist(state: DashboardState) {
     transacoesPageSize: state.transacoesPageSize,
     transacoesFiltros: state.transacoesFiltros,
     extratoLimite: state.extratoLimite,
+    blocoNotas: state.blocoNotas,
   });
 }
 
@@ -89,6 +92,7 @@ function applyProfile(state: DashboardState, profile: DashboardProfile) {
   state.transacoesPageSize = profile.transacoesPageSize;
   state.transacoesFiltros = profile.transacoesFiltros;
   state.extratoLimite = profile.extratoLimite;
+  state.blocoNotas = profile.blocoNotas ?? '';
   applyAppAppearance(profile.theme, profile.themeMode);
 }
 
@@ -189,6 +193,10 @@ const dashboardSlice = createSlice({
       state.extratoLimite = normalizeExtratoLimite(action.payload);
       persist(state);
     },
+    setBlocoNotas(state, action: PayloadAction<string>) {
+      state.blocoNotas = action.payload;
+      persist(state);
+    },
     syncTransacoesPageSize(state, action: PayloadAction<number>) {
       state.transacoesPageSize = action.payload;
     },
@@ -206,6 +214,7 @@ const dashboardSlice = createSlice({
         transacoesPageSize: state.transacoesPageSize,
         transacoesFiltros: state.transacoesFiltros,
         extratoLimite: state.extratoLimite,
+        blocoNotas: state.blocoNotas,
         widgets: defaultDashboard.widgets,
         layoutRows: defaultDashboard.layoutRows,
         layoutGroups: defaultDashboard.layoutGroups,
@@ -235,6 +244,7 @@ export const {
   setMetaEconomia,
   setAlertaGastos,
   setExtratoLimite,
+  setBlocoNotas,
   syncTransacoesPageSize,
   syncTransacoesFiltros,
   resetDashboard,

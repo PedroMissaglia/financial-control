@@ -6,7 +6,7 @@ import {
   totaisPorFormaPagamento,
   totaisPorTipo,
   transacoesDoMesCorrente,
-  dataHojeSaoPaulo,
+  competenciaDe,
   type PontoSaldo,
   type ReceitasDespesasAno,
   type TotalPorGrupo,
@@ -64,8 +64,10 @@ export interface PontoAnoEmpilhado {
 }
 
 export interface DashboardWidgetAnalytics {
+  competencia: string;
   saldo: number;
   resumo: ReturnType<typeof resumoFinanceiro>;
+  resumoMes: ReturnType<typeof resumoFinanceiro>;
   evolucao: PontoSaldo[];
   porCategoria: TotalPorGrupo[];
   porTipo: TotalPorGrupo[];
@@ -109,9 +111,10 @@ export function buildWidgetAnalytics(
   categoriaLabels?: Record<string, string>,
   gastos: GastoMensal[] = [],
   donoLabels?: Record<string, string>,
+  competencia = competenciaDe(),
 ): DashboardWidgetAnalytics {
   const resumo = resumoFinanceiro(transacoes);
-  const doMes = transacoesDoMesCorrente(transacoes);
+  const doMes = transacoesDoMesCorrente(transacoes, competencia);
   const resumoMes = resumoFinanceiro(doMes);
 
   const ids =
@@ -137,7 +140,7 @@ export function buildWidgetAnalytics(
           despesas: r.despesas,
           receitasMes: rMes.receitas,
           despesasMes: rMes.despesas,
-          compromissosTotal: resumoCompromissos(gastosPessoa).total,
+          compromissosTotal: resumoCompromissos(gastosPessoa, competencia).total,
         };
       })
     : [];
@@ -211,7 +214,7 @@ export function buildWidgetAnalytics(
     ? empilharGrupo(
         TIPO_ORDEM.map(chave => ({ chave, label: TIPO_LABELS[chave] })),
         (txs, chave) => txs.filter(t => t.tipo === chave).reduce((acc, t) => acc + t.valor, 0),
-        transacoes,
+        doMes,
       )
     : [];
 
@@ -222,7 +225,7 @@ export function buildWidgetAnalytics(
           txs
             .filter(t => !isEntrada(t.tipo) && t.formaPagamento === chave)
             .reduce((acc, t) => acc + t.valor, 0),
-        transacoes,
+        doMes,
       )
     : [];
 
@@ -251,9 +254,9 @@ export function buildWidgetAnalytics(
 
   const receitasDespesasAnoEmpilhado = fragmentado
     ? (() => {
-        const hoje = dataHojeSaoPaulo();
-        const ano = Number(hoje.slice(0, 4));
-        const mesAtual = Number(hoje.slice(5, 7));
+        const competenciaAno = competenciaDe();
+        const ano = Number(competenciaAno.slice(0, 4));
+        const mesAtual = Number(competenciaAno.slice(5, 7));
         const series = porPessoa.flatMap(pessoa => [
           { dataKey: `${pessoa.dataKey}_rec`, nome: `Receitas de ${pessoa.nome}`, kind: 'receita' as const },
           { dataKey: `${pessoa.dataKey}_desp`, nome: `Despesas de ${pessoa.nome}`, kind: 'despesa' as const },
@@ -282,21 +285,23 @@ export function buildWidgetAnalytics(
         }
         return { ano, meses, series };
       })()
-    : { ano: Number(dataHojeSaoPaulo().slice(0, 4)), meses: [], series: [] };
+    : { ano: Number(competenciaDe().slice(0, 4)), meses: [], series: [] };
 
   return {
+    competencia,
     saldo: calcularSaldo(transacoes),
     resumo,
+    resumoMes,
     evolucao: evolucaoSaldo(transacoes),
     porCategoria: totaisPorCategoria(doMes, categoriaLabels),
-    porTipo: totaisPorTipo(transacoes),
-    porForma: totaisPorFormaPagamento(transacoes),
+    porTipo: totaisPorTipo(doMes),
+    porForma: totaisPorFormaPagamento(doMes),
     receitasDespesas: [
       { name: 'Receitas', valor: resumoMes.receitas },
       { name: 'Despesas', valor: resumoMes.despesas },
     ],
     receitasDespesasAno: receitasDespesasPorMesAno(transacoes),
-    compromissos: resumoCompromissos(gastos),
+    compromissos: resumoCompromissos(gastos, competencia),
     porPessoa,
     fragmentado,
     receitasDespesasFatias,

@@ -23,6 +23,8 @@ export function StandaloneApp() {
           metaEconomia={DEFAULT_META_ECONOMIA}
           alertaGastos={DEFAULT_ALERTA_GASTOS}
           extratoLimite={DEFAULT_EXTRATO_LIMITE}
+          blocoNotas=""
+          notasPorUsuario={[]}
           apiUrl={resolveDashboardApiUrl()}
         />
       </main>

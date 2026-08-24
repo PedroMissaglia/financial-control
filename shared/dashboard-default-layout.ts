@@ -22,6 +22,7 @@ export const DEFAULT_WIDGETS: DashboardWidget[] = [
   { id: 'anual', visible: true, cols: 12, colStart: 1 },
   { id: 'alerta', visible: true, cols: 6, colStart: 1 },
   { id: 'meta', visible: true, cols: 6, colStart: 7 },
+  { id: 'notas', visible: true, cols: 12, colStart: 1 },
 ];
 
 export function createDefaultDashboardLayout(): {
@@ -35,6 +36,7 @@ export function createDefaultDashboardLayout(): {
     widgets,
     layoutRows: [
       { type: 'group', groupId: DEFAULT_LAYOUT_GROUP_IDS.resumo },
+      { type: 'full', widgetId: 'notas' },
       { type: 'group', groupId: DEFAULT_LAYOUT_GROUP_IDS.graficos },
       { type: 'full', widgetId: 'evolucao' },
       { type: 'full', widgetId: 'anual' },

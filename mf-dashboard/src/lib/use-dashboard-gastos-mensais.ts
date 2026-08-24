@@ -61,11 +61,16 @@ async function fetchGastos(usuarioIds: string[], apiUrl: string, competencia: st
   return parseGastos(await response.json());
 }
 
-export function useDashboardGastosMensais(apiUrl?: string, usuarioIdsProp?: string[]) {
+export function useDashboardGastosMensais(
+  apiUrl?: string,
+  usuarioIdsProp?: string[],
+  competencia = competenciaAtual(),
+) {
   const resolvedApiUrl = resolveDashboardApiUrl(apiUrl);
   const [gastos, setGastos] = useState<GastoMensal[]>([]);
   const [loading, setLoading] = useState(false);
   const scopeRef = useRef<string[]>(usuarioIdsProp?.length ? usuarioIdsProp : []);
+  const competenciaRef = useRef(competencia);
   const idsKey = (usuarioIdsProp ?? []).join(',');
 
   useEffect(() => {
@@ -91,13 +96,19 @@ export function useDashboardGastosMensais(apiUrl?: string, usuarioIdsProp?: stri
               })();
       if (ids.length === 0) return;
 
+      const competenciaChanged = competenciaRef.current !== competencia;
+      competenciaRef.current = competencia;
+
       if (options?.fromVisao) {
+        setLoading(true);
+        setGastos([]);
+      } else if (competenciaChanged) {
         setLoading(true);
         setGastos([]);
       }
 
       try {
-        const data = await fetchGastos(ids, resolvedApiUrl, competenciaAtual());
+        const data = await fetchGastos(ids, resolvedApiUrl, competencia);
         if (cancelled || !data) return;
         setGastos(prev => (gastosSignature(prev) === gastosSignature(data) ? prev : data));
       } catch (error) {
@@ -124,7 +135,7 @@ export function useDashboardGastosMensais(apiUrl?: string, usuarioIdsProp?: stri
       window.removeEventListener(MF_GASTOS_MENSAIS_CHANGED, onChanged);
       window.removeEventListener(MF_VISAO_CHANGED, onVisao);
     };
-  }, [resolvedApiUrl, idsKey]);
+  }, [resolvedApiUrl, idsKey, competencia]);
 
   return { gastos, loading };
 }

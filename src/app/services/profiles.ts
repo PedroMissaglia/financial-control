@@ -40,3 +40,20 @@ export async function saveProfile(profile: DashboardProfile): Promise<void> {
     console.error('Erro ao salvar profile:', error);
   }
 }
+
+/** Atualiza só o bloco de notas (próprio ou do cônjuge com parceria ativa). */
+export async function saveBlocoNotas(usuarioId: string, blocoNotas: string): Promise<void> {
+  try {
+    await apiFetch(`/profiles/${encodeURIComponent(usuarioId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: usuarioId,
+        usuarioId,
+        blocoNotas,
+      }),
+    });
+  } catch (error) {
+    console.error('Erro ao salvar bloco de notas:', error);
+  }
+}

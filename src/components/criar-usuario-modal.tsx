@@ -103,7 +103,7 @@ export function CriarUsuarioModal({ open, onClose }: Readonly<CriarUsuarioModalP
         <h2 id="criar-usuario-title" className="text-xl font-bold text-gray-900">
           Criar conta
         </h2>
-        <p className="text-muted-foreground mt-1 text-sm">Preencha os dados para começar a usar o Fin Control</p>
+        <p className="text-muted-foreground mt-1 text-sm">Preencha os dados para começar a usar o Pennywise</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4" noValidate>
           <div className="space-y-2">

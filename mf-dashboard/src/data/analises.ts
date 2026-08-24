@@ -134,11 +134,14 @@ export function dataHojeSaoPaulo(agora = new Date()): string {
   }).format(agora);
 }
 
+export function competenciaDe(hoje = dataHojeSaoPaulo()): string {
+  return hoje.slice(0, 7);
+}
+
 export function transacoesDoMesCorrente(
   transacoes: Transacao[],
-  hoje = dataHojeSaoPaulo(),
+  competencia = competenciaDe(),
 ): Transacao[] {
-  const competencia = hoje.slice(0, 7);
   return transacoes.filter(transacao => transacao.data.startsWith(competencia));
 }
 
@@ -150,12 +153,30 @@ export function labelMesDeAno(competencia: string): string {
   return `${mes.charAt(0).toUpperCase() + mes.slice(1)} de ${year}`;
 }
 
+export interface MesOpcao {
+  competencia: string;
+  label: string;
+}
+
+export function mesesDoAnoAte(competencia: string): MesOpcao[] {
+  const ano = competencia.slice(0, 4);
+  const mesLimite = Number(competencia.slice(5, 7));
+  if (!ano || !Number.isFinite(mesLimite) || mesLimite < 1) return [];
+
+  const meses: MesOpcao[] = [];
+  for (let mes = 1; mes <= Math.min(mesLimite, 12); mes += 1) {
+    const value = `${ano}-${String(mes).padStart(2, '0')}`;
+    meses.push({ competencia: value, label: labelMesDeAno(value) });
+  }
+  return meses;
+}
+
 export function receitasDespesasPorMesAno(
   transacoes: Transacao[],
-  hoje = dataHojeSaoPaulo(),
+  competencia = competenciaDe(),
 ): ReceitasDespesasAno {
-  const ano = Number(hoje.slice(0, 4));
-  const mesAtual = Number(hoje.slice(5, 7));
+  const ano = Number(competencia.slice(0, 4));
+  const mesAtual = Number(competencia.slice(5, 7));
   const totais = Array.from({ length: mesAtual }, () => ({ receitas: 0, despesas: 0 }));
 
   for (const transacao of transacoes) {

@@ -15,6 +15,8 @@ interface DashboardLayoutSlice {
   metaEconomia: unknown;
   alertaGastos: unknown;
   extratoLimite: unknown;
+  blocoNotas?: unknown;
+  notasPorUsuario?: unknown;
   apiUrl?: unknown;
   transacoes?: unknown;
   categoriaLabels?: unknown;
@@ -32,6 +34,8 @@ function propsSignature(props: DashboardLayoutSlice) {
   const usuarioIds = Array.isArray(props.usuarioIds) ? props.usuarioIds : [];
   const donoLabels =
     props.donoLabels && typeof props.donoLabels === 'object' ? props.donoLabels : {};
+  const blocoNotas = typeof props.blocoNotas === 'string' ? props.blocoNotas : '';
+  const notasPorUsuario = Array.isArray(props.notasPorUsuario) ? props.notasPorUsuario : [];
   return JSON.stringify({
     widgets: props.widgets,
     layoutRows: props.layoutRows,
@@ -39,6 +43,10 @@ function propsSignature(props: DashboardLayoutSlice) {
     metaEconomia: props.metaEconomia,
     alertaGastos: props.alertaGastos,
     extratoLimite: props.extratoLimite,
+    blocoNotas,
+    notas: notasPorUsuario.map(
+      (item: { usuarioId?: string; html?: string }) => `${item.usuarioId}:${item.html ?? ''}`,
+    ),
     apiUrl: props.apiUrl,
     loading: Boolean(props.loading),
     ids: usuarioIds.join(','),

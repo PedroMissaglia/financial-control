@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { fetchTransacoes } from '@/app/services/transacoes';
 import type { Transacao } from '@/data/transacoes';
 import { MF_DASHBOARD_URL } from '@/lib/load-mf-remote';
+import { useBlocoNotasPersistence } from '@/lib/use-bloco-notas-persistence';
 import { MF_TRANSACOES_CHANGED } from '@/lib/mf-events';
 import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 import { useMfDashboardBaseProps } from '@/lib/use-mf-dashboard-base-props';
@@ -69,6 +70,7 @@ export function DashboardViewMicrofrontend({
 
   const mfProps = useMfDashboardBaseProps(transacoes, { loading: scopeLoading });
   const { hostRef, mode } = useMfDashboardMount('./DashboardView', mfProps);
+  useBlocoNotasPersistence();
 
   return (
     <>

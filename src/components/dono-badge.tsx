@@ -10,7 +10,10 @@ export function DonoBadge({ usuarioId }: Readonly<{ usuarioId?: string | null }>
   if (!label) return null;
 
   return (
-    <Badge variant="outline" className="shrink-0 font-medium">
+    <Badge
+      variant="default"
+      className="shrink-0 font-medium dark:bg-primary/18 dark:text-primary"
+    >
       {label}
     </Badge>
   );

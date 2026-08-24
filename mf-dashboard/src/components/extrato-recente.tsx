@@ -11,9 +11,10 @@ interface ExtratoRecenteProps {
   transacoes: Transacao[];
   limit: number;
   donoLabels?: Record<string, string>;
+  periodo: string;
 }
 
-export function ExtratoRecente({ transacoes, limit, donoLabels }: Readonly<ExtratoRecenteProps>) {
+export function ExtratoRecente({ transacoes, limit, donoLabels, periodo }: Readonly<ExtratoRecenteProps>) {
   const recentes = getUltimasTransacoes(transacoes, limit);
   const showDono = Boolean(donoLabels && Object.keys(donoLabels).length > 1);
 
@@ -21,8 +22,8 @@ export function ExtratoRecente({ transacoes, limit, donoLabels }: Readonly<Extra
     <Card>
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <CardTitle>Extrato recente</CardTitle>
-          <CardDescription>Últimas movimentações da sua conta</CardDescription>
+          <CardTitle>Extrato recente · {periodo}</CardTitle>
+          <CardDescription>Últimas movimentações de {periodo}</CardDescription>
         </div>
         <Button
           type="button"
@@ -36,7 +37,7 @@ export function ExtratoRecente({ transacoes, limit, donoLabels }: Readonly<Extra
       </CardHeader>
       <CardContent className="space-y-3">
         {recentes.length === 0 ? (
-          <p className="text-muted-foreground fc-caption text-sm">Nenhuma transação registrada.</p>
+          <p className="text-muted-foreground fc-caption text-sm">Nenhuma transação neste mês.</p>
         ) : (
           recentes.map(transacao => {
             const entrada = isEntrada(transacao.tipo);
@@ -49,7 +50,9 @@ export function ExtratoRecente({ transacoes, limit, donoLabels }: Readonly<Extra
                 <div
                   className={cn(
                     'flex h-9 w-9 shrink-0 items-center justify-center rounded-full',
-                    entrada ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive',
+                    entrada
+                      ? 'bg-status-aberto/25 text-status-aberto dark:bg-status-aberto/14'
+                      : 'bg-status-atrasado/25 text-status-atrasado dark:bg-status-atrasado/14',
                   )}
                   aria-hidden="true"
                 >
@@ -72,7 +75,7 @@ export function ExtratoRecente({ transacoes, limit, donoLabels }: Readonly<Extra
                 <p
                   className={cn(
                     'shrink-0 text-sm font-semibold',
-                    entrada ? 'text-success' : 'text-destructive',
+                    entrada ? 'text-status-aberto' : 'text-status-atrasado',
                   )}
                 >
                   {entrada ? '+' : '-'}

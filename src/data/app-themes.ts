@@ -19,7 +19,7 @@ export interface AppThemeOption {
 
 /** Dez variações no padrão Esmeralda: fundo tintado, primária saturada, bordas suaves. */
 export const APP_THEMES: AppThemeOption[] = [
-  { id: 'emerald', label: 'Verde Esmeralda', description: 'Crescimento e metas', swatch: '#047857' },
+  { id: 'emerald', label: 'Sage', description: 'Pennywise — sage e forest', swatch: '#839958' },
   { id: 'teal', label: 'Teal', description: 'Confiança e clareza', swatch: '#0F766E' },
   { id: 'cyan', label: 'Ciano', description: 'Frescor e leveza', swatch: '#0E7490' },
   { id: 'sky', label: 'Azul Céu', description: 'Aberto e sereno', swatch: '#0369A1' },
@@ -33,7 +33,7 @@ export const APP_THEMES: AppThemeOption[] = [
 
 export type AppThemeMode = 'light' | 'dark';
 
-export const DEFAULT_APP_THEME: AppThemeId = 'cyan';
+export const DEFAULT_APP_THEME: AppThemeId = 'emerald';
 
 export const DEFAULT_APP_THEME_MODE: AppThemeMode = 'light';
 
@@ -41,6 +41,7 @@ export const APP_THEME_IDS = new Set<AppThemeId>(APP_THEMES.map(theme => theme.i
 
 /** Temas removidos ou renomeados — mantém perfis antigos funcionando. */
 const LEGACY_THEME_MAP: Record<string, AppThemeId> = {
+  cyan: 'emerald',
   slate: 'blue',
   dark: 'indigo',
   stripe: 'indigo',
@@ -60,10 +61,10 @@ export function isAppThemeId(value: unknown): value is AppThemeId {
 }
 
 export function resolveAppTheme(value: unknown): AppThemeId {
-  if (isAppThemeId(value)) return value;
   if (typeof value === 'string' && value in LEGACY_THEME_MAP) {
     return LEGACY_THEME_MAP[value];
   }
+  if (isAppThemeId(value)) return value;
   return DEFAULT_APP_THEME;
 }
 

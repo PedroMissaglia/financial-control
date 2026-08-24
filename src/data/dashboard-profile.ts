@@ -67,6 +67,7 @@ export interface DashboardProfile {
   transacoesPageSize: number;
   transacoesFiltros: TransacoesFiltros;
   extratoLimite: number;
+  blocoNotas: string;
   widgets: DashboardWidget[];
   layoutRows?: LayoutRow[];
   layoutGroups?: LayoutGroupDefinition[];
@@ -150,6 +151,7 @@ export function defaultProfile(usuarioId: string): DashboardProfile {
     transacoesPageSize: DEFAULT_TRANSACOES_PAGE_SIZE,
     transacoesFiltros: { ...FILTROS_VAZIOS },
     extratoLimite: DEFAULT_EXTRATO_LIMITE,
+    blocoNotas: '',
     widgets,
     layoutRows,
     layoutGroups,
@@ -256,6 +258,7 @@ export function mergeProfile(stored: Partial<DashboardProfile> | null | undefine
     transacoesPageSize: normalizeTransacoesPageSize(stored.transacoesPageSize),
     transacoesFiltros: mergeTransacoesFiltros(stored.transacoesFiltros),
     extratoLimite: normalizeExtratoLimite(stored.extratoLimite),
+    blocoNotas: typeof stored.blocoNotas === 'string' ? stored.blocoNotas : base.blocoNotas,
     widgets: restored,
     layoutRows,
     layoutGroups,

@@ -15,6 +15,7 @@ import {
 export interface ParceiroMeta {
   metaEconomia: number;
   alertaGastos: number;
+  blocoNotas: string;
 }
 
 interface ContaConjuntaState {
@@ -62,7 +63,11 @@ export const loadContaConjunta = createAsyncThunk('contaConjunta/load', async ()
   let parceiroMeta: ParceiroMeta | null = null;
   if (view.status === 'ativa' && view.parceiro) {
     const profile = await fetchProfile(view.parceiro.id);
-    parceiroMeta = { metaEconomia: profile.metaEconomia, alertaGastos: profile.alertaGastos };
+    parceiroMeta = {
+      metaEconomia: profile.metaEconomia,
+      alertaGastos: profile.alertaGastos,
+      blocoNotas: profile.blocoNotas ?? '',
+    };
   }
   return { view, parceiroMeta };
 });
@@ -83,6 +88,13 @@ const contaConjuntaSlice = createSlice({
     },
     applyContaConjuntaView(state, action: PayloadAction<ContaConjuntaView>) {
       applyView(state, action.payload);
+    },
+    setParceiroBlocoNotas(state, action: PayloadAction<string>) {
+      if (!state.parceiroMeta) {
+        state.parceiroMeta = { metaEconomia: 0, alertaGastos: 0, blocoNotas: action.payload };
+        return;
+      }
+      state.parceiroMeta.blocoNotas = action.payload;
     },
     resetContaConjunta() {
       persistVisao('eu');
@@ -108,5 +120,6 @@ const contaConjuntaSlice = createSlice({
   },
 });
 
-export const { hydrateVisao, setVisao, applyContaConjuntaView, resetContaConjunta } = contaConjuntaSlice.actions;
+export const { hydrateVisao, setVisao, applyContaConjuntaView, setParceiroBlocoNotas, resetContaConjunta } =
+  contaConjuntaSlice.actions;
 export const contaConjuntaReducer = contaConjuntaSlice.reducer;

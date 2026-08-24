@@ -1,11 +1,12 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Wallet } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { BrandMark } from '@/components/brand-mark';
 import { CriarUsuarioModal } from '@/components/criar-usuario-modal';
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
@@ -69,11 +70,9 @@ export default function LoginPage() {
         <div className="flex items-start justify-center px-4 py-8 sm:items-center sm:py-12">
           <div className="w-full max-w-sm">
             <div className="mb-8 flex flex-col items-center gap-3 text-center">
-              <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-xl" aria-hidden="true">
-                <Wallet className="h-6 w-6 text-white" />
-              </div>
+              <BrandMark className="h-12 w-12 sm:h-12 sm:w-12" />
               <div>
-                <h1 className="text-foreground text-2xl font-bold">Fin Control</h1>
+                <h1 className="text-foreground text-2xl font-bold">Pennywise</h1>
                 <p className="text-muted-foreground mt-1 text-sm">Entre para gerenciar suas finanças</p>
               </div>
             </div>
