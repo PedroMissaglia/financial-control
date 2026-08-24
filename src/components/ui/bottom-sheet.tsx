@@ -268,24 +268,24 @@ export function BottomSheet({
         }}
         className="bg-card border-border fixed inset-x-0 bottom-0 z-[80] flex flex-col overflow-hidden rounded-t-2xl border shadow-2xl"
       >
-        {/* Header — fixed */}
-        <div className="border-border shrink-0 border-b">
-          <div
-            className="flex touch-none justify-center pt-2 pb-1"
-            role="button"
-            tabIndex={0}
-            aria-label="Arraste para redimensionar ou fechar"
-            onPointerDown={onHandlePointerDown}
-            onPointerMove={onHandlePointerMove}
-            onPointerUp={onHandlePointerUp}
-            onPointerCancel={onHandlePointerUp}
-            onKeyDown={event => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                requestClose();
-              }
-            }}
-          >
+        {/* Header — fixed + fully draggable */}
+        <div
+          className="border-border shrink-0 touch-none border-b"
+          role="button"
+          tabIndex={0}
+          aria-label="Arraste para redimensionar ou fechar"
+          onPointerDown={onHandlePointerDown}
+          onPointerMove={onHandlePointerMove}
+          onPointerUp={onHandlePointerUp}
+          onPointerCancel={onHandlePointerUp}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              requestClose();
+            }
+          }}
+        >
+          <div className="flex justify-center pt-2 pb-1" aria-hidden="true">
             <div className="bg-muted h-1 w-10 rounded-full" />
           </div>
           <div className="px-4 pt-1 pb-3">
