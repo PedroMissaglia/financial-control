@@ -34,7 +34,7 @@ export function ProfileBoard({ transacoes }: Readonly<ProfileBoardProps>) {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="bg-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-semibold text-white">
+            <div className="bg-primary text-primary-foreground flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-semibold">
               {usuario?.nome?.trim().charAt(0).toUpperCase() || <User className="h-6 w-6" aria-hidden="true" />}
             </div>
             <div className="min-w-0">

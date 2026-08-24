@@ -57,7 +57,7 @@ export function UserMenu({ nome, onLogout }: Readonly<UserMenuProps>) {
       >
         {inicial ? (
           <div
-            className="bg-primary relative flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white"
+            className="bg-primary text-primary-foreground relative flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold"
             title={nome ?? undefined}
           >
             {inicial}

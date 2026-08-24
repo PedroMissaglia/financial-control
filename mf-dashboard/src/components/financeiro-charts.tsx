@@ -107,6 +107,12 @@ function shadeSwatch(swatch: ListSwatch, lightnessShift: number): ListSwatch {
   return { fill: color, stroke: color };
 }
 
+/** Pessoa 0 = cor da visão unitária; demais = mesmo matiz, tom mais claro. */
+function pessoaShadeOf(base: ListSwatch, pessoaIndex: number): ListSwatch {
+  if (pessoaIndex === 0) return base;
+  return shadeSwatch(base, 16);
+}
+
 function receitaDespesaSwatch(
   colors: ReturnType<typeof useChartThemeColors>,
   kind: 'receita' | 'despesa',
@@ -120,6 +126,17 @@ function receitaDespesaSwatch(
 interface SeriePessoa {
   dataKey: string;
   nome: string;
+}
+
+function PessoaShadeLegend({ seriesPessoas }: Readonly<{ seriesPessoas: SeriePessoa[] }>) {
+  const primeira = seriesPessoas[0];
+  const segunda = seriesPessoas[1];
+  if (!primeira || !segunda) return null;
+  return (
+    <p className="text-muted-foreground mt-1 text-center text-xs">
+      {primeira.nome}: cor da categoria · {segunda.nome}: mesmo tom, mais claro
+    </p>
+  );
 }
 
 interface EvolucaoSaldoChartProps {
@@ -280,32 +297,24 @@ export function VolumePorTipoChart({
                 tick={{ fontSize: isMobile ? 11 : 12, fill: colors.axis }}
               />
               <ChartTooltip />
-              <Legend
-                content={() => (
-                  <ContrastLegend
-                    items={seriesPessoas.map((serie, index) => ({
-                      label: serie.nome,
-                      color: pessoaSeriesSwatch(colors.series, index, colors.line).stroke,
-                    }))}
-                  />
-                )}
-              />
-              {seriesPessoas.map((serie, index) => {
-                const tone = pessoaSeriesSwatch(colors.series, index, colors.line);
-                return (
-                  <Bar
-                    key={serie.dataKey}
-                    dataKey={serie.dataKey}
-                    name={serie.nome}
-                    stackId="tipo"
-                    fill={tone.fill}
-                    stroke={tone.stroke}
-                    strokeWidth={1}
-                    isAnimationActive={false}
-                    maxBarSize={28}
-                  />
-                );
-              })}
+              <Legend content={() => <PessoaShadeLegend seriesPessoas={seriesPessoas} />} />
+              {seriesPessoas.map((serie, pessoaIndex) => (
+                <Bar
+                  key={serie.dataKey}
+                  dataKey={serie.dataKey}
+                  name={serie.nome}
+                  stackId="tipo"
+                  isAnimationActive={false}
+                  maxBarSize={28}
+                >
+                  {porTipoEmpilhado.map(entry => {
+                    const tone = pessoaShadeOf(colors.tipo[entry.chave] ?? pastelFromHsl(colors.line), pessoaIndex);
+                    return (
+                      <Cell key={`${serie.dataKey}-${entry.chave}`} fill={tone.fill} stroke={tone.stroke} strokeWidth={1} />
+                    );
+                  })}
+                </Bar>
+              ))}
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -410,32 +419,24 @@ export function SaidasPorFormaChart({
                 tick={{ fontSize: isMobile ? 11 : 12, fill: colors.axis }}
               />
               <ChartTooltip />
-              <Legend
-                content={() => (
-                  <ContrastLegend
-                    items={seriesPessoas.map((serie, index) => ({
-                      label: serie.nome,
-                      color: pessoaSeriesSwatch(colors.series, index, colors.line).stroke,
-                    }))}
-                  />
-                )}
-              />
-              {seriesPessoas.map((serie, index) => {
-                const tone = pessoaSeriesSwatch(colors.series, index, colors.line);
-                return (
-                  <Bar
-                    key={serie.dataKey}
-                    dataKey={serie.dataKey}
-                    name={serie.nome}
-                    stackId="forma"
-                    fill={tone.fill}
-                    stroke={tone.stroke}
-                    strokeWidth={1}
-                    isAnimationActive={false}
-                    maxBarSize={28}
-                  />
-                );
-              })}
+              <Legend content={() => <PessoaShadeLegend seriesPessoas={seriesPessoas} />} />
+              {seriesPessoas.map((serie, pessoaIndex) => (
+                <Bar
+                  key={serie.dataKey}
+                  dataKey={serie.dataKey}
+                  name={serie.nome}
+                  stackId="forma"
+                  isAnimationActive={false}
+                  maxBarSize={28}
+                >
+                  {porFormaEmpilhado.map(entry => {
+                    const tone = pessoaShadeOf(colors.forma[entry.chave] ?? pastelFromHsl(colors.line), pessoaIndex);
+                    return (
+                      <Cell key={`${serie.dataKey}-${entry.chave}`} fill={tone.fill} stroke={tone.stroke} strokeWidth={1} />
+                    );
+                  })}
+                </Bar>
+              ))}
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -745,32 +746,25 @@ export function GastosCategoriaChart({
                 tick={{ fontSize: isMobile ? 11 : 12, fill: colors.axis }}
               />
               <ChartTooltip />
-              <Legend
-                content={() => (
-                  <ContrastLegend
-                    items={seriesPessoas.map((serie, index) => ({
-                      label: serie.nome,
-                      color: pessoaSeriesSwatch(colors.series, index, colors.line).stroke,
-                    }))}
-                  />
-                )}
-              />
-              {seriesPessoas.map((serie, index) => {
-                const tone = pessoaSeriesSwatch(colors.series, index, colors.line);
-                return (
-                  <Bar
-                    key={serie.dataKey}
-                    dataKey={serie.dataKey}
-                    name={serie.nome}
-                    stackId="cat"
-                    fill={tone.fill}
-                    stroke={tone.stroke}
-                    strokeWidth={1}
-                    isAnimationActive={false}
-                    maxBarSize={28}
-                  />
-                );
-              })}
+              <Legend content={() => <PessoaShadeLegend seriesPessoas={seriesPessoas} />} />
+              {seriesPessoas.map((serie, pessoaIndex) => (
+                <Bar
+                  key={serie.dataKey}
+                  dataKey={serie.dataKey}
+                  name={serie.nome}
+                  stackId="cat"
+                  isAnimationActive={false}
+                  maxBarSize={28}
+                >
+                  {porCategoriaEmpilhado.map((entry, index) => {
+                    const base = pastelFromHsl(colors.series[index % colors.series.length] ?? colors.line);
+                    const tone = pessoaShadeOf(base, pessoaIndex);
+                    return (
+                      <Cell key={`${serie.dataKey}-${entry.chave}`} fill={tone.fill} stroke={tone.stroke} strokeWidth={1} />
+                    );
+                  })}
+                </Bar>
+              ))}
             </BarChart>
           </ResponsiveContainer>
         ) : (
