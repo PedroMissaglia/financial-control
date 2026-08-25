@@ -108,7 +108,10 @@
           <mat-card-content>
             <div class="card-top">
               <div class="card-main">
-                <p class="card-title">{{ item.descricao }}</p>
+                <p class="card-title">
+                  {{ item.descricao }}
+                  <span *ngIf="donoLabel(item.usuarioId)" class="dono-badge">{{ donoLabel(item.usuarioId) }}</span>
+                </p>
                 <p class="card-meta">{{ dataCurta(item.data) }} · {{ categoriaLabel(item.categoria) }}</p>
               </div>
               <p class="card-value" [class.ok]="entrada(item.tipo)" [class.bad]="!entrada(item.tipo)">

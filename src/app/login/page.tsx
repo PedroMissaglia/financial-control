@@ -58,12 +58,15 @@ export default function LoginPage() {
   return (
     <>
       <Header />
-      <main id="main-content" className="grid min-h-0 flex-1 lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]">
-        <div className="relative hidden overflow-hidden lg:block">
+      <main
+        id="main-content"
+        className="grid min-h-[calc(100dvh-var(--header-offset)-var(--footer-height))] flex-1 lg:h-[calc(100dvh-var(--header-offset)-var(--footer-height))] lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]"
+      >
+        <div className="relative min-h-0 overflow-hidden max-lg:hidden">
           <img
             src="/login-opcoes/4-still-life.png"
             alt="Cofre e planta em mesa clara, ilustrando organização financeira"
-            className="absolute inset-0 size-full object-cover"
+            className="h-full w-full object-cover"
           />
         </div>
 

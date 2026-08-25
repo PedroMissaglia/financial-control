@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 
-import { loginThunk, logoutThunk } from '@/store/slices/auth-slice';
+import { loginThunk, logout as clearSession, logoutThunk } from '@/store/slices/auth-slice';
 import { loadContaConjunta, resetContaConjunta } from '@/store/slices/conta-conjunta-slice';
 
 import type { AppDispatch, RootState } from './index';
@@ -31,6 +31,7 @@ export function useAuth() {
     },
     logout: () => {
       dispatch(resetContaConjunta());
+      dispatch(clearSession());
       void dispatch(logoutThunk());
     },
   };

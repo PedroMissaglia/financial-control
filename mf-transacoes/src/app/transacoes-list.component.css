@@ -37,13 +37,14 @@
 .dono-badge {
   display: inline-flex;
   align-items: center;
-  border: 1px solid transparent;
+  border: 1px solid hsl(var(--border));
   border-radius: 999px;
-  padding: 0.05rem 0.45rem;
-  font-size: 0.7rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.625rem;
+  line-height: 1;
   font-weight: 600;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background: transparent;
+  color: hsl(var(--muted-foreground));
   white-space: nowrap;
 }
 
@@ -60,7 +61,7 @@
 }
 
 .ok {
-  color: hsl(var(--status-aberto));
+  color: hsl(var(--primary));
   font-weight: 600;
 }
 
@@ -208,6 +209,10 @@
 }
 
 .card-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
   margin: 0;
   font-size: var(--fc-text-body);
   font-weight: var(--fc-weight-semibold);
@@ -288,11 +293,6 @@
 
 :host-context([data-fin-theme-mode='dark']) {
   color-scheme: dark;
-}
-
-:host-context([data-fin-theme-mode='dark']) .dono-badge {
-  background: hsl(var(--primary) / 0.18);
-  color: hsl(var(--primary));
 }
 
 :host-context([data-fin-theme-mode='dark']) .fc-badge-tipo-deposito {

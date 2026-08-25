@@ -123,6 +123,16 @@ function receitaDespesaSwatch(
   return shadeSwatch(base, kind === 'receita' ? 16 : -10);
 }
 
+function receitaDespesaAnoSwatch(
+  colors: ReturnType<typeof useChartThemeColors>,
+  kind: 'receita' | 'despesa',
+  pessoaIndex: number,
+): ListSwatch {
+  const base = kind === 'receita' ? colors.anoReceita : colors.anoDespesa;
+  if (pessoaIndex === 0) return base;
+  return shadeSwatch(base, 16);
+}
+
 interface SeriePessoa {
   dataKey: string;
   nome: string;
@@ -159,6 +169,7 @@ export function EvolucaoSaldoChart({
   const evolucaoAno = evolucao.filter(item => item.data.startsWith(prefix));
   const evolucaoEmpilhadoAno = evolucaoEmpilhado.filter(item => String(item.data).startsWith(prefix));
   const fragmentado = seriesPessoas.length > 1 && evolucaoEmpilhadoAno.length > 0;
+  const tomSaldoUnitario = pessoaSeriesSwatch(colors.series, 0, colors.line);
 
   return (
     <ChartFrame
@@ -235,12 +246,15 @@ export function EvolucaoSaldoChart({
             />
             <YAxis width={44} tick={{ fontSize: 10, fill: colors.axis }} tickFormatter={formatAxisValue} />
             <ChartTooltip />
-            <Bar dataKey="saldo" name="Saldo" isAnimationActive={false} maxBarSize={48} strokeWidth={1}>
-              {evolucaoAno.map(item => {
-                const tone = item.saldo >= 0 ? colors.saldoPos : colors.saldoNeg;
-                return <Cell key={item.data} fill={tone.fill} stroke={tone.stroke} />;
-              })}
-            </Bar>
+            <Bar
+              dataKey="saldo"
+              name="Saldo"
+              fill={tomSaldoUnitario.fill}
+              stroke={tomSaldoUnitario.stroke}
+              isAnimationActive={false}
+              maxBarSize={48}
+              strokeWidth={1}
+            />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -589,8 +603,8 @@ export function ReceitasDespesasAnoChart({
   const vazio = fragmentado
     ? mesesEmpilhado.every(mes => seriesAno.every(s => Number(mes[s.dataKey] ?? 0) === 0))
     : meses.every(item => item.receitas === 0 && item.despesas === 0);
-  const receitas = colors.receita;
-  const despesas = colors.despesa;
+  const receitas = colors.anoReceita;
+  const despesas = colors.anoDespesa;
 
   return (
     <ChartFrame
@@ -622,13 +636,13 @@ export function ReceitasDespesasAnoChart({
                 <ContrastLegend
                   items={seriesAno.map((serie, index) => ({
                     label: serie.nome,
-                    color: receitaDespesaSwatch(colors, serie.kind, Math.floor(index / 2)).stroke,
+                    color: receitaDespesaAnoSwatch(colors, serie.kind, Math.floor(index / 2)).stroke,
                   }))}
                 />
               )}
             />
             {seriesAno.map((serie, index) => {
-              const tone = receitaDespesaSwatch(colors, serie.kind, Math.floor(index / 2));
+              const tone = receitaDespesaAnoSwatch(colors, serie.kind, Math.floor(index / 2));
               return (
                 <Bar
                   key={serie.dataKey}

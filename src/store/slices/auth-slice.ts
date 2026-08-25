@@ -52,7 +52,9 @@ const authSlice = createSlice({
       state.loading = false;
     });
     builder.addCase(logoutThunk.fulfilled, state => {
-      state.usuario = null;
+      state.loading = false;
+    });
+    builder.addCase(logoutThunk.rejected, state => {
       state.loading = false;
     });
   },

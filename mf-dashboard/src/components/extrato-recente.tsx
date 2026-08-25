@@ -51,7 +51,7 @@ export function ExtratoRecente({ transacoes, limit, donoLabels, periodo }: Reado
                   className={cn(
                     'flex h-9 w-9 shrink-0 items-center justify-center rounded-full',
                     entrada
-                      ? 'bg-status-aberto/25 text-status-aberto dark:bg-status-aberto/14'
+                      ? 'bg-primary/25 text-primary dark:bg-primary/14'
                       : 'bg-status-atrasado/25 text-status-atrasado dark:bg-status-atrasado/14',
                   )}
                   aria-hidden="true"
@@ -75,7 +75,7 @@ export function ExtratoRecente({ transacoes, limit, donoLabels, periodo }: Reado
                 <p
                   className={cn(
                     'shrink-0 text-sm font-semibold',
-                    entrada ? 'text-status-aberto' : 'text-status-atrasado',
+                    entrada ? 'text-primary' : 'text-status-atrasado',
                   )}
                 >
                   {entrada ? '+' : '-'}

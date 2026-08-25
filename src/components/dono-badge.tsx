@@ -1,6 +1,5 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { useEscopoFinanceiro } from '@/lib/use-escopo-financeiro';
 
 export function DonoBadge({ usuarioId }: Readonly<{ usuarioId?: string | null }>) {
@@ -10,11 +9,8 @@ export function DonoBadge({ usuarioId }: Readonly<{ usuarioId?: string | null }>
   if (!label) return null;
 
   return (
-    <Badge
-      variant="default"
-      className="shrink-0 font-medium dark:bg-primary/18 dark:text-primary"
-    >
+    <span className="border-border text-muted-foreground shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold">
       {label}
-    </Badge>
+    </span>
   );
 }

@@ -1,59 +1,94 @@
 /* Pennywise — temas compartilhados (host Next + microfrontends)
-   Paleta sage/forest: primária #839958 no claro, fundo #0A3323 no escuro.
-   Tokens semânticos (status, tipos, formas, gráficos) seguem a paleta da marca. */
+   Primária #9fd253. Chrome e tokens semânticos puxam para essa matiz. */
 
 :root {
-  --status-aberto: 205 55% 40%;
-  --status-pago: 50 72% 38%;
-  --status-atrasado: 8 72% 58%;
-  --tipo-deposito: 205 55% 40%;
+  --status-aberto: 50 46% 48%;
+  --status-pago: 84 44% 46%;
+  --status-atrasado: 8 46% 52%;
+  --tipo-deposito: 210 52% 48%;
   --tipo-deposito-fg: 0 0% 100%;
-  --tipo-saque: 19 70% 46%;
+  --tipo-saque: 28 52% 48%;
   --tipo-saque-fg: 0 0% 100%;
-  --tipo-transferencia: 46 68% 50%;
+  --tipo-transferencia: 275 48% 48%;
   --tipo-transferencia-fg: 0 0% 100%;
-  --tipo-pagamento: 8 72% 58%;
+  --tipo-pagamento: 8 46% 52%;
   --tipo-pagamento-fg: 0 0% 100%;
-  --forma-pix: 38 70% 48%;
+  --forma-pix: 50 52% 48%;
   --forma-pix-fg: 0 0% 100%;
-  --forma-credito: 350 68% 52%;
+  --forma-credito: 340 50% 50%;
   --forma-credito-fg: 0 0% 100%;
-  --forma-debito: 325 58% 42%;
+  --forma-debito: 275 48% 44%;
   --forma-debito-fg: 0 0% 100%;
-  --forma-vr-va: 54 68% 50%;
+  --forma-vr-va: 175 48% 42%;
   --forma-vr-va-fg: 0 0% 100%;
-  --chart-receita: 205 55% 40%;
-  --chart-despesa: 8 72% 58%;
-  --chart-saldo-positivo: 205 55% 40%;
-  --chart-saldo-negativo: 8 72% 58%;
+  --chart-receita: 84 59% 57%;
+  --chart-despesa: 8 46% 52%;
+  --chart-saldo-positivo: 84 59% 57%;
+  --chart-saldo-negativo: 8 46% 52%;
 }
 
 :root,
 [data-fin-theme='emerald'] {
   color-scheme: light;
-  --background: 80 35% 96%;
-  --foreground: 157 45% 12%;
-  --card: 0 0% 100%;
-  --card-foreground: 157 45% 12%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 157 45% 12%;
-  --primary: 80 27% 47%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 80 30% 92%;
-  --secondary-foreground: 157 35% 18%;
-  --muted: 80 18% 93%;
-  --muted-foreground: 80 10% 38%;
-  --accent: 80 28% 88%;
-  --accent-foreground: 80 35% 28%;
-  --destructive: 355 78% 32%;
+  /* Escala #9fd253 — shades (escurece) e tints (clareia) */
+  --pw-shade-0: 84 59% 57%;
+  --pw-shade-10: 84 46% 52%;
+  --pw-shade-20: 84 44% 46%;
+  --pw-shade-30: 84 43% 40%;
+  --pw-shade-40: 84 43% 35%;
+  --pw-shade-50: 84 43% 29%;
+  --pw-shade-60: 84 44% 23%;
+  --pw-shade-70: 84 43% 17%;
+  --pw-shade-80: 84 42% 12%;
+  --pw-shade-90: 83 45% 6%;
+  --pw-shade-100: 0 0% 0%;
+  --pw-tint-0: 84 59% 57%;
+  --pw-tint-10: 84 59% 62%;
+  --pw-tint-20: 84 59% 66%;
+  --pw-tint-30: 84 59% 70%;
+  --pw-tint-40: 84 58% 75%;
+  --pw-tint-50: 84 59% 79%;
+  --pw-tint-60: 84 59% 83%;
+  --pw-tint-70: 85 60% 87%;
+  --pw-tint-80: 84 58% 92%;
+  --pw-tint-90: 88 62% 96%;
+  --pw-tint-100: 0 0% 100%;
+  --pw-red-0: 8 59% 57%;
+  --pw-red-10: 8 46% 52%;
+  --pw-red-20: 8 44% 46%;
+  --pw-red-30: 8 43% 40%;
+  --pw-yellow-0: 50 59% 57%;
+  --pw-yellow-10: 50 46% 48%;
+  --pw-yellow-20: 50 44% 42%;
+  --pw-yellow-30: 50 43% 36%;
+
+  --background: var(--pw-tint-90);
+  --foreground: var(--pw-shade-80);
+  --card: var(--pw-tint-100);
+  --card-foreground: var(--pw-shade-80);
+  --popover: var(--pw-tint-100);
+  --popover-foreground: var(--pw-shade-80);
+  --primary: var(--pw-shade-0);
+  --primary-foreground: var(--pw-shade-80);
+  --secondary: var(--pw-tint-80);
+  --secondary-foreground: var(--pw-shade-70);
+  --muted: var(--pw-tint-80);
+  --muted-foreground: var(--pw-shade-40);
+  --accent: var(--pw-tint-70);
+  --accent-foreground: var(--pw-shade-60);
+  --destructive: var(--pw-red-20);
   --destructive-foreground: 0 0% 100%;
-  --success: 191 78% 32%;
-  --success-foreground: 0 0% 100%;
-  --border: 80 20% 84%;
-  --input: 80 20% 84%;
-  --ring: 80 27% 47%;
-  --chart-primary: 205 55% 40%;
-  --chart-danger: 355 64% 20%;
+  --success: var(--pw-shade-30);
+  --success-foreground: var(--pw-tint-100);
+  --border: var(--pw-tint-60);
+  --input: var(--pw-tint-60);
+  --ring: var(--pw-shade-0);
+  --chart-primary: var(--pw-shade-0);
+  --chart-danger: var(--pw-red-10);
+  --chart-receita: var(--pw-shade-10);
+  --chart-despesa: var(--pw-red-10);
+  --chart-saldo-positivo: var(--pw-shade-0);
+  --chart-saldo-negativo: var(--pw-red-10);
 }
 
 [data-fin-theme='teal'] {
@@ -299,44 +334,79 @@
   --chart-danger: 0 72% 51%;
 }
 
-/* Modo escuro — chrome quase preto (oliva residual), primária sage clara para nav/botões */
+/* Modo escuro — superfícies nos shades #9fd253 */
 :root[data-fin-theme-mode='dark'],
 [data-fin-theme='emerald'][data-fin-theme-mode='dark'] {
   color-scheme: dark;
-  --background: 40 8% 5%;
-  --foreground: 42 10% 93%;
-  --card: 40 7% 8%;
-  --card-foreground: 42 10% 93%;
-  --popover: 40 7% 8%;
-  --popover-foreground: 42 10% 93%;
-  --primary: 80 20% 48%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 40 8% 12%;
-  --secondary-foreground: 42 10% 88%;
-  --muted: 40 6% 11%;
-  --muted-foreground: 40 8% 62%;
-  --accent: 40 10% 14%;
-  --accent-foreground: 80 16% 72%;
-  --destructive: 355 55% 52%;
+  --pw-shade-0: 84 59% 57%;
+  --pw-shade-10: 84 46% 52%;
+  --pw-shade-20: 84 44% 46%;
+  --pw-shade-30: 84 43% 40%;
+  --pw-shade-40: 84 43% 35%;
+  --pw-shade-50: 84 43% 29%;
+  --pw-shade-60: 84 44% 23%;
+  --pw-shade-70: 84 43% 17%;
+  --pw-shade-80: 84 42% 12%;
+  --pw-shade-90: 83 45% 6%;
+  --pw-shade-100: 0 0% 0%;
+  --pw-tint-0: 84 59% 57%;
+  --pw-tint-10: 84 59% 62%;
+  --pw-tint-20: 84 59% 66%;
+  --pw-tint-30: 84 59% 70%;
+  --pw-tint-40: 84 58% 75%;
+  --pw-tint-50: 84 59% 79%;
+  --pw-tint-60: 84 59% 83%;
+  --pw-tint-70: 85 60% 87%;
+  --pw-tint-80: 84 58% 92%;
+  --pw-tint-90: 88 62% 96%;
+  --pw-tint-100: 0 0% 100%;
+  --pw-red-0: 8 59% 57%;
+  --pw-red-10: 8 46% 52%;
+  --pw-red-20: 8 44% 46%;
+  --pw-red-30: 8 43% 40%;
+  --pw-yellow-0: 50 59% 57%;
+  --pw-yellow-10: 50 46% 48%;
+  --pw-yellow-20: 50 44% 42%;
+  --pw-yellow-30: 50 43% 36%;
+
+  --background: var(--pw-shade-90);
+  --foreground: var(--pw-tint-80);
+  --card: var(--pw-shade-80);
+  --card-foreground: var(--pw-tint-80);
+  --popover: var(--pw-shade-80);
+  --popover-foreground: var(--pw-tint-80);
+  --primary: var(--pw-shade-0);
+  --primary-foreground: var(--pw-shade-90);
+  --secondary: var(--pw-shade-70);
+  --secondary-foreground: var(--pw-tint-70);
+  --muted: var(--pw-shade-80);
+  --muted-foreground: var(--pw-tint-40);
+  --accent: var(--pw-shade-70);
+  --accent-foreground: var(--pw-tint-50);
+  --destructive: var(--pw-red-20);
   --destructive-foreground: 0 0% 100%;
-  --success: 191 48% 50%;
-  --success-foreground: 40 8% 5%;
-  --border: 40 8% 16%;
-  --input: 40 8% 16%;
-  --ring: 80 20% 48%;
-  --chart-primary: 205 42% 44%;
-  --chart-danger: 8 50% 50%;
-  --status-aberto: 205 44% 50%;
-  --status-pago: 50 50% 48%;
-  --status-atrasado: 8 52% 50%;
-  --tipo-deposito: 205 44% 50%;
-  --tipo-saque: 19 50% 48%;
-  --tipo-transferencia: 46 50% 48%;
-  --tipo-pagamento: 8 52% 50%;
-  --forma-pix: 38 50% 48%;
-  --forma-credito: 350 48% 52%;
-  --forma-debito: 325 42% 52%;
-  --forma-vr-va: 54 50% 48%;
+  --success: var(--pw-shade-10);
+  --success-foreground: var(--pw-shade-90);
+  --border: var(--pw-shade-70);
+  --input: var(--pw-shade-70);
+  --ring: var(--pw-shade-0);
+  --chart-primary: var(--pw-shade-0);
+  --chart-danger: var(--pw-red-10);
+  --chart-receita: var(--pw-shade-10);
+  --chart-despesa: var(--pw-red-10);
+  --chart-saldo-positivo: var(--pw-shade-0);
+  --chart-saldo-negativo: var(--pw-red-10);
+  --status-aberto: var(--pw-yellow-10);
+  --status-pago: var(--pw-shade-20);
+  --status-atrasado: var(--pw-red-10);
+  --tipo-deposito: 210 50% 52%;
+  --tipo-saque: 28 50% 52%;
+  --tipo-transferencia: 275 46% 56%;
+  --tipo-pagamento: var(--pw-red-10);
+  --forma-pix: 50 50% 52%;
+  --forma-credito: 340 48% 56%;
+  --forma-debito: 275 46% 54%;
+  --forma-vr-va: 175 46% 50%;
 }
 
 [data-fin-theme='teal'][data-fin-theme-mode='dark'] {

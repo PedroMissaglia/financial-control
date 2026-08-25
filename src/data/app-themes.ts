@@ -19,7 +19,7 @@ export interface AppThemeOption {
 
 /** Dez variações no padrão Esmeralda: fundo tintado, primária saturada, bordas suaves. */
 export const APP_THEMES: AppThemeOption[] = [
-  { id: 'emerald', label: 'Sage', description: 'Pennywise — sage e forest', swatch: '#839958' },
+  { id: 'emerald', label: 'Sage', description: 'Pennywise — #9fd253 e forest', swatch: '#9fd253' },
   { id: 'teal', label: 'Teal', description: 'Confiança e clareza', swatch: '#0F766E' },
   { id: 'cyan', label: 'Ciano', description: 'Frescor e leveza', swatch: '#0E7490' },
   { id: 'sky', label: 'Azul Céu', description: 'Aberto e sereno', swatch: '#0369A1' },

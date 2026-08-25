@@ -2,7 +2,7 @@
 
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { BrandMark } from '@/components/brand-mark';
@@ -98,7 +98,6 @@ function NavMenu({ pathname }: Readonly<{ pathname: string }>) {
 
 export function Header() {
   const pathname = usePathname();
-  const router = useRouter();
   const { usuario, isAuthenticated, logout } = useAuth();
   const { ativa } = useEscopoFinanceiro();
   const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -131,7 +130,7 @@ export function Header() {
 
   function handleLogout() {
     logout();
-    router.replace('/login');
+    window.location.replace('/login');
   }
 
   return (
