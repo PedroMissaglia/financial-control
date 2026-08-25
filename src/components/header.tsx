@@ -24,6 +24,37 @@ const navItems = [
 
 const mobileNavItems = [...navItems, { href: '/transacoes/nova', label: 'Nova transação' }];
 
+function NavLinks({
+  pathname,
+  className,
+}: Readonly<{ pathname: string; className?: string }>) {
+  return (
+    <nav className={cn('flex min-w-0 items-center', className)} aria-label="Navegação principal">
+      {navItems.map(item => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={cn(
+            'focus:ring-primary shrink-0 rounded-md px-2 py-1 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none',
+            pathname === item.href ? 'text-primary' : 'text-foreground hover:text-primary',
+          )}
+          aria-current={pathname === item.href ? 'page' : undefined}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+function NovaTransacaoButton() {
+  return (
+    <Link href="/transacoes/nova" className="shrink-0">
+      <Button size="sm">Nova transação</Button>
+    </Link>
+  );
+}
+
 function NavMenu({ pathname }: Readonly<{ pathname: string }>) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -100,9 +131,11 @@ export function Header() {
   const pathname = usePathname();
   const { usuario, isAuthenticated, logout } = useAuth();
   const { ativa } = useEscopoFinanceiro();
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isTabletUp = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useMediaQuery('(min-width: 1280px)');
   const headerRef = useRef<HTMLElement>(null);
-  const showMobileVisao = isAuthenticated && ativa && !isDesktop;
+  const showTabletNav = isAuthenticated && isTabletUp && !isDesktop;
+  const showVisaoRow = isAuthenticated && ativa && !isDesktop;
 
   useEffect(() => {
     const header = headerRef.current;
@@ -126,7 +159,7 @@ export function Header() {
       document.documentElement.style.removeProperty('--header-bar-height');
       document.documentElement.style.removeProperty('--header-visao-row');
     };
-  }, [showMobileVisao, isAuthenticated, ativa]);
+  }, [showTabletNav, showVisaoRow, isAuthenticated, ativa]);
 
   function handleLogout() {
     logout();
@@ -151,40 +184,29 @@ export function Header() {
           </Link>
 
           {isAuthenticated && (
-            <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
+            <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2 xl:gap-4">
               {isDesktop ? (
-                <nav className="flex items-center gap-6" aria-label="Navegação principal">
-                  {navItems.map(item => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        'focus:ring-primary shrink-0 rounded-md px-2 py-1 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none sm:text-base',
-                        pathname === item.href ? 'text-primary' : 'text-foreground hover:text-primary',
-                      )}
-                      aria-current={pathname === item.href ? 'page' : undefined}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                  <Link href="/transacoes/nova" className="shrink-0">
-                    <Button size="sm">Nova transação</Button>
-                  </Link>
-                </nav>
+                <>
+                  <NavLinks pathname={pathname} className="gap-4 xl:gap-6" />
+                  <NovaTransacaoButton />
+                  <VisaoSwitcher />
+                </>
+              ) : isTabletUp ? (
+                <NovaTransacaoButton />
               ) : (
                 <NavMenu pathname={pathname} />
               )}
 
-              {isDesktop && <VisaoSwitcher />}
               <UserMenu nome={usuario?.nome} onLogout={handleLogout} />
               <ThemeModeToggle />
             </div>
           )}
         </div>
 
-        {showMobileVisao && (
-          <div className="border-border flex items-center border-t pt-2 pb-2.5">
-            <VisaoSwitcher fullWidth />
+        {(showTabletNav || showVisaoRow) && (
+          <div className="border-border flex items-center gap-3 border-t pt-2 pb-2.5">
+            {showTabletNav && <NavLinks pathname={pathname} className="min-w-0 flex-1 gap-3 overflow-x-auto" />}
+            {showVisaoRow && <VisaoSwitcher fullWidth={!showTabletNav} className={showTabletNav ? 'shrink-0' : undefined} />}
           </div>
         )}
       </div>
