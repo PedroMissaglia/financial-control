@@ -6,17 +6,19 @@ import { formatCurrency } from '@/lib/utils';
 
 interface SaldoCardProps {
   saldo: number;
+  periodo?: string;
   porPessoa?: TotaisPorPessoa[];
 }
 
-export function SaldoCard({ saldo, porPessoa = [] }: SaldoCardProps) {
+export function SaldoCard({ saldo, periodo, porPessoa = [] }: SaldoCardProps) {
   const isPositive = saldo >= 0;
+  const titulo = periodo ? `Saldo em conta · ${periodo}` : 'Saldo em conta';
 
   return (
     <Card className="border-primary/20 to-accent bg-gradient-to-br from-card">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="min-w-0 flex-1 pr-3">
-          <CardDescription>Saldo em conta</CardDescription>
+          <CardDescription>{titulo}</CardDescription>
           <CardMetric className="truncate">{formatCurrency(saldo)}</CardMetric>
         </div>
         <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full sm:h-12 sm:w-12">

@@ -279,7 +279,7 @@ export function DashboardWidgetPreview({
   let content: ReactNode;
   switch (id) {
     case 'saldo':
-      content = <SaldoCard saldo={saldo} porPessoa={porPessoa} />;
+      content = <SaldoCard saldo={saldo} periodo={periodo} porPessoa={porPessoa} />;
       break;
     case 'evolucao':
       content = (

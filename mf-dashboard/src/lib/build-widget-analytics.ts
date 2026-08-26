@@ -135,7 +135,7 @@ export function buildWidgetAnalytics(
           usuarioId,
           nome: donoLabels?.[usuarioId] ?? usuarioId,
           dataKey: dataKeyFor(usuarioId, index),
-          saldo: calcularSaldo(txs),
+          saldo: calcularSaldo(txsMes),
           receitas: r.receitas,
           despesas: r.despesas,
           receitasMes: rMes.receitas,
@@ -289,7 +289,7 @@ export function buildWidgetAnalytics(
 
   return {
     competencia,
-    saldo: calcularSaldo(transacoes),
+    saldo: resumoMes.saldo,
     resumo,
     resumoMes,
     evolucao: evolucaoSaldo(transacoes),
