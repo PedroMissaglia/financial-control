@@ -22,7 +22,7 @@ const navItems = [
   { href: '/gastos-mensais', label: 'Gastos Mensais' },
 ];
 
-const mobileNavItems = [...navItems, { href: '/transacoes/nova', label: 'Nova transação' }];
+const mobileNavItems = [...navItems, { href: '/transacoes?nova=1', label: 'Nova transação' }];
 
 function NavLinks({
   pathname,
