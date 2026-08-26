@@ -8,14 +8,12 @@
   /* h-14 / sm:h-16 do header (sem safe-area); Header sincroniza via ResizeObserver */
   --header-bar-height: 3.5rem;
   --header-offset: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px));
-  /* py-4 (~1rem*2) + linha de texto + safe-area inferior */
-  --footer-height: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+  --footer-height: env(safe-area-inset-bottom, 0px);
 }
 
 @media (min-width: 640px) {
   :root {
     --header-bar-height: 4rem;
-    --footer-height: calc(3.75rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

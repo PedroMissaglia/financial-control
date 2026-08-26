@@ -1,4 +1,3 @@
-import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 
 export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -11,7 +10,6 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
       >
         {children}
       </main>
-      <Footer />
     </>
   );
 }

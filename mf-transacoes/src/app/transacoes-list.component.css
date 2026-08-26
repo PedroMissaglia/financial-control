@@ -365,7 +365,7 @@
 
 .table-card mat-paginator {
   position: sticky;
-  bottom: var(--footer-height, 3.75rem);
+  bottom: 0;
   z-index: 30;
   display: block;
   border-top: 1px solid hsl(var(--border));
@@ -399,7 +399,7 @@
 
   .table-card mat-paginator {
     bottom: 0;
-    padding-bottom: var(--footer-height, 3.25rem);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     box-shadow: none;
   }
 

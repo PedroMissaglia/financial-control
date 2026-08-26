@@ -8,7 +8,6 @@ import { z } from 'zod';
 
 import { BrandMark } from '@/components/brand-mark';
 import { CriarUsuarioModal } from '@/components/criar-usuario-modal';
-import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,7 +59,7 @@ export default function LoginPage() {
       <Header />
       <main
         id="main-content"
-        className="grid min-h-[calc(100dvh-var(--header-offset)-var(--footer-height))] flex-1 lg:h-[calc(100dvh-var(--header-offset)-var(--footer-height))] lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]"
+        className="grid min-h-[calc(100dvh-var(--header-offset))] flex-1 lg:h-[calc(100dvh-var(--header-offset))] lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]"
       >
         <div className="relative min-h-0 overflow-hidden max-lg:hidden">
           <img
@@ -161,7 +160,6 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
-      <Footer />
 
       <CriarUsuarioModal open={isCriarOpen} onClose={() => setIsCriarOpen(false)} />
     </>
