@@ -85,18 +85,21 @@ export function TransacaoForm({
   const router = useRouter();
   const { usuario } = useAuth();
   const { usuarioIdEscrita, parceiro, ativa } = useEscopoFinanceiro();
-  const [donoId, setDonoId] = useState(usuarioIdEscrita ?? usuario?.id ?? '');
-  const categoriasOwner = mode === 'edit' && transacao ? transacao.usuarioId : donoId || usuarioIdEscrita;
+  const [donoId, setDonoId] = useState(transacao?.usuarioId ?? usuarioIdEscrita ?? usuario?.id ?? '');
+  const categoriasOwner = donoId || usuarioIdEscrita;
   const categoriasEscopo = useMemo(() => {
-    if (mode === 'edit' && transacao) return transacao.usuarioId;
     if (ativa && usuario?.id && parceiro?.id) return [usuario.id, parceiro.id];
     return categoriasOwner;
-  }, [ativa, categoriasOwner, mode, parceiro?.id, transacao, usuario?.id]);
+  }, [ativa, categoriasOwner, parceiro?.id, usuario?.id]);
   const { categorias } = useCategorias(categoriasEscopo);
 
   useEffect(() => {
-    if (usuarioIdEscrita) setDonoId(usuarioIdEscrita);
-  }, [usuarioIdEscrita]);
+    if (mode === 'create' && usuarioIdEscrita) setDonoId(usuarioIdEscrita);
+  }, [mode, usuarioIdEscrita]);
+
+  useEffect(() => {
+    if (mode === 'edit' && transacao?.usuarioId) setDonoId(transacao.usuarioId);
+  }, [mode, transacao?.usuarioId]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [anexo, setAnexo] = useState<TransacaoAnexo | null>(transacao?.anexo ?? null);
@@ -145,10 +148,6 @@ export function TransacaoForm({
   }, [categorias, transacao?.categoria]);
 
   useEffect(() => {
-    if (mode === 'create' && usuarioIdEscrita) setDonoId(usuarioIdEscrita);
-  }, [mode, usuarioIdEscrita]);
-
-  useEffect(() => {
     if (!transacao?.anexoId || transacao.anexo) return;
     let cancelled = false;
 
@@ -194,7 +193,7 @@ export function TransacaoForm({
   }
 
   async function onSubmit(data: TransacaoFormData) {
-    const usuarioId = mode === 'edit' && transacao ? transacao.usuarioId : donoId || usuarioIdEscrita;
+    const usuarioId = donoId || usuarioIdEscrita;
 
     if (!usuarioId) {
       setError('Sessão expirada. Faça login novamente.');
@@ -245,7 +244,7 @@ export function TransacaoForm({
 
   return (
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-      {mode === 'create' && ativa && usuario && parceiro && (
+      {ativa && usuario && parceiro && (
         <div className="space-y-2">
           <Label htmlFor="dono">Lançar em nome de</Label>
           <SelectMenu
