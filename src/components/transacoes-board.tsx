@@ -3,17 +3,15 @@
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
-import { NovaTransacaoFab } from '@/components/nova-transacao-fab';
 import { TransacoesMicrofrontend } from '@/components/transacoes-microfrontend';
 import { Button } from '@/components/ui/button';
 import { useMediaQuery } from '@/lib/use-media-query';
-import { cn } from '@/lib/utils';
 
 export function TransacoesBoard() {
   const isDesktop = useMediaQuery('(min-width: 640px)');
 
   return (
-    <div className={cn(!isDesktop && 'pb-20')}>
+    <div>
       <div className="mb-6">
         <h1 className="fc-page-title">Transações</h1>
         <p className="fc-card-subtitle mt-1">Visualize, edite ou exclua suas movimentações.</p>
@@ -31,7 +29,6 @@ export function TransacoesBoard() {
       )}
 
       <TransacoesMicrofrontend />
-      <NovaTransacaoFab />
     </div>
   );
 }
