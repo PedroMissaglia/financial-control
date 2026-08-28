@@ -14,9 +14,11 @@ interface ModalProps {
   children: React.ReactNode;
   title?: string;
   footer?: React.ReactNode;
+  /** Bottom sheet height on mobile. Use `tall` for long forms. */
+  initialSnap?: 'half' | 'tall';
 }
 
-export function Modal({ children, title = 'Dialog', footer }: ModalProps) {
+export function Modal({ children, title = 'Dialog', footer, initialSnap = 'half' }: ModalProps) {
   const router = useRouter();
   const isDesktop = useMediaQuery('(min-width: 640px)');
   const [sheetOpen, setSheetOpen] = useState(true);
@@ -33,6 +35,7 @@ export function Modal({ children, title = 'Dialog', footer }: ModalProps) {
         onClosed={finishClose}
         title={title}
         footer={footer}
+        initialSnap={initialSnap}
       >
         {children}
       </BottomSheet>

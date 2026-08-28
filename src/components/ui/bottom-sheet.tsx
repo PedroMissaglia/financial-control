@@ -27,6 +27,8 @@ interface BottomSheetProps {
   onClose: () => void;
   /** Called after the exit animation finishes (when `open` became false). */
   onClosed?: () => void;
+  /** Height when the sheet opens. Use `tall` for long forms. */
+  initialSnap?: Snap;
   title: string;
   description?: React.ReactNode;
   footer?: React.ReactNode;
@@ -41,6 +43,7 @@ export function BottomSheet({
   open,
   onClose,
   onClosed,
+  initialSnap = 'half',
   title,
   description,
   footer,
@@ -51,7 +54,7 @@ export function BottomSheet({
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(false);
   const [entered, setEntered] = useState(false);
-  const [snap, setSnap] = useState<Snap>('half');
+  const [snap, setSnap] = useState<Snap>(initialSnap);
   const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
   const dragStartY = useRef(0);
@@ -70,6 +73,8 @@ export function BottomSheet({
       isShowingRef.current = true;
       setEntered(false);
       setVisible(false);
+      setSnap(initialSnap);
+      snapRef.current = initialSnap;
       setMounted(true);
       return;
     }
@@ -78,8 +83,8 @@ export function BottomSheet({
     setEntered(false);
     setDragging(false);
     setDragY(0);
-    setSnap('half');
-    snapRef.current = 'half';
+    setSnap(initialSnap);
+    snapRef.current = initialSnap;
 
     if (!isShowingRef.current) return;
 
@@ -89,7 +94,7 @@ export function BottomSheet({
       onClosedRef.current?.();
     }, BOTTOM_SHEET_EXIT_MS);
     return () => window.clearTimeout(timeout);
-  }, [open]);
+  }, [open, initialSnap]);
 
   // Enter only after the sheet is in the DOM and painted off-screen (fixes first-open skip).
   useLayoutEffect(() => {

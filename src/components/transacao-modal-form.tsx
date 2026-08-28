@@ -33,6 +33,7 @@ export function TransacaoModalForm({
   return (
     <Modal
       title={title}
+      initialSnap="tall"
       footer={
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
           <Button
