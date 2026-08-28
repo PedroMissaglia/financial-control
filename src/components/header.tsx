@@ -1,11 +1,12 @@
 'use client';
 
-import { Menu } from 'lucide-react';
+import { Menu, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { BrandMark } from '@/components/brand-mark';
+import { MobileNavDrawer } from '@/components/mobile-nav-drawer';
 import { ThemeModeToggle } from '@/components/theme-mode-toggle';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/user-menu';
@@ -21,8 +22,6 @@ const navItems = [
   { href: '/categorias', label: 'Categorias' },
   { href: '/gastos-mensais', label: 'Gastos Mensais' },
 ];
-
-const mobileNavItems = [...navItems, { href: '/transacoes/nova', label: 'Nova transação' }];
 
 function NavLinks({
   pathname,
@@ -55,75 +54,69 @@ function NovaTransacaoButton() {
   );
 }
 
-function NavMenu({ pathname }: Readonly<{ pathname: string }>) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+function MobileHeaderActions({
+  pathname,
+  onLogout,
+  usuarioNome,
+  showVisaoSwitcher,
+}: Readonly<{
+  pathname: string;
+  onLogout: () => void;
+  usuarioNome?: string | null;
+  showVisaoSwitcher: boolean;
+}>) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const hideNova = pathname.startsWith('/transacoes/nova');
 
   useEffect(() => {
-    setOpen(false);
+    setDrawerOpen(false);
   }, [pathname]);
 
-  useEffect(() => {
-    if (!open) return;
-
-    function onPointerDown(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setOpen(false);
-    }
-
-    document.addEventListener('mousedown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
-
   return (
-    <div ref={rootRef} className="relative">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls="nav-menu"
-        aria-label={open ? 'Fechar menu' : 'Abrir menu'}
-        onClick={() => setOpen(current => !current)}
-      >
-        <Menu className="h-5 w-5" aria-hidden="true" />
-      </Button>
-
-      {open && (
-        <div
-          id="nav-menu"
-          role="menu"
-          aria-label="Navegação principal"
-          className="border-border bg-popover text-popover-foreground absolute right-0 z-[60] mt-2 w-52 overflow-hidden rounded-md border py-1 shadow-md"
+    <>
+      <div className="grid w-full grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="shrink-0"
+          aria-expanded={drawerOpen}
+          aria-controls="mobile-nav-drawer"
+          aria-label={drawerOpen ? 'Fechar menu' : 'Abrir menu'}
+          onClick={() => setDrawerOpen(current => !current)}
         >
-          {mobileNavItems.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              role="menuitem"
-              className={cn(
-                'hover:bg-accent hover:text-accent-foreground block px-3 py-2 text-sm transition-colors',
-                pathname === item.href && 'bg-accent text-accent-foreground font-medium',
-              )}
-              aria-current={pathname === item.href ? 'page' : undefined}
-              onClick={() => setOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
+          <Menu className="h-5 w-5" aria-hidden="true" />
+        </Button>
+
+        <Link
+          href="/"
+          className="focus:ring-primary flex min-w-0 items-center justify-center gap-2 rounded-md focus:ring-2 focus:ring-offset-2 focus:outline-none"
+          aria-label="Pennywise - Página inicial"
+        >
+          <BrandMark />
+          <span className="text-foreground truncate text-base font-bold">Pennywise</span>
+        </Link>
+
+        {hideNova ? (
+          <span className="h-10 w-10 shrink-0" aria-hidden="true" />
+        ) : (
+          <Link href="/transacoes/nova" className="shrink-0 justify-self-end">
+            <Button type="button" variant="ghost" size="icon" aria-label="Nova transação">
+              <Plus className="h-5 w-5" aria-hidden="true" />
+            </Button>
+          </Link>
+        )}
+      </div>
+
+      <MobileNavDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        pathname={pathname}
+        usuarioNome={usuarioNome}
+        showVisaoSwitcher={showVisaoSwitcher}
+        onLogout={onLogout}
+      />
+    </>
   );
 }
 
@@ -133,9 +126,10 @@ export function Header() {
   const { ativa } = useEscopoFinanceiro();
   const isTabletUp = useMediaQuery('(min-width: 768px)');
   const isDesktop = useMediaQuery('(min-width: 1280px)');
+  const isMobile = !isTabletUp;
   const headerRef = useRef<HTMLElement>(null);
   const showTabletNav = isAuthenticated && isTabletUp && !isDesktop;
-  const showVisaoRow = isAuthenticated && ativa && !isDesktop;
+  const showVisaoRow = isAuthenticated && ativa && isTabletUp && !isDesktop;
 
   useEffect(() => {
     const header = headerRef.current;
@@ -174,39 +168,48 @@ export function Header() {
     >
       <div className="mx-auto max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between gap-2 sm:h-16">
-          <Link
-            href="/"
-            className="focus:ring-primary flex min-w-0 items-center gap-2 rounded-md focus:ring-2 focus:ring-offset-2 focus:outline-none"
-            aria-label="Pennywise - Página inicial"
-          >
-            <BrandMark />
-            <span className="text-foreground truncate text-base font-bold sm:text-xl">Pennywise</span>
-          </Link>
+          {isAuthenticated && isMobile ? (
+            <MobileHeaderActions
+              pathname={pathname}
+              onLogout={handleLogout}
+              usuarioNome={usuario?.nome}
+              showVisaoSwitcher={ativa}
+            />
+          ) : (
+            <>
+              <Link
+                href="/"
+                className="focus:ring-primary flex min-w-0 items-center gap-2 rounded-md focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                aria-label="Pennywise - Página inicial"
+              >
+                <BrandMark />
+                <span className="text-foreground truncate text-base font-bold sm:text-xl">Pennywise</span>
+              </Link>
 
-          {isAuthenticated && (
-            <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2 xl:gap-4">
-              {isDesktop ? (
-                <>
-                  <NavLinks pathname={pathname} className="gap-4 xl:gap-6" />
-                  <NovaTransacaoButton />
-                  <VisaoSwitcher />
-                </>
-              ) : isTabletUp ? (
-                <NovaTransacaoButton />
-              ) : (
-                <NavMenu pathname={pathname} />
+              {isAuthenticated && (
+                <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2 xl:gap-4">
+                  {isDesktop ? (
+                    <>
+                      <NavLinks pathname={pathname} className="gap-4 xl:gap-6" />
+                      <NovaTransacaoButton />
+                      <VisaoSwitcher />
+                    </>
+                  ) : (
+                    <NovaTransacaoButton />
+                  )}
+
+                  <UserMenu nome={usuario?.nome} onLogout={handleLogout} />
+                  <ThemeModeToggle />
+                </div>
               )}
-
-              <UserMenu nome={usuario?.nome} onLogout={handleLogout} />
-              <ThemeModeToggle />
-            </div>
+            </>
           )}
         </div>
 
-        {(showTabletNav || showVisaoRow) && (
+        {showVisaoRow && (
           <div className="border-border flex items-center gap-3 border-t pt-2 pb-2.5">
-            {showTabletNav && <NavLinks pathname={pathname} className="min-w-0 flex-1 gap-3 overflow-x-auto" />}
-            {showVisaoRow && <VisaoSwitcher fullWidth={!showTabletNav} className={showTabletNav ? 'shrink-0' : undefined} />}
+            <NavLinks pathname={pathname} className="min-w-0 flex-1 gap-3 overflow-x-auto" />
+            <VisaoSwitcher className="shrink-0" />
           </div>
         )}
       </div>
