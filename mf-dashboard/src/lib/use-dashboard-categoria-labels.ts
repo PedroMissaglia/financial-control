@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { resolveDashboardApiUrl } from '@/lib/api-url';
-import { authHeaders } from '@/lib/auth-token';
+import { authFetch } from '@/lib/auth-token';
 
 function getUsuarioIdFromCookie(): string | undefined {
   if (typeof document === 'undefined') return undefined;
@@ -34,9 +34,9 @@ export function useDashboardCategoriaLabels(
       if (!usuarioId) return;
 
       try {
-        const response = await fetch(
-          `${resolvedApiUrl}/categorias?usuarioId=${encodeURIComponent(usuarioId)}`,
-          { cache: 'no-store', headers: authHeaders() },
+        const response = await authFetch(
+          resolvedApiUrl,
+          `/categorias?usuarioId=${encodeURIComponent(usuarioId)}`,
         );
         if (!response.ok) return;
         const json: unknown = await response.json();

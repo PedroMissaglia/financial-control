@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { competenciaAtual, type GastoMensal } from '@/data/gastos-mensais';
 import { resolveDashboardApiUrl } from '@/lib/api-url';
-import { authHeaders } from '@/lib/auth-token';
+import { authFetch } from '@/lib/auth-token';
 
 const MF_TRANSACOES_CHANGED = 'fincontrol:transacoes-changed';
 const MF_GASTOS_MENSAIS_CHANGED = 'fincontrol:gastos-mensais-changed';
@@ -53,10 +53,10 @@ function gastosSignature(items: GastoMensal[]) {
 
 async function fetchGastos(usuarioIds: string[], apiUrl: string, competencia: string): Promise<GastoMensal[] | null> {
   if (usuarioIds.length === 0) return [];
-  const response = await fetch(`${apiUrl}/gastos-mensais?${buildQuery(usuarioIds, competencia)}`, {
-    cache: 'no-store',
-    headers: authHeaders(),
-  });
+  const response = await authFetch(
+    apiUrl,
+    `/gastos-mensais?${buildQuery(usuarioIds, competencia)}`,
+  );
   if (!response.ok) return null;
   return parseGastos(await response.json());
 }

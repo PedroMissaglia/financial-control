@@ -11,7 +11,9 @@ const REFRESH_MARGIN_MS = 30_000;
 function delayUntilRefresh() {
   const expiresAt = getExpiresAt();
   if (!expiresAt || !getRefreshToken()) return null;
-  return Math.max(5_000, expiresAt - Date.now() - REFRESH_MARGIN_MS);
+  const msUntilRefresh = expiresAt - Date.now() - REFRESH_MARGIN_MS;
+  if (msUntilRefresh <= 0) return 0;
+  return msUntilRefresh;
 }
 
 export function AuthTokenRefresher() {

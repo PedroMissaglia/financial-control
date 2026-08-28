@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { seedTransacoes, type Transacao } from '@/data/transacoes';
-import { authHeaders } from '@/lib/auth-token';
+import { authFetch } from '@/lib/auth-token';
 import { parseTransacoesItems } from '@/lib/transacoes-page';
 
 const DEFAULT_API_URL = 'http://localhost:3001';
@@ -19,9 +19,9 @@ export function useStandaloneTransacoes(usuarioId = DEFAULT_USUARIO_ID) {
 
     async function load() {
       try {
-        const response = await fetch(
-          `${getApiUrl()}/transacoes?usuarioId=${encodeURIComponent(usuarioId)}`,
-          { cache: 'no-store', headers: authHeaders() },
+        const response = await authFetch(
+          getApiUrl(),
+          `/transacoes?usuarioId=${encodeURIComponent(usuarioId)}`,
         );
 
         if (!response.ok) {

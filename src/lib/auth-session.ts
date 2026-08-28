@@ -135,6 +135,12 @@ export function getExpiresAt(): number | null {
   return readStoredSession()?.expiresAt ?? null;
 }
 
+export function isAccessTokenStale(marginMs = 30_000): boolean {
+  const expiresAt = getExpiresAt();
+  if (!expiresAt) return false;
+  return expiresAt - Date.now() <= marginMs;
+}
+
 export async function getAccessToken(): Promise<string | null> {
   if (typeof window === 'undefined') {
     const { cookies } = await import('next/headers');
