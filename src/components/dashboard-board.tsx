@@ -1,5 +1,9 @@
 'use client';
 
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
+
+import { NovaTransacaoFab } from '@/components/nova-transacao-fab';
 import { DashboardViewMicrofrontend } from '@/components/dashboard-view-microfrontend';
 import type { Transacao } from '@/data/transacoes';
 import { useMediaQuery } from '@/lib/use-media-query';
@@ -22,6 +26,7 @@ export function DashboardBoard({ transacoes }: Readonly<DashboardBoardProps>) {
       </div>
 
       <DashboardViewMicrofrontend transacoes={transacoes} />
+      <NovaTransacaoFab />
     </div>
   );
 }

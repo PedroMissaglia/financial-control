@@ -1,5 +1,4 @@
 import { Header } from '@/components/header';
-import { NovaTransacaoFab } from '@/components/nova-transacao-fab';
 
 export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -11,7 +10,6 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
       >
         {children}
       </main>
-      <NovaTransacaoFab />
     </>
   );
 }

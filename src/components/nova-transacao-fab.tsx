@@ -2,19 +2,15 @@
 
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 import { useMediaQuery } from '@/lib/use-media-query';
 import { cn } from '@/lib/utils';
 
-const FAB_ROUTES = ['/', '/transacoes'] as const;
-
+/** Mobile-only FAB for quick access to /transacoes/nova. Mount only on allowed pages. */
 export function NovaTransacaoFab() {
-  const pathname = usePathname();
   const isMobile = !useMediaQuery('(min-width: 640px)');
-  const showFab = FAB_ROUTES.some(route => pathname === route);
 
-  if (!isMobile || !showFab || pathname.startsWith('/transacoes/nova')) return null;
+  if (!isMobile) return null;
 
   return (
     <Link
