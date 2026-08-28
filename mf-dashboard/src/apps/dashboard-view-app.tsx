@@ -30,7 +30,10 @@ export function DashboardViewApp(props: Readonly<DashboardViewProps>) {
     props.usuarioIds,
     competencia,
   );
-  const refreshing = Boolean(props.loading) || txLoading || gastosLoading;
+  const refreshing =
+    (Boolean(props.loading) && transacoes.length === 0) ||
+    (txLoading && transacoes.length === 0) ||
+    (gastosLoading && gastos.length === 0);
 
   const analytics = useMemo(
     () => buildWidgetAnalytics(transacoes, categoriaLabels, gastos, props.donoLabels, competencia),

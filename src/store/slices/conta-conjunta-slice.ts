@@ -103,7 +103,9 @@ const contaConjuntaSlice = createSlice({
   },
   extraReducers: builder => {
     builder.addCase(loadContaConjunta.pending, state => {
-      state.loading = true;
+      if (state.status === 'nenhuma' && !state.parceiro && !state.convite) {
+        state.loading = true;
+      }
     });
     builder.addCase(loadContaConjunta.fulfilled, (state, action) => {
       applyView(state, action.payload.view);

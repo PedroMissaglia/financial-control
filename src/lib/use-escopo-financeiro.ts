@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { type VisaoFinanceira, primeiroNome } from '@/data/conta-conjunta';
 import { notifyVisaoChanged } from '@/lib/mf-events';
@@ -53,8 +53,16 @@ export function useEscopoFinanceiro() {
         ? alertaGastos + parceiroMeta.alertaGastos
         : alertaGastos;
 
+  const visaoScopeRef = useRef<string | null>(null);
+
   useEffect(() => {
-    notifyVisaoChanged({ visao, usuarioIds });
+    const scopeKey = `${visao}:${usuarioIds.join(',')}`;
+    if (visaoScopeRef.current === scopeKey) return;
+    const hadPrevious = visaoScopeRef.current !== null;
+    visaoScopeRef.current = scopeKey;
+    if (hadPrevious) {
+      notifyVisaoChanged({ visao, usuarioIds });
+    }
   }, [visao, usuarioIds]);
 
   return {

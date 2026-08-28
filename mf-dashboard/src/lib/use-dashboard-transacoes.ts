@@ -102,6 +102,12 @@ export function useDashboardTransacoes(
       void refresh();
     }
     function onVisao(event: Event) {
+      const detailIds = (event as CustomEvent<{ usuarioIds?: string[] }> | undefined)?.detail?.usuarioIds;
+      const nextIds =
+        detailIds?.length ? detailIds : genIds.length > 0 ? genIds : scopeRef.current;
+      const nextKey = nextIds.join(',');
+      const currentKey = scopeRef.current.join(',');
+      if (nextKey === currentKey) return;
       void refresh({ fromVisao: true, event });
     }
 

@@ -35,9 +35,13 @@ function StoreHydration({ children }: Readonly<{ children: React.ReactNode }>) {
       dispatch(hydrateFromStorage());
       dispatch(hydrateVisao());
       if (usuario?.id) {
-        void dispatch(loadDashboardProfile(usuario.id));
-        void dispatch(loadContaConjunta());
+        await Promise.all([
+          dispatch(loadDashboardProfile(usuario.id)),
+          dispatch(loadContaConjunta()),
+        ]);
       }
+
+      if (cancelled) return;
 
       setReady(true);
     }
