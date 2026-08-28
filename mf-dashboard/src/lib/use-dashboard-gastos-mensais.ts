@@ -123,6 +123,16 @@ export function useDashboardGastosMensais(
       void refresh();
     }
     function onVisao(event: Event) {
+      const detailIds = (event as CustomEvent<{ usuarioIds?: string[] }> | undefined)?.detail?.usuarioIds;
+      const nextIds =
+        detailIds?.length
+          ? detailIds
+          : idsKey
+            ? idsKey.split(',')
+            : scopeRef.current;
+      const nextKey = nextIds.join(',');
+      const currentKey = scopeRef.current.join(',');
+      if (nextKey === currentKey) return;
       void refresh({ fromVisao: true, event });
     }
 
