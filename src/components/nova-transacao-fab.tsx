@@ -7,11 +7,14 @@ import { usePathname } from 'next/navigation';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { cn } from '@/lib/utils';
 
+const FAB_ROUTES = ['/', '/transacoes'] as const;
+
 export function NovaTransacaoFab() {
   const pathname = usePathname();
   const isMobile = !useMediaQuery('(min-width: 640px)');
+  const showFab = FAB_ROUTES.some(route => pathname === route);
 
-  if (!isMobile || pathname.startsWith('/transacoes/nova')) return null;
+  if (!isMobile || !showFab || pathname.startsWith('/transacoes/nova')) return null;
 
   return (
     <Link

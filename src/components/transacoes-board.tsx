@@ -3,7 +3,6 @@
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
-import { NovaTransacaoFab } from '@/components/nova-transacao-fab';
 import { TransacoesMicrofrontend } from '@/components/transacoes-microfrontend';
 import { Button } from '@/components/ui/button';
 import { useMediaQuery } from '@/lib/use-media-query';
@@ -31,7 +30,6 @@ export function TransacoesBoard() {
       )}
 
       <TransacoesMicrofrontend />
-      <NovaTransacaoFab />
     </div>
   );
 }
