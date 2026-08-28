@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { APP_NAV_DRAWER_ID, APP_NAV_ITEMS, AppNavDrawer } from '@/components/app-nav-drawer';
 import { BrandMark } from '@/components/brand-mark';
-import { MobileNavDrawer } from '@/components/mobile-nav-drawer';
 import { ThemeModeToggle } from '@/components/theme-mode-toggle';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/user-menu';
@@ -16,20 +16,13 @@ import { useMediaQuery } from '@/lib/use-media-query';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/store/hooks';
 
-const navItems = [
-  { href: '/', label: 'Início' },
-  { href: '/transacoes', label: 'Transações' },
-  { href: '/categorias', label: 'Categorias' },
-  { href: '/gastos-mensais', label: 'Gastos Mensais' },
-];
-
 function NavLinks({
   pathname,
   className,
 }: Readonly<{ pathname: string; className?: string }>) {
   return (
     <nav className={cn('flex min-w-0 items-center', className)} aria-label="Navegação principal">
-      {navItems.map(item => (
+      {APP_NAV_ITEMS.map(item => (
         <Link
           key={item.href}
           href={item.href}
@@ -54,7 +47,7 @@ function NovaTransacaoButton() {
   );
 }
 
-function MobileHeaderActions({
+function CompactHeaderActions({
   pathname,
   onLogout,
   usuarioNome,
@@ -81,7 +74,7 @@ function MobileHeaderActions({
           size="icon"
           className="shrink-0"
           aria-expanded={drawerOpen}
-          aria-controls="mobile-nav-drawer"
+          aria-controls={APP_NAV_DRAWER_ID}
           aria-label={drawerOpen ? 'Fechar menu' : 'Abrir menu'}
           onClick={() => setDrawerOpen(current => !current)}
         >
@@ -108,7 +101,7 @@ function MobileHeaderActions({
         )}
       </div>
 
-      <MobileNavDrawer
+      <AppNavDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         pathname={pathname}
@@ -124,12 +117,9 @@ export function Header() {
   const pathname = usePathname();
   const { usuario, isAuthenticated, logout } = useAuth();
   const { ativa } = useEscopoFinanceiro();
-  const isTabletUp = useMediaQuery('(min-width: 768px)');
   const isDesktop = useMediaQuery('(min-width: 1280px)');
-  const isMobile = !isTabletUp;
+  const isCompactHeader = isAuthenticated && !isDesktop;
   const headerRef = useRef<HTMLElement>(null);
-  const showTabletNav = isAuthenticated && isTabletUp && !isDesktop;
-  const showVisaoRow = isAuthenticated && ativa && isTabletUp && !isDesktop;
 
   useEffect(() => {
     const header = headerRef.current;
@@ -153,7 +143,7 @@ export function Header() {
       document.documentElement.style.removeProperty('--header-bar-height');
       document.documentElement.style.removeProperty('--header-visao-row');
     };
-  }, [showTabletNav, showVisaoRow, isAuthenticated, ativa]);
+  }, [isCompactHeader, isAuthenticated]);
 
   function handleLogout() {
     logout();
@@ -168,8 +158,8 @@ export function Header() {
     >
       <div className="mx-auto max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between gap-2 sm:h-16">
-          {isAuthenticated && isMobile ? (
-            <MobileHeaderActions
+          {isCompactHeader ? (
+            <CompactHeaderActions
               pathname={pathname}
               onLogout={handleLogout}
               usuarioNome={usuario?.nome}
@@ -188,16 +178,9 @@ export function Header() {
 
               {isAuthenticated && (
                 <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2 xl:gap-4">
-                  {isDesktop ? (
-                    <>
-                      <NavLinks pathname={pathname} className="gap-4 xl:gap-6" />
-                      <NovaTransacaoButton />
-                      <VisaoSwitcher />
-                    </>
-                  ) : (
-                    <NovaTransacaoButton />
-                  )}
-
+                  <NavLinks pathname={pathname} className="gap-4 xl:gap-6" />
+                  <NovaTransacaoButton />
+                  <VisaoSwitcher />
                   <UserMenu nome={usuario?.nome} onLogout={handleLogout} />
                   <ThemeModeToggle />
                 </div>
@@ -205,13 +188,6 @@ export function Header() {
             </>
           )}
         </div>
-
-        {showVisaoRow && (
-          <div className="border-border flex items-center gap-3 border-t pt-2 pb-2.5">
-            <NavLinks pathname={pathname} className="min-w-0 flex-1 gap-3 overflow-x-auto" />
-            <VisaoSwitcher className="shrink-0" />
-          </div>
-        )}
       </div>
     </header>
   );
