@@ -2,6 +2,7 @@ import {
   clearPersistedUsuario,
   getAccessToken,
   getRefreshToken,
+  isAccessTokenStale,
   persistTokens,
 } from '@/lib/auth-session';
 import { getApiUrl } from '@/lib/api-url';
@@ -69,6 +70,13 @@ export async function refreshSession(): Promise<boolean> {
   return Boolean(token);
 }
 
+export async function ensureValidAccessToken(): Promise<string | null> {
+  if (typeof window === 'undefined') return getAccessToken();
+  if (!getRefreshToken()) return getAccessToken();
+  if (!isAccessTokenStale()) return getAccessToken();
+  return refreshAccessToken();
+}
+
 export async function logoutRemote(): Promise<void> {
   const refreshToken = getRefreshToken();
   const accessToken = await getAccessToken();
@@ -98,6 +106,10 @@ export async function apiFetch(path: string, init: RequestInit & { auth?: boolea
       nextHeaders.set('Authorization', `Bearer ${accessToken}`);
     }
     return fetch(url, { ...rest, headers: nextHeaders, cache: rest.cache ?? 'no-store' });
+  }
+
+  if (auth && typeof window !== 'undefined') {
+    await ensureValidAccessToken();
   }
 
   let accessToken = auth ? await getAccessToken() : null;

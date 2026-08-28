@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { type Transacao } from '@/data/transacoes';
 import { resolveDashboardApiUrl } from '@/lib/api-url';
-import { authHeaders } from '@/lib/auth-token';
+import { authFetch } from '@/lib/auth-token';
 import { parseTransacoesItems } from '@/lib/transacoes-page';
 
 const MF_TRANSACOES_CHANGED = 'fincontrol:transacoes-changed';
@@ -31,11 +31,7 @@ function transacoesSignature(items: Transacao[] | undefined) {
 
 async function fetchTransacoes(usuarioIds: string[], apiUrl: string): Promise<Transacao[] | null> {
   if (usuarioIds.length === 0) return [];
-  const url = `${apiUrl}/transacoes?${buildQuery(usuarioIds)}`;
-  const response = await fetch(url, {
-    cache: 'no-store',
-    headers: authHeaders(),
-  });
+  const response = await authFetch(apiUrl, `/transacoes?${buildQuery(usuarioIds)}`);
   if (!response.ok) return null;
   const json: unknown = await response.json();
   return parseTransacoesItems(json);
