@@ -1,11 +1,5 @@
-import { TransacaoModalForm } from '@/components/transacao-modal-form';
+import { NovaTransacaoIntercept } from '@/components/nova-transacao-intercept';
 
 export default function ModalNovaTransacaoPage() {
-  return (
-    <TransacaoModalForm
-      title="Nova transação"
-      description="Preencha os dados para registrar uma nova movimentação"
-      mode="create"
-    />
-  );
+  return <NovaTransacaoIntercept />;
 }
