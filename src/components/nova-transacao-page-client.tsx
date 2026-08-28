@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FeedbackToast } from '@/components/ui/feedback-toast';
 import { useMediaQuery } from '@/lib/use-media-query';
 
+const PAGE_DESCRIPTION =
+  'Registre uma movimentação. Após salvar, o formulário é limpo para o próximo lançamento.';
+
 export function NovaTransacaoPageClient() {
   const router = useRouter();
   const isDesktop = useMediaQuery('(min-width: 640px)');
@@ -32,7 +35,7 @@ export function NovaTransacaoPageClient() {
           <Card>
             <CardHeader>
               <CardTitle>Nova transação</CardTitle>
-              <CardDescription>Preencha os dados para registrar uma nova movimentação</CardDescription>
+              <CardDescription>{PAGE_DESCRIPTION}</CardDescription>
             </CardHeader>
             <CardContent>{form}</CardContent>
           </Card>
@@ -41,9 +44,7 @@ export function NovaTransacaoPageClient() {
         <div className="pb-4">
           <div className="mb-4">
             <h1 className="fc-page-title">Nova transação</h1>
-            <p className="fc-card-subtitle mt-1">
-              Registre uma movimentação. Após salvar, o formulário é limpo para o próximo lançamento.
-            </p>
+            <p className="fc-card-subtitle mt-1">{PAGE_DESCRIPTION}</p>
           </div>
           {form}
         </div>
