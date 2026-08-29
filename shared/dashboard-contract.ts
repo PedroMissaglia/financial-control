@@ -38,7 +38,7 @@ export interface LayoutGroupDefinition {
 export interface DashboardTransacao {
   id: string;
   usuarioId: string;
-  tipo: 'deposito' | 'transferencia' | 'saque' | 'pagamento';
+  tipo: 'deposito' | 'rendimentos' | 'transferencia' | 'saque' | 'pagamento';
   valor: number;
   data: string;
   hora: string;

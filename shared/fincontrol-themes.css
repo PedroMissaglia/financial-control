@@ -13,6 +13,8 @@
   --tipo-transferencia-fg: 0 0% 100%;
   --tipo-pagamento: 8 46% 52%;
   --tipo-pagamento-fg: 0 0% 100%;
+  --tipo-rendimentos: 160 46% 38%;
+  --tipo-rendimentos-fg: 0 0% 100%;
   --forma-pix: 50 52% 48%;
   --forma-pix-fg: 0 0% 100%;
   --forma-credito: 340 50% 50%;
@@ -403,6 +405,7 @@
   --tipo-saque: 28 50% 52%;
   --tipo-transferencia: 275 46% 56%;
   --tipo-pagamento: var(--pw-red-10);
+  --tipo-rendimentos: 160 44% 46%;
   --forma-pix: 50 50% 52%;
   --forma-credito: 340 48% 56%;
   --forma-debito: 275 46% 54%;

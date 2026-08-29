@@ -271,6 +271,11 @@
   color: hsl(var(--tipo-transferencia-fg));
 }
 
+.fc-badge-tipo-rendimentos {
+  background: hsl(var(--tipo-rendimentos));
+  color: hsl(var(--tipo-rendimentos-fg));
+}
+
 .fc-badge-pag-pix {
   background: hsl(var(--forma-pix));
   color: hsl(var(--forma-pix-fg));
@@ -313,6 +318,11 @@
 :host-context([data-fin-theme-mode='dark']) .fc-badge-tipo-transferencia {
   background: hsl(var(--tipo-transferencia) / 0.18);
   color: hsl(var(--tipo-transferencia));
+}
+
+:host-context([data-fin-theme-mode='dark']) .fc-badge-tipo-rendimentos {
+  background: hsl(var(--tipo-rendimentos) / 0.18);
+  color: hsl(var(--tipo-rendimentos));
 }
 
 :host-context([data-fin-theme-mode='dark']) .fc-badge-pag-pix {

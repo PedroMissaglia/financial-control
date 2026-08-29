@@ -27,6 +27,7 @@ import {
   type NovaTransacao,
   sugerirCategoria,
   TIPOS_TRANSACAO,
+  type TipoTransacao,
   type Transacao,
   type TransacaoAnexo,
 } from '@/data/transacoes';
@@ -42,8 +43,10 @@ const hoje = () => {
   return `${year}-${month}-${day}`;
 };
 
+const TIPO_VALUES = TIPOS_TRANSACAO.map(tipo => tipo.value) as [TipoTransacao, ...TipoTransacao[]];
+
 const transacaoSchema = z.object({
-  tipo: z.enum(['deposito', 'transferencia', 'saque', 'pagamento']),
+  tipo: z.enum(TIPO_VALUES),
   valor: z.number().positive('O valor deve ser maior que zero'),
   data: z
     .string()

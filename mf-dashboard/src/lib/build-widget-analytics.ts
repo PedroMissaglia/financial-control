@@ -91,7 +91,7 @@ function dataKeyFor(usuarioId: string, index: number): string {
   return `p_${index}_${safe}`;
 }
 
-const TIPO_ORDEM: TipoTransacao[] = ['pagamento', 'deposito', 'saque', 'transferencia'];
+const TIPO_ORDEM: TipoTransacao[] = ['pagamento', 'deposito', 'rendimentos', 'saque', 'transferencia'];
 const FORMA_ORDEM: FormaPagamento[] = ['pix', 'credito', 'debito', 'vr_va'];
 const MES_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] as const;
 

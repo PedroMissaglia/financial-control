@@ -45,7 +45,7 @@ export function evolucaoSaldo(transacoes: Transacao[]): PontoSaldo[] {
   }));
 }
 
-const TIPO_ORDEM: TipoTransacao[] = ['pagamento', 'deposito', 'saque', 'transferencia'];
+const TIPO_ORDEM: TipoTransacao[] = ['pagamento', 'deposito', 'rendimentos', 'saque', 'transferencia'];
 
 export function totaisPorTipo(transacoes: Transacao[]): TotalPorGrupo[] {
   const totais = new Map<string, number>();

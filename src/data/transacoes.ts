@@ -1,4 +1,4 @@
-export type TipoTransacao = 'deposito' | 'transferencia' | 'saque' | 'pagamento';
+export type TipoTransacao = 'deposito' | 'rendimentos' | 'transferencia' | 'saque' | 'pagamento';
 
 export const FORMAS_PAGAMENTO_IDS = ['credito', 'debito', 'pix', 'vr_va'] as const;
 
@@ -65,6 +65,7 @@ function horaDe(item: Transacao): string {
 
 export const TIPOS_TRANSACAO: { value: TipoTransacao; label: string }[] = [
   { value: 'deposito', label: 'Depósito' },
+  { value: 'rendimentos', label: 'Rendimentos' },
   { value: 'transferencia', label: 'Transferência' },
   { value: 'saque', label: 'Saque' },
   { value: 'pagamento', label: 'Pagamento' },
@@ -72,6 +73,7 @@ export const TIPOS_TRANSACAO: { value: TipoTransacao; label: string }[] = [
 
 export const TIPO_LABELS: Record<TipoTransacao, string> = {
   deposito: 'Depósito',
+  rendimentos: 'Rendimentos',
   transferencia: 'Transferência',
   saque: 'Saque',
   pagamento: 'Pagamento',
@@ -153,7 +155,7 @@ export function labelFormaPagamento(value: FormaPagamento | null | undefined): s
 }
 
 export function isEntrada(tipo: TipoTransacao): boolean {
-  return tipo === 'deposito';
+  return tipo === 'deposito' || tipo === 'rendimentos';
 }
 
 export function calcularSaldo(transacoes: Transacao[]): number {

@@ -1,4 +1,4 @@
-export type TipoTransacao = 'deposito' | 'transferencia' | 'saque' | 'pagamento';
+export type TipoTransacao = 'deposito' | 'rendimentos' | 'transferencia' | 'saque' | 'pagamento';
 
 export type FormaPagamento = 'credito' | 'debito' | 'pix' | 'vr_va';
 
@@ -18,6 +18,7 @@ export interface Transacao {
 export const TIPOS: { value: TipoTransacao | ''; label: string }[] = [
   { value: '', label: 'Todos os tipos' },
   { value: 'deposito', label: 'Depósito' },
+  { value: 'rendimentos', label: 'Rendimentos' },
   { value: 'transferencia', label: 'Transferência' },
   { value: 'saque', label: 'Saque' },
   { value: 'pagamento', label: 'Pagamento' },
@@ -33,6 +34,7 @@ export const FORMAS_PAGAMENTO: { value: FormaPagamento | ''; label: string }[] =
 
 export const TIPO_LABELS: Record<TipoTransacao, string> = {
   deposito: 'Depósito',
+  rendimentos: 'Rendimentos',
   transferencia: 'Transferência',
   saque: 'Saque',
   pagamento: 'Pagamento',
@@ -60,7 +62,7 @@ export const CATEGORIA_LABELS: Record<string, string> = {
 };
 
 export function isEntrada(tipo: TipoTransacao): boolean {
-  return tipo === 'deposito';
+  return tipo === 'deposito' || tipo === 'rendimentos';
 }
 
 export function labelCategoria(id: string | undefined, extras?: Record<string, string>): string {
